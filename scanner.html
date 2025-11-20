@@ -1,10 +1,10 @@
+
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Leitor de Ingressos ESIP</title>
 
-  <!-- Biblioteca que funciona no celular e HTTPS -->
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
   <style>
@@ -12,75 +12,127 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 20px;
-      background: #f2f6ff;
+      background: #eef3ff;
     }
-    h2 {
-      color: #005bbb;
-    }
+    h2 { color: #003f88; }
+
     #reader {
       width: 320px;
       margin: auto;
-      border: 3px solid #005bbb;
+      border: 3px solid #003f88;
       border-radius: 12px;
       padding: 10px;
       background: white;
     }
+
     #result {
       margin-top: 20px;
-      font-size: 20px;
+      font-size: 22px;
       font-weight: bold;
+      padding: 15px;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
 
-<h2>📷 Leitor de Ingressos ESIP</h2>
+<h2>📷 Leitor Oficial ESIP</h2>
 <p>Aponte a câmera para o QR Code do ingresso.</p>
 
 <div id="reader"></div>
 <div id="result"></div>
 
+<!-- Sons -->
+<audio id="okSound">
+  <source src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg">
+</audio>
+
+<audio id="errorSound">
+  <source src="https://actions.google.com/sounds/v1/cartoon/boing.ogg">
+</audio>
+
 <script>
+
+// ---------- 1) Proteção com código secreto ----------
+const codigo = prompt("Digite o código de acesso para usar o leitor ESIP:");
+
+if (codigo !== "ESIP2025") {
+  alert("Código incorreto. Acesso negado.");
+  window.location.href = "https://google.com";
+}
+
+
+// ---------- 2) Função para validar formato do ingresso ----------
+function formatoValido(textoQR) {
+  // Exemplo de formato aceito: ESIP-1234 ou somente número
+  return /^ESIP-\d+$/.test(textoQR) || /^\d+$/.test(textoQR);
+}
+
+
+// ---------- 3) Função para validar ingresso ----------
 function marcarUsado(id) {
+
+  if (!formatoValido(id)) {
+    erro("Formato inválido — isso NÃO é um ingresso ESIP!");
+    return;
+  }
+
   let ingressos = JSON.parse(localStorage.getItem("ingressosESIP") || "[]");
-  
   const index = ingressos.findIndex(i => i.id == id);
 
   if (index === -1) {
-    document.getElementById("result").innerHTML = "❌ Ingresso não encontrado!";
+    erro("❌ Ingresso não encontrado no sistema!");
     return;
   }
 
   if (ingressos[index].usado) {
-    document.getElementById("result").innerHTML = "⛔ Ingresso já foi utilizado!";
+    erro("⛔ Ingresso já utilizado!");
     return;
   }
 
   ingressos[index].usado = true;
   localStorage.setItem("ingressosESIP", JSON.stringify(ingressos));
 
-  document.getElementById("result").innerHTML = "✅ Ingresso validado com sucesso!";
+  sucesso("✅ Ingresso válido!<br>" +
+          "🎟 Tipo: " + ingressos[index].tipo + "<br>" +
+          "🆔 ID: " + ingressos[index].id);
 }
 
+
+// ---------- Estilos de resultado + som ----------
+function sucesso(msg) {
+  document.getElementById("result").style.background = "#b6ffb3";
+  document.getElementById("result").style.color = "#003300";
+  document.getElementById("result").innerHTML = msg;
+  document.getElementById("okSound").play();
+}
+
+function erro(msg) {
+  document.getElementById("result").style.background = "#ffb6b6";
+  document.getElementById("result").style.color = "#660000";
+  document.getElementById("result").innerHTML = msg;
+  document.getElementById("errorSound").play();
+}
+
+
+// ---------- 4) Iniciar o scanner ----------
 function startScanner() {
   const html5QrCode = new Html5Qrcode("reader");
 
   html5QrCode.start(
-    { facingMode: "environment" }, // Traseira do celular
+    { facingMode: "environment" },
     { fps: 10, qrbox: 250 },
     (decodedText) => {
-      marcarUsado(decodedText);
+      marcarUsado(decodedText.trim());
     },
-    (errorMessage) => {
-      // Erros ignorados para não travar
-    }
+    () => {}
   ).catch(err => {
-    document.getElementById("result").innerHTML =
-      "❌ Erro ao acessar câmera. Permita o uso da câmera.";
+    erro("Erro ao acessar câmera! Permita o uso da câmera.");
   });
 }
 
 startScanner();
+
 </script>
 
 </body>
