@@ -1,177 +1,252 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Leitor ESIP Premium</title>
+<title>Leitor ESIP — Pro (Com registro & export)</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 <style>
-  body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: #0a0d14;
-    color: white;
+  :root{
+    --bg: #0a0d14; --card:#0f1724; --muted:#9aa4ba; --accent:#0077ff; --ok:#0fbd7f; --err:#ff4e4e;
   }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--bg);color:#fff}
+  header{background:linear-gradient(90deg,#003f88,#0057b8);padding:18px 20px;display:flex;align-items:center;gap:16px}
+  header img{width:44px;height:44px;border-radius:8px;background:#fff;padding:6px}
+  header h1{margin:0;font-size:20px;letter-spacing:0.6px}
 
-  header {
-    background: #003f88;
-    padding: 20px;
-    text-align: center;
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: 1px;
-  }
+  .wrap{max-width:980px;margin:28px auto;padding:18px}
+  .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
 
-  .container {
-    max-width: 600px;
-    margin: auto;
-    padding: 20px;
-  }
+  /* Card */
+  .card{background:var(--card);padding:16px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+  .muted{color:var(--muted);font-size:13px}
 
   /* Login */
-  #loginCard {
-    background: #111623;
-    padding: 25px;
-    border-radius: 18px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    margin-top: 40px;
-  }
+  .login input{width:100%;padding:12px;border-radius:10px;border:none;background:#0b1220;color:#fff;font-size:16px}
+  .login .btn{display:inline-block;margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--accent);color:#fff;border:none;font-weight:600;cursor:pointer}
 
-  #loginCard h2 {
-    margin: 0 0 10px;
-    font-size: 24px;
-  }
+  /* Reader */
+  #reader{border-radius:12px;overflow:hidden;background:#000}
+  #result{margin-top:12px;padding:12px;border-radius:10px;font-weight:700;text-align:center}
 
-  input {
-    width: 100%;
-    padding: 14px;
-    border-radius: 10px;
-    border: none;
-    margin-top: 12px;
-    font-size: 18px;
-    background: #1a2030;
-    color: white;
-  }
+  /* Controls */
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .controls button{padding:8px 12px;border-radius:10px;border:none;cursor:pointer}
+  .btn-muted{background:#1b2230;color:#cbd6ee}
+  .btn-danger{background:var(--err);color:#fff}
 
-  button {
-    margin-top: 18px;
-    width: 100%;
-    padding: 14px;
-    font-size: 18px;
-    border: none;
-    border-radius: 12px;
-    background: #0077ff;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.3s;
-  }
+  /* Log table */
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:8px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
+  th{color:var(--muted);font-weight:600}
 
-  button:hover {
-    background: #2893ff;
-  }
+  /* stats */
+  .stats{display:flex;gap:8px;flex-wrap:wrap}
+  .stat{flex:1;min-width:120px;background:#07101a;padding:12px;border-radius:10px}
+  .stat b{display:block;font-size:20px}
 
-  /* Scanner area */
-  #scanSection {
-    display: none;
-    margin-top: 30px;
-  }
+  footer{margin-top:18px;text-align:center;color:var(--muted);font-size:13px}
 
-  #reader {
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
-  }
-
-  #result {
-    margin-top: 20px;
-    padding: 18px;
-    font-size: 22px;
-    font-weight: 600;
-    border-radius: 14px;
-    text-align: center;
-  }
-
-  footer {
-    margin-top: 50px;
-    text-align: center;
-    color: #6f7a90;
-    font-size: 14px;
-    padding-bottom: 30px;
-  }
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}.card{margin-bottom:12px}}
 </style>
 </head>
 <body>
+<header>
+  <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' rx='12' fill='%23003f88'/><text x='50%' y='54%' font-size='28' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'>E</text></svg>" alt="logo">
+  <h1>ESIP — Leitor Pro (Registro & Export)</h1>
+</header>
 
-<header>📡 ESIP - Leitor Oficial Premium</header>
+<div class="wrap">
+  <div class="grid">
 
-<div class="container">
+    <div>
+      <div class="card login" id="loginCard">
+        <h2 style="margin:0">🔒 Acesso</h2>
+        <p class="muted">Digite o código para liberar o leitor.</p>
+        <input id="accessCode" placeholder="Código de acesso" type="password">
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" onclick="validateLogin()">Entrar</button>
+          <button class="btn-muted" onclick="fillDemo()">Demo</button>
+        </div>
+        <p id="loginError" class="muted" style="display:none;color:var(--err);font-weight:700;margin-top:8px">Código incorreto</p>
 
-  <div id="loginCard">
-    <h2>🔒 Acesso Restrito</h2>
-    <p>Digite o código para continuar:</p>
-    <input id="accessCode" type="password" placeholder="Código de acesso" />
-    <button onclick="validateLogin()">Entrar</button>
-    <p id="loginError" style="display:none; color:#ff4e4e; margin-top:10px; font-weight:600;">Código incorreto!</p>
+        <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+        <div class="muted">Ações rápidas</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn-muted" onclick="exportCsv()">Exportar CSV</button>
+          <button class="btn-muted" onclick="clearLogs()">Limpar registros</button>
+        </div>
+      </div>
+
+      <div class="card" id="scanCard" style="display:none;margin-top:14px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h3 style="margin:0">📷 Leitor</h3>
+            <div class="muted">Aponte a câmera para o QR. Aceito: <code>ESIP-*</code></div>
+          </div>
+          <div style="text-align:right">
+            <div class="muted">Sessão</div>
+            <div id="sessionTime">—</div>
+          </div>
+        </div>
+
+        <div id="reader" style="margin-top:12px;height:360px"></div>
+
+        <div id="result">Aguardando leitura...</div>
+
+        <div class="controls">
+          <button class="btn-muted" onclick="pauseScanner()">Pausar</button>
+          <button class="btn-muted" onclick="resumeScanner()">Retomar</button>
+          <button class="btn-danger" onclick="stopScanner()">Parar</button>
+        </div>
+      </div>
+
+    </div>
+
+    <div>
+      <div class="card">
+        <h3 style="margin:0">📊 Estatísticas</h3>
+        <div class="muted">Resumo da sessão</div>
+        <div class="stats" style="margin-top:10px">
+          <div class="stat"><small class="muted">Total</small><b id="statTotal">0</b></div>
+          <div class="stat"><small class="muted">Válidos</small><b id="statValid">0</b></div>
+          <div class="stat"><small class="muted">Inválidos</small><b id="statInvalid">0</b></div>
+          <div class="stat"><small class="muted">Duplicados</small><b id="statDup">0</b></div>
+        </div>
+
+        <hr style="margin:12px 0;border:none;border-top:1px solid rgba(255,255,255,0.04)">
+        <h4 style="margin:0">Últimas leituras</h4>
+        <div class="muted">As leituras ficam salvas no navegador (localStorage).</div>
+        <table id="logTable">
+          <thead><tr><th>#</th><th>Hora</th><th>Código</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
-  <div id="scanSection">
-    <h2>📷 Leitor ESIP</h2>
-    <p>Aponte a câmera para o QR Code.</p>
-    <div id="reader"></div>
-    <div id="result"></div>
-  </div>
-
+  <footer>© 2025 ESIP • Desenvolvido — Personalize cores e logo conforme necessário</footer>
 </div>
 
-<footer>© 2025 ESIP - Sistemas Inteligentes</footer>
-
 <script>
-const correctCode = "ESIP2025";
+// Config
+const ACCESS_CODE = 'ESIP2025';
+const STORAGE_KEY = 'esip_scans_v1';
+const ACCEPT_PREFIX = 'ESIP-';
 
-function validateLogin() {
-  const typed = document.getElementById("accessCode").value;
+let html5Qr = null;
+let isRunning = false;
+let sessionStart = null;
 
-  if (typed === correctCode) {
-    document.getElementById("loginCard").style.display = "none";
-    document.getElementById("scanSection").style.display = "block";
-    startScanner();
-  } else {
-    document.getElementById("loginError").style.display = "block";
-  }
+// util
+function nowIso(){ return new Date().toISOString(); }
+function formatTime(iso){ const d=new Date(iso); return d.toLocaleString(); }
+
+function loadLogs(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }catch(e){return[]}
+}
+function saveLogs(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+function addLog(code,status){ const logs = loadLogs();
+  const entry = {id:logs.length+1, ts: nowIso(), code, status};
+  logs.unshift(entry); // newest first
+  saveLogs(logs);
+  refreshUI();
 }
 
-function formatValid(qr) {
-  return qr.startsWith("ESIP-");
-}
+function refreshUI(){
+  const logs = loadLogs();
+  document.getElementById('statTotal').innerText = logs.length;
+  document.getElementById('statValid').innerText = logs.filter(l=>l.status==='valid').length;
+  document.getElementById('statInvalid').innerText = logs.filter(l=>l.status==='invalid').length;
+  document.getElementById('statDup').innerText = logs.filter(l=>l.status==='dup').length;
 
-function startScanner() {
-  const html5Qr = new Html5Qrcode("reader");
-
-  html5Qr.start(
-    { facingMode: "environment" },
-    { fps: 10, qrbox: 280 },
-    (decodedText) => {
-
-      if (!formatValid(decodedText)) {
-        showResult(false, "❌ Código inválido!");
-        return;
-      }
-
-      showResult(true, "✅ Ingresso ESIP válido!");
-    }
-  ).catch(() => {
-    showResult(false, "❌ Erro ao acessar câmera. Permita o uso.");
+  const tbody = document.querySelector('#logTable tbody'); tbody.innerHTML='';
+  logs.slice(0,50).forEach((l,idx)=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${idx+1}</td><td>${formatTime(l.ts)}</td><td>${l.code}</td><td>${statusLabel(l.status)}</td>`;
+    tbody.appendChild(tr);
   });
 }
 
-function showResult(success, msg) {
-  const box = document.getElementById("result");
-  box.style.background = success ? "#0fbd7f" : "#ff4e4e";
-  box.innerHTML = msg;
+function statusLabel(s){ if(s==='valid') return '<span style="color:var(--ok);font-weight:700">VÁLIDO</span>';
+  if(s==='invalid') return '<span style="color:var(--err);font-weight:700">INVÁLIDO</span>';
+  return '<span style="color:#ffd966;font-weight:700">DUPLICADO</span>';
 }
-</script>
 
+function validateLogin(){ const v = document.getElementById('accessCode').value.trim();
+  if(v===ACCESS_CODE){ document.getElementById('loginCard').style.display='none'; document.getElementById('scanCard').style.display='block'; startScanner(); }
+  else{ document.getElementById('loginError').style.display='block'; }
+}
+function fillDemo(){ document.getElementById('accessCode').value = ACCESS_CODE; validateLogin(); }
+
+// scanner logic with duplicate prevention
+function isDuplicate(code){ const logs = loadLogs(); return logs.some(l=>l.code===code && l.status==='valid'); }
+function formatValid(code){ return typeof code==='string' && code.startsWith(ACCEPT_PREFIX); }
+
+async function startScanner(){
+  if(html5Qr) return;
+  html5Qr = new Html5Qrcode('reader');
+  sessionStart = new Date(); document.getElementById('sessionTime').innerText = sessionStart.toLocaleString();
+
+  const constraints = { fps:8, qrbox: {width:320, height:320} };
+  try{
+    await html5Qr.start({ facingMode: 'environment' }, constraints, onDecode);
+    isRunning = true;
+  }catch(e){ showResult(false, 'Erro ao acessar a câmera. Permita o uso e atualize a página.'); }
+}
+
+function onDecode(decodedText){
+  // normalize
+  const code = decodedText.trim();
+
+  // duplicate
+  if(isDuplicate(code) && formatValid(code)){
+    addLog(code,'dup');
+    showResult(false, '⚠️ Já registrado (duplicado)');
+    return;
+  }
+
+  if(!formatValid(code)){
+    addLog(code,'invalid');
+    showResult(false, '❌ QR Inválido');
+    return;
+  }
+
+  // válido
+  addLog(code,'valid');
+  showResult(true, '✅ Ingresso ESIP válido');
+}
+
+function showResult(ok,msg){ const box=document.getElementById('result');
+  box.style.background = ok ? 'linear-gradient(90deg, rgba(15,189,127,0.12), rgba(15,189,127,0.06))' : 'linear-gradient(90deg, rgba(255,78,78,0.12), rgba(255,78,78,0.06))';
+  box.innerHTML = `<div style="font-size:18px">${msg}</div><div class=\"muted\">${new Date().toLocaleTimeString()}</div>`;
+}
+
+async function pauseScanner(){ if(html5Qr && isRunning){ await html5Qr.pause(); isRunning=false; showResult(false,'Scanner pausado'); }}
+async function resumeScanner(){ if(html5Qr && !isRunning){ await html5Qr.resume(); isRunning=true; showResult(true,'Scanner ativo'); }}
+async function stopScanner(){ if(html5Qr){ await html5Qr.stop(); html5Qr.clear(); html5Qr=null; isRunning=false; showResult(false,'Scanner parado'); }}
+
+// Export CSV
+function exportCsv(){ const logs = loadLogs(); if(!logs.length) return alert('Nenhum registro para exportar');
+  const header = ['id','timestamp','code','status'];
+  const rows = logs.map(r=>[r.id, r.ts, `"${r.code.replace(/"/g,'""')}"`, r.status].join(','));
+  const csv = [header.join(','), ...rows].join('
+');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download = `esip_scans_${new Date().toISOString()}.csv`; a.click(); URL.revokeObjectURL(url);
+}
+
+function clearLogs(){ if(!confirm('Limpar todos os registros?')) return; localStorage.removeItem(STORAGE_KEY); refreshUI(); }
+
+// init
+(function(){ refreshUI(); })();
+
+</script>
 </body>
 </html>
