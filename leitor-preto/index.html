@@ -1,1 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📡 ESIP — Leitor Black Premium</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    :root{--bg:#000;--panel:#0b0b0b;--muted:#bfbfbf;--accent:#ffd700;--ok:#28a745;--err:#e03a3a}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,Arial,Helvetica,sans-serif;background:var(--bg);color:var(--muted);-webkit-font-smoothing:antialiased}
+    header{background:linear-gradient(90deg,#050505, #101010);padding:16px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #111}
+    header .brand{font-size:18px;color:var(--accent);font-weight:700}
+    header h1{margin:0;font-size:18px;color:#fff}
+    .container{max-width:460px;margin:22px auto;padding:0 16px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px;margin-bottom:18px;border:1px solid #111}
+    label{display:block;color:var(--muted);margin-bottom:8px}
+    input[type=password]{width:100%;padding:12px;border-radius:8px;border:1px solid #222;background:#070707;color:#fff}
+    .row{display:flex;gap:10px}
+    button{appearance:none;border:none;cursor:pointer;padding:12px 14px;border-radius:10px;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg,#333,#222);color:var(--accent);box-shadow:0 6px 22px rgba(0,0,0,0.6)}
+    .btn-ghost{background:transparent;border:1px solid #222;color:var(--muted)}
+    .btn-flash{background:var(--accent);color:#000}
+    .counter{background:#070707;padding:12px;border-radius:10px;text-align:center;margin-top:12px;color:#fff}
+    #reader{border-radius:8px;overflow:hidden;background:#000;height:320px}
+    .msg{margin-top:12px;padding:12px;border-radius:10px;color:#000;font-weight:700}
+    .msg.ok{background:var(--ok)}
+    .msg.err{background:var(--err)}
+    #log{max-height:140px;overflow:auto;margin-top:12px;background:#070707;padding:10px;border-radius:8px;color:var(--muted)}
+    /* floating button */
+    .float{position:fixed;right:18px;bottom:18px;background:#111;color:var(--accent);width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:999}
+    /* animation on primary */
+    .btn-primary:hover{transform:translateY(-3px);box-shadow:0 18px 36px rgba(0,0,0,0.7)}
+    .small{font-size:13px;color:var(--muted)}
+    .hidden{display:none}
+    footer{max-width:460px;margin:6px auto 24px;padding:0 16px;color:#666;font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">📡 ESIP</div>
+    <h1>Leitor Pro+ — Black Premium</h1>
+  </header>
+
+  <div class="container">
+    <!-- login -->
+    <div class="card" id="loginCard">
+      <label for="senha">Senha de Acesso</label>
+      <input id="senha" type="password" placeholder="Digite a senha">
+      <div style="margin-top:12px">
+        <button class="btn-primary" style="width:100%" onclick="login()">Entrar</button>
+      </div>
+      <div class="small" style="margin-top:8px">Senha padrão: <b>ESIP2025</b></div>
+    </div>
+
+    <!-- painel do evento (opcional) -->
+    <div class="card hidden" id="eventCard">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="small">Evento</div>
+          <div id="eventName" style="font-weight:700;color:#fff">--</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small">ID</div>
+          <div id="eventId" style="font-weight:700;color:#fff">--</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- scanner card -->
+    <div class="card hidden" id="scanCard">
+      <div id="reader"></div>
+      <button id="btnFlash" class="btn-flash" style="width:100%;margin-top:12px" onclick="toggleFlash()">🔦 Ligar Lanterna</button>
+      <div class="counter" id="counter">Entradas válidas: <b id="count">0</b></div>
+
+      <div id="msgArea" class="small"></div>
+      <div id="log"></div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-primary" style="flex:1" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn-ghost" style="flex:1" onclick="clearLog()">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="float" title="Modo escuro/claro" onclick="toggleTheme()">🌓</div>
+  <footer>ESIP-Sistemas • Leitor Black Premium</footer>
+
+  <audio id="okSound" src="https://cdn.pixabay.com/download/audio/2023/06/29/audio_25c0700121.mp3?filename=success-158310.mp3"></audio>
+  <audio id="errSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_4e6261a0ef.mp3?filename=error-126627.mp3"></audio>
+
+  <script>
+    // configuração do evento (você pode preencher dinamicamente antes de abrir):
+    const EVENT_NAME = "Evento Black Premium";
+    const EVENT_ID = "ESIP-BLK-0001";
+
+    // estado
+    let used = new Set();
+    let log = [];
+    let count = 0;
+    let cameraTrack = null;
+    let flashOn = false;
+
+    // util
+    function showToast(text, ok=true){
+      const area = document.getElementById('msgArea');
+      area.innerHTML = `<div class='msg ${ok?"ok":"err"}'>${text}</div>`;
+      setTimeout(()=> area.innerHTML = '', 2500);
+    }
+
+    function login(){
+      const s = document.getElementById('senha').value.trim();
+      if(s === 'ESIP2025'){
+        document.getElementById('loginCard').classList.add('hidden');
+        document.getElementById('eventCard').classList.remove('hidden');
+        document.getElementById('scanCard').classList.remove('hidden');
+        document.getElementById('eventName').innerText = EVENT_NAME;
+        document.getElementById('eventId').innerText = EVENT_ID;
+        setTimeout(startScanner, 300);
+      } else {
+        alert('Senha incorreta');
+      }
+    }
+
+    function startScanner(){
+      const html5Qr = new Html5Qrcode('reader');
+      Html5Qrcode.getCameras().then(cameras=>{
+        if(!cameras || !cameras.length) return showToast('Nenhuma câmera encontrada', false);
+        const cameraId = cameras[0].id;
+        html5Qr.start(cameraId, {fps:10, qrbox:260}, (decoded)=>{
+          processQR(decoded);
+        }).then(()=>{
+          // pegamos a track para controlar torch
+          const v = document.querySelector('#reader video');
+          if(v && v.srcObject){
+            const stream = v.srcObject;
+            cameraTrack = stream.getVideoTracks()[0];
+          }
+        }).catch(err=> console.warn(err));
+      }).catch(err=> console.warn(err));
+    }
+
+    function toggleFlash(){
+      if(!cameraTrack) return alert('Câmera ainda não pronta');
+      flashOn = !flashOn;
+      cameraTrack.applyConstraints({advanced:[{torch: flashOn}]}).catch(()=>{
+        alert('Lanterna não suportada');
+        flashOn = false;
+      });
+      document.getElementById('btnFlash').innerText = flashOn ? '🔦 Desligar Lanterna' : '🔦 Ligar Lanterna';
+    }
+
+    function processQR(code){
+      const okSound = document.getElementById('okSound');
+      const errSound = document.getElementById('errSound');
+      if(!code.startsWith('ESIP')){ errSound.play(); navigator.vibrate(200); return showToast('QR inválido', false); }
+      if(used.has(code)){ errSound.play(); navigator.vibrate(200); return showToast('Ingresso já usado', false); }
+      used.add(code);
+      count++;
+      document.getElementById('count').innerText = count;
+      okSound.play(); navigator.vibrate([60,30,60]);
+      showToast('Ingresso válido', true);
+      const row = {codigo:code, hora:new Date().toLocaleString()};
+      log.push(row);
+      renderLog();
+    }
+
+    function renderLog(){
+      const el = document.getElementById('log');
+      el.innerHTML = log.slice().reverse().map(r=>`<div style="padding:6px 0;border-bottom:1px solid #111"><b>${r.codigo}</b><br><small style='color:#888'>${r.hora}</small></div>`).join('');
+    }
+
+    function clearLog(){ if(confirm('Limpar log?')){ log=[]; used=new Set(); count=0; document.getElementById('count').innerText = 0; renderLog(); }}
+
+    function exportCSV(){
+      if(!log.length) return alert('Sem registros');
+      let csv = 'codigo,hora\n';
+      log.forEach(r=> csv += `${r.codigo},"${r.hora}"\n`);
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = `${EVENT_ID}_entradas.csv`; a.click();
+    }
+
+    function toggleTheme(){ document.body.classList.toggle('light'); }
+
+    // detecção automática de ambiente escuro (se for útil para UI)
+    setTimeout(()=>{
+      try{
+        const lux = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if(lux) document.body.classList.add('light');
+      }catch(e){}
+    },800);
+  </script>
+</body>
+</html>
 
