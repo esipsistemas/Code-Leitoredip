@@ -1,2 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Ingressos - ESIP</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #0d0d0d;
+        color: white;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        background: #1b1b1b;
+        padding: 15px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #333;
+    }
+
+    .container {
+        margin-top: 25px;
+        padding: 20px;
+    }
+
+    input {
+        width: 90%;
+        padding: 12px;
+        font-size: 18px;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 15px;
+    }
+
+    button {
+        width: 90%;
+        padding: 15px;
+        background: #03a9f4;
+        border: none;
+        color: white;
+        font-size: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background: #0288d1;
+    }
+
+    #qrcode {
+        margin-top: 25px;
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+</head>
+<body>
+
+<header>📡 ESIP-Sistemas – Anti-Fraude</header>
+
+<div class="container">
+
+    <h2>Gerar Ingresso</h2>
+
+    <input type="text" id="nome" placeholder="Nome completo">
+    <input type="text" id="cpf" placeholder="CPF apenas números">
+    <input type="text" id="evento" placeholder="Nome do evento">
+
+    <button onclick="gerarIngresso()">Gerar QR Code</button>
+
+    <div id="qrcode"></div>
+
+</div>
+
+<script>
+
+function gerarIngresso() {
+    let nome = document.getElementById("nome").value.trim();
+    let cpf  = document.getElementById("cpf").value.trim();
+    let evento = document.getElementById("evento").value.trim();
+
+    if (!nome || !cpf || !evento) {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    if (cpf.length !== 11) {
+        alert("CPF inválido!");
+        return;
+    }
+
+    // 🔒 Impedir mais de um ingresso por CPF
+    if (localStorage.getItem("cpf_" + cpf)) {
+        alert("⚠ Este CPF já gerou um ingresso!");
+        return;
+    }
+
+    // Salvar CPF gerado
+    localStorage.setItem("cpf_" + cpf, "gerado");
+
+    // 🔐 Conteúdo do QR
+    let dados = JSON.stringify({
+        nome: nome,
+        cpf: cpf,
+        evento: evento,
+        codigo: "ESIP-" + Math.random().toString(36).substr(2, 8)
+    });
+
+    document.getElementById("qrcode").innerHTML = "";
+
+    new QRCode(document.getElementById("qrcode"), {
+        text: dados,
+        width: 260,
+        height: 260,
+        correctLevel: QRCode.CorrectLevel.H
+    });
+
+    alert("Ingresso gerado com sucesso!");
+}
+
+</script>
+
+</body>
+</html>
 
 
