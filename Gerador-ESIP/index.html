@@ -1,1 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Ingressos - ESIP</title>
 
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #0d0d0d;
+        color: white;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+
+    header {
+        background: #1b1b1b;
+        padding: 15px;
+        font-size: 22px;
+        font-weight: bold;
+        border-bottom: 2px solid #333;
+    }
+
+    .container {
+        margin-top: 25px;
+        padding: 20px;
+    }
+
+    input, input[type=number] {
+        width: 90%;
+        padding: 12px;
+        font-size: 18px;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 15px;
+    }
+
+    button {
+        width: 90%;
+        padding: 15px;
+        background: #03a9f4;
+        border: none;
+        color: white;
+        font-size: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+
+    button:hover {
+        background: #0288d1;
+    }
+
+    #qrcode {
+        margin-top: 25px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .qr-item {
+        margin: 10px;
+    }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+</head>
+<body>
+
+<header>📡 ESIP-Sistemas – Anti-Fraude</header>
+
+<div class="container">
+
+    <h2>Gerar Ingresso</h2>
+
+    <input type="text" id="nome" placeholder="Nome completo">
+    <input type="text" id="cpf" placeholder="CPF apenas números">
+    <input type="text" id="evento" placeholder="Nome do evento">
+    <input type="number" id="quantidade" placeholder="Quantidade de ingressos" min="1" value="1">
+
+    <button onclick="gerarIngresso()">Gerar QR Code</button>
+    <button onclick="baixarPDF()">Baixar PDF</button>
+
+    <div id="qrcode"></div>
+
+</div>
+
+<script>
+let ingressosGerados = [];
+const URL_ADMINISTRADOR = "URL_DO_ADMINISTRADOR_AQUI"; // coloque sua URL real aqui
+
+function gerarIngresso() {
+    let nome = document.getElementById("nome").value.trim();
+    let cpf  = document.getElementById("cpf").value.trim();
+    let evento = document.getElementById("evento").value.trim();
+    let quantidade = parseInt(document.getElementById("quantidade").value);
+
+    // Validação
+    if (!nome || !cpf || !evento) {
+        alert("Preencha todos os campos!");
+        return;
+    }
+
+    if (!/^\d{11}$/.test(cpf)) {
+        alert("CPF inválido! Deve conter apenas 11 números.");
+        return;
+    }
+
+    if (isNaN(quantidade) || quantidade < 1) {
+        alert("Informe uma quantidade válida de ingressos!");
+        return;
+    }
+
+    ingressosGerados = [];
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = "";
+
+    for (let i = 1; i <= quantidade; i++) {
+        let codigo = "ESIP-" + Math.random().toString(36).substr(2, 8);
+        ingressosGerados.push({ id: codigo });
+
+        // Criar div individual para cada QR Code
+        let qrDiv = document.createElement("div");
+        qrDiv.className = "qr-item";
+        qrContainer.appendChild(qrDiv);
+
+        // Gerar QR Code
+        new QRCode(qrDiv, {
+            text: JSON.stringify({ nome, cpf, evento, id: codigo }),
+            width: 260,
+            height: 260
+        });
+    }
+
+    alert("Ingresso(s) gerado(s) com sucesso!");
+
+    // Envio para administrador (se URL válida)
+    if (URL_ADMINISTRADOR && URL_ADMINISTRADOR !== "URL_DO_ADMINISTRADOR_AQUI") {
+        fetch(URL_ADMINISTRADOR, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                nome, cpf, evento, quantidade,
+                ingressos: ingressosGerados,
+                timestamp: new Date().toISOString()
+            })
+        })
+        .then(res => res.json())
+        .then(data => console.log("Enviado com sucesso", data))
+        .catch(err => console.error("Erro ao enviar", err));
+    }
+}
+
+function baixarPDF() {
+    if (ingressosGerados.length === 0) {
+        alert("Nenhum ingresso gerado para baixar!");
+        return;
+    }
+
+    let { jsPDF } = window.jspdf;
+    let doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("📡 ESIP-Sistemas – Ingresso", 20, 20);
+
+    ingressosGerados.forEach((ingresso, index) => {
+        let y = 40 + (index % 10) * 40; // 10 ingressos por página
+        if (index > 0 && index % 10 === 0) doc.addPage();
+        doc.setFontSize(12);
+        doc.text(`Ingresso ${index+1}`, 20, y);
+        doc.text(`ID: ${ingresso.id}`, 20, y + 10);
+    });
+
+    doc.save("ingresso.pdf");
+}
+</script>
+
+</body>
+</html>
