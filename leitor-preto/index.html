@@ -1,58 +1,69 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>📡 ESIP — Leitor Black Premium + Banco Local</title>
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📡 ESIP — Leitor Black Premium + Painel Admin</title>
 
-  <style>
-    body{margin:0;font-family:Arial;background:#000;color:#ccc}
-    .hidden{display:none}
-    header{background:#0c0c0c;padding:15px;color:#ffd700;font-weight:bold;font-size:18px}
-    .container{max-width:480px;margin:auto;padding:20px}
-    .card{background:#111;padding:18px;border-radius:10px;margin-bottom:20px;border:1px solid #222}
-    label{display:block;margin-bottom:6px;color:#ccc}
-    input{width:100%;padding:12px;border:none;border-radius:8px;background:#0a0a0a;color:#fff;margin-bottom:12px}
-    button{width:100%;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer}
-    .btn-primary{background:#ffd700;color:#000}
-    .btn-ghost{background:#000;border:1px solid #333;color:#bbb}
-    #reader{width:100%;height:340px;background:#000;border-radius:12px}
-    .msg{padding:10px;margin-top:10px;border-radius:8px;text-align:center;font-weight:bold}
-    .ok{background:#28a745;color:#fff}
-    .err{background:#e03a3a;color:#fff}
-    #log{background:#080808;padding:10px;border-radius:8px;color:#bbb;max-height:200px;overflow:auto;margin-top:10px;font-size:13px}
-  </style>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body {margin:0;font-family:Arial;background:#000;color:#ccc;}
+header {background:#0c0c0c;padding:15px;color:#ffd700;font-weight:bold;text-align:center;font-size:18px;}
+.container {max-width:900px;margin:auto;padding:20px;}
+.card {background:#111;padding:18px;border-radius:10px;margin-bottom:20px;border:1px solid #222;}
+input, select {width:100%;padding:12px;border:none;border-radius:8px;background:#0a0a0a;color:#fff;margin-bottom:12px;}
+button {width:100%;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;margin-bottom:8px;}
+.btn-primary {background:#ffd700;color:#000;}
+.btn-ghost {background:#000;border:1px solid #333;color:#bbb;}
+#reader {width:100%;height:340px;background:#000;border-radius:12px;}
+.msg {padding:10px;margin-top:10px;border-radius:8px;text-align:center;font-weight:bold;}
+.ok {background:#28a745;color:#fff;}
+.err {background:#e03a3a;color:#fff;}
+#log {background:#080808;padding:10px;border-radius:8px;color:#bbb;max-height:200px;overflow:auto;margin-top:10px;font-size:13px;}
+table {width:100%;border-collapse:collapse;margin-top:20px;}
+th,td {border-bottom:1px solid #333;padding:8px;text-align:left;}
+th {color:#ffd700;}
+.empty{text-align:center;color:#777;padding:20px;}
+</style>
 </head>
-
 <body>
-<header>📡 ESIP – Leitor Black Premium + DB Local</header>
+
+<header>📡 ESIP — Leitor Black Premium + Painel Admin</header>
 
 <div class="container">
 
-  <div class="card" id="loginCard">
-    <label>Senha de Acesso</label>
-    <input type="password" id="senha" placeholder="Digite a senha">
-    <button class="btn-primary" onclick="login()">Entrar</button>
-    <small>Senha padrão: <b>ESIP2025</b></small>
-  </div>
+<!-- LEITOR -->
+<div class="card" id="scanCard">
+<h2>Leitor de QR Code</h2>
+<div id="reader"></div>
+<button id="flashBtn" class="btn-primary" onclick="toggleFlash()">🔦 Lanterna</button>
+<button class="btn-primary" onclick="switchCamera()">📷 Trocar câmera</button>
+<div style="background:#0c0c0c;padding:12px;border-radius:10px;margin-top:12px;color:#fff;text-align:center">
+Entradas válidas: <b id="count">0</b>
+</div>
+<div id="msgArea"></div>
+<div id="log"></div>
+<button class="btn-primary" onclick="exportCSV()">Exportar CSV</button>
+<button class="btn-ghost" onclick="clearLog()">Limpar Log</button>
+</div>
 
-  <div class="card hidden" id="scanCard">
-    <div id="reader"></div>
-
-    <button id="flashBtn" class="btn-primary" style="margin-top:12px" onclick="toggleFlash()">🔦 Lanterna</button>
-    <button class="btn-primary" style="margin-top:8px" onclick="switchCamera()">📷 Trocar câmera</button>
-
-    <div style="background:#0c0c0c;padding:12px;border-radius:10px;margin-top:12px;color:#fff;text-align:center">
-      Entradas válidas: <b id="count">0</b>
-    </div>
-
-    <div id="msgArea"></div>
-    <div id="log"></div>
-
-    <button class="btn-primary" style="margin-top:10px" onclick="exportCSV()">Exportar CSV</button>
-    <button class="btn-ghost" style="margin-top:8px" onclick="clearLog()">Limpar Log</button>
-  </div>
+<!-- PAINEL ADMIN -->
+<div class="card">
+<h2>Painel de Administrador</h2>
+<label>Filtro CPF</label>
+<input type="text" id="filtroCPF" placeholder="Digite CPF">
+<label>Filtro Evento</label>
+<input type="text" id="filtroEvento" placeholder="Nome do evento">
+<button class="btn-primary" onclick="carregarPainel()">Aplicar Filtros</button>
+<p id="contador">Total: 0</p>
+<table>
+<thead>
+<tr><th>CPF</th><th>Evento</th><th>Código QR</th><th>Data/Hora</th></tr>
+</thead>
+<tbody id="lista"></tbody>
+</table>
+<div id="vazio" class="empty">Nenhum ingresso gerado ainda.</div>
 </div>
 
 <audio id="okSound" src="https://cdn.pixabay.com/audio/2023/06/29/audio_25c0700121.mp3"></audio>
@@ -60,211 +71,121 @@
 
 <script>
 /* =========================================================
-   BANCO DE DADOS — IndexedDB com proteção anti-duplicado
+   BANCO DE DADOS — IndexedDB
 ========================================================= */
 let db;
 const DB_NAME = "ESIP_LocalDB";
 const STORE_NAME = "checkins";
+let log = [];
 let dbReady = false;
 
-function initDB(){
-  let req = indexedDB.open(DB_NAME, 1);
-
+function initDB(callback){
+  let req = indexedDB.open(DB_NAME,1);
   req.onupgradeneeded = function(e){
     db = e.target.result;
     if(!db.objectStoreNames.contains(STORE_NAME)){
       db.createObjectStore(STORE_NAME, { keyPath: "codigo" });
     }
   };
-
   req.onsuccess = function(e){
     db = e.target.result;
     dbReady = true;
     loadLog();
+    if(callback) callback();
   };
-
-  req.onerror = function(){
-    alert("Erro ao iniciar banco local");
-  };
+  req.onerror = function(){ alert("Erro ao iniciar banco local"); };
 }
 
 function saveCheckin(data){
+  if(!dbReady) return;
   let tx = db.transaction([STORE_NAME], "readwrite");
   tx.objectStore(STORE_NAME).put(data);
 }
 
-function loadLog(){
+function getAllCheckins(callback){
+  if(!dbReady) return;
   let tx = db.transaction([STORE_NAME], "readonly");
   let req = tx.objectStore(STORE_NAME).getAll();
-  req.onsuccess = () => { log = req.result || []; updateUI(); };
+  req.onsuccess = () => callback(req.result || []);
 }
 
-function clearDB(){
+function clearDB(callback){
+  if(!dbReady) return;
   let tx = db.transaction([STORE_NAME], "readwrite");
-  tx.objectStore(STORE_NAME).clear().onsuccess = () => loadLog();
+  tx.objectStore(STORE_NAME).clear().onsuccess = ()=>{ loadLog(); if(callback) callback(); };
 }
 
 /* =========================================================
-   SISTEMA PRINCIPAL
+   LEITOR DE QR CODE
 ========================================================= */
 let html5Qr;
-let log = [];
 let cameraTrack = null;
 let flashOn = false;
 let cameras = [];
 let currentCamIndex = 0;
 
-function login(){
-  if(document.getElementById("senha").value !== "ESIP2025"){
-    return alert("Senha incorreta");
-  }
-
-  document.getElementById("loginCard").classList.add("hidden");
-  document.getElementById("scanCard").classList.remove("hidden");
-
-  // Tela cheia para escanear melhor
-  if(document.documentElement.requestFullscreen){
-    document.documentElement.requestFullscreen().catch(()=>{});
-  }
-
-  setTimeout(startScanner, 300);
-}
-
-async function startScanner(){
-  if(!dbReady) return setTimeout(startScanner, 200);
-
+function startScanner(){
   html5Qr = new Html5Qrcode("reader");
-
-  try{
-    cameras = await Html5Qrcode.getCameras();
-    if(!cameras.length) return alert("Nenhuma câmera encontrada!");
-
-    // Procurar câmera traseira automaticamente
-    let backCam = cameras.find(c =>
-      c.label.toLowerCase().includes("back") ||
-      c.label.toLowerCase().includes("environment") ||
-      c.label.toLowerCase().includes("traseira")
-    );
-
-    currentCamIndex = backCam ? cameras.indexOf(backCam) : 0;
-
-    await startCamByIndex(currentCamIndex);
-
-  }catch(e){
-    alert("Erro ao iniciar câmera");
-  }
+  Html5Qrcode.getCameras().then(camList=>{
+    cameras=camList;
+    currentCamIndex = cameras.findIndex(c=>c.label.toLowerCase().includes("back") || c.label.toLowerCase().includes("environment") || c.label.toLowerCase().includes("traseira"));
+    if(currentCamIndex<0) currentCamIndex=0;
+    startCamByIndex(currentCamIndex);
+  }).catch(()=>alert("Nenhuma câmera encontrada"));
 }
 
 async function startCamByIndex(i){
-  try{
-    await html5Qr.stop();
-  }catch(e){}
-
+  try{ await html5Qr.stop(); }catch(e){}
   let camId = cameras[i].id;
-
-  await html5Qr.start(
-    camId,
-    { fps: 10, qrbox: 260 },
-    decoded => processQR(decoded),
-  );
-
+  await html5Qr.start(camId, {fps:10, qrbox:260}, decoded => processQR(decoded));
   setTimeout(()=>{
-    let v = document.querySelector("#reader video");
-    if(v && v.srcObject){
-      cameraTrack = v.srcObject.getVideoTracks()[0];
+    let v=document.querySelector("#reader video");
+    if(v && v.srcObject) cameraTrack=v.srcObject.getVideoTracks()[0];
+  },600);
+}
+
+function processQR(code){
+  const okSound=document.getElementById("okSound");
+  const errSound=document.getElementById("errSound");
+
+  if(!code.toUpperCase().includes("ESIP")){
+    errSound.play();
+    return showTemporario("QR inválido", false);
+  }
+
+  getAllCheckins(all=>{
+    if(all.some(x=>x.codigo===code)){
+      errSound.play();
+      return showTemporario("JÁ USADO", false);
     }
-  }, 600);
+
+    let row = { codigo: code, hora: new Date().toISOString() };
+    log.push(row);
+    saveCheckin(row);
+
+    okSound.play();
+    showTemporario("VÁLIDO", true);
+    updateUIPanel();
+  });
+}
+
+function showTemporario(msg, ok){
+  const m=document.getElementById("msgArea");
+  m.className=ok?"msg ok":"msg err";
+  m.innerText=msg;
+  setTimeout(()=>{ m.innerText=""; m.className=""; },2000);
+}
+
+function toggleFlash(){
+  if(!cameraTrack) return alert("Câmera não pronta");
+  flashOn=!flashOn;
+  if(cameraTrack.getCapabilities().torch){
+    cameraTrack.applyConstraints({advanced:[{torch:flashOn}]}).catch(()=>{ flashOn=false; alert("Lanterna não suportada");});
+  } else { alert("Lanterna não suportada"); flashOn=false; }
+  document.getElementById("flashBtn").innerText=flashOn?"🔦 Desligar":"🔦 Lanterna";
 }
 
 function switchCamera(){
   if(!cameras.length) return;
-
-  currentCamIndex = (currentCamIndex + 1) % cameras.length;
-  startCamByIndex(currentCamIndex);
-}
-
-/* =========================================================
-   LEITURA DE QR
-========================================================= */
-function processQR(code){
-  const okSound = document.getElementById("okSound");
-  const errSound = document.getElementById("errSound");
-
-  // Forçar comparação maiúscula
-  if(!code.toUpperCase().includes("ESIP")){
-    errSound.play();
-    return show("QR inválido", false);
-  }
-
-  // Evitar duplicações
-  if(log.some(x => x.codigo === code)){
-    errSound.play();
-    return show("Já utilizado", false);
-  }
-
-  let row = {
-    codigo: code,
-    hora: new Date().toLocaleString()
-  };
-
-  log.push(row);
-  saveCheckin(row);
-
-  okSound.play();
-  show("Válido", true);
-  updateUI();
-}
-
-/* =========================================================
-   INTERFACE
-========================================================= */
-function toggleFlash(){
-  if(!cameraTrack) return alert("Câmera não pronta");
-
-  flashOn = !flashOn;
-
-  cameraTrack.applyConstraints({
-    advanced: [{ torch: flashOn }]
-  }).catch(() => {
-    flashOn = false;
-    alert("Lanterna não suportada");
-  });
-
-  document.getElementById("flashBtn").innerText =
-    flashOn ? "🔦 Desligar" : "🔦 Lanterna";
-}
-
-function show(msg, ok){
-  let m = document.getElementById("msgArea");
-  m.className = ok ? "msg ok" : "msg err";
-  m.innerText = msg;
-}
-
-function updateUI(){
-  document.getElementById("count").innerText = log.length;
-  document.getElementById("log").innerHTML =
-    log.map(r => `${r.hora} — ${r.codigo}`).join("<br>");
-}
-
-function clearLog(){
-  log = [];
-  clearDB();
-}
-
-function exportCSV(){
-  let csv = "codigo,hora\n";
-  log.forEach(r => csv += `${r.codigo},${r.hora}\n`);
-
-  let blob = new Blob([csv], {type:"text/csv"});
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "checkins.csv";
-  a.click();
-}
-
-/* INICIAR BD */
-initDB();
-</script>
-</body>
-</html>
-
+  currentCamIndex=(currentCamIndex+1)%cameras.length;
+  startCamByIndex(currentCamIndex)
