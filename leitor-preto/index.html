@@ -1,1 +1,386 @@
-<
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ESIP — Leitor Pro (Versão Pro Corrigida)</title>
+
+  <!-- html5-qrcode versão fixa -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#050505; --panel:#0c0c0c; --muted:#cfd8dc; --accent:#ffd54f; --ok:#16a34a; --err:#ef4444;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--muted);-webkit-font-smoothing:antialiased}
+    header{padding:14px 18px;display:flex;align-items:center;gap:12px;background:linear-gradient(90deg,#070707,#101010);border-bottom:1px solid #111}
+    .brand{color:var(--accent);font-weight:800}
+    .title{color:#fff;font-size:18px;margin:0}
+    .wrap{max-width:520px;margin:20px auto;padding:12px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;margin-bottom:14px;border:1px solid #111}
+    label{display:block;margin-bottom:8px;color:var(--muted)}
+    input[type=password]{width:100%;padding:12px;border-radius:8px;border:1px solid #222;background:#070707;color:#fff}
+    .row{display:flex;gap:8px}
+    button{cursor:pointer;border:none;padding:10px 12px;border-radius:10px;font-weight:700}
+    .btn-primary{background:linear-gradient(90deg,#333,#222);color:var(--accent);width:100%}
+    .btn-ghost{background:transparent;border:1px solid #222;color:var(--muted)}
+    .btn-flash{background:var(--accent);color:#000;width:100%}
+    .counter{background:#070707;padding:10px;border-radius:10px;text-align:center;margin-top:12px;color:#fff}
+    #reader{border-radius:8px;overflow:hidden;background:#000;height:360px;display:flex;align-items:center;justify-content:center}
+    #reader .hint{color:#666;font-size:14px}
+    .msg{margin-top:12px;padding:12px;border-radius:10px;color:#fff;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+    .msg.ok{background:var(--ok)}
+    .msg.err{background:var(--err)}
+    #log{max-height:200px;overflow:auto;margin-top:12px;background:#070707;padding:10px;border-radius:8px;color:var(--muted)}
+    .float{position:fixed;right:18px;bottom:18px;background:#111;color:var(--accent);width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 10px 30px rgba(0,0,0,0.6);z-index:999}
+    .small{font-size:13px;color:var(--muted)}
+    .hidden{display:none}
+    footer{max-width:520px;margin:8px auto 30px;padding:0 12px;color:#666;font-size:13px; text-align:center}
+    /* responsive */
+    @media (max-width:540px){ #reader{height:280px} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">📡 ESIP</div>
+    <h1 class="title">Leitor Pro — Versão Pro</h1>
+  </header>
+
+  <main class="wrap">
+    <!-- LOGIN -->
+    <section class="card" id="loginCard">
+      <label for="senha">Senha do operador</label>
+      <input id="senha" type="password" placeholder="Digite a senha" autocomplete="off" />
+      <div style="margin-top:12px">
+        <button class="btn-primary" onclick="doLogin()">Entrar</button>
+      </div>
+      <div class="small" style="margin-top:8px">Senha padrão: <b>ESIP2025</b></div>
+    </section>
+
+    <!-- SCANNER -->
+    <section class="card hidden" id="scanCard" aria-hidden="true">
+      <div id="reader" aria-live="polite"><div class="hint">Aguardando câmera...</div></div>
+
+      <div style="margin-top:12px">
+        <button id="btnFlash" class="btn-flash" onclick="toggleTorch()">🔦 Ligar Lanterna</button>
+      </div>
+
+      <div class="counter" style="margin-top:12px">
+        Entradas válidas: <b id="count">0</b>
+      </div>
+
+      <div id="msgArea" style="margin-top:12px"></div>
+
+      <h3 style="margin-top:12px">Log de leituras</h3>
+      <div id="log"></div>
+
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn-primary" style="flex:1" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn-ghost" style="flex:1" onclick="clearLog()">Limpar</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="float" title="Tema" onclick="toggleTheme()">🌓</div>
+  <footer>ESIP • Leitor Pro — use com permissão de câmera</footer>
+
+  <audio id="okSound" src="https://cdn.pixabay.com/download/audio/2023/06/29/audio_25c0700121.mp3?filename=success-158310.mp3"></audio>
+  <audio id="errSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_4e6261a0ef.mp3?filename=error-126627.mp3"></audio>
+
+<script>
+/* =========   CONFIG  ========= */
+const OPERATOR_PASSWORD = 'ESIP2025';
+/* ============================= */
+
+let used = new Set();
+let log = [];
+let count = 0;
+
+let html5QrScanner = null;
+let activeCameraId = null;
+let activeTrack = null;
+let messageVisible = false; // bloqueia leituras enquanto mensagem exibida
+
+// util
+const $ = id => document.getElementById(id);
+
+// LOGIN
+function doLogin(){
+  const s = $('senha').value.trim();
+  if(s === OPERATOR_PASSWORD){
+    $('loginCard').classList.add('hidden');
+    $('scanCard').classList.remove('hidden');
+    $('scanCard').setAttribute('aria-hidden','false');
+    setTimeout(startScanner, 250);
+  } else {
+    alert('Senha incorreta');
+  }
+}
+
+// tenta escolher câmera frontal (label) ou última
+function pickFrontCamera(cameras){
+  if(!cameras || !cameras.length) return null;
+  const prefer = cameras.find(c => {
+    if(!c.label) return false;
+    const l = c.label.toLowerCase();
+    return l.includes('front') || l.includes('frontal') || l.includes('selfie') || l.includes('user');
+  });
+  if(prefer) return prefer.id;
+  return cameras[cameras.length - 1].id;
+}
+
+// INICIAR SCANNER
+async function startScanner(){
+  if(html5QrScanner) return;
+  if(typeof Html5Qrcode === 'undefined'){
+    alert('Biblioteca html5-qrcode não carregada');
+    return;
+  }
+
+  html5QrScanner = new Html5Qrcode('reader', { verbose: false });
+
+  try {
+    const cameras = await Html5Qrcode.getCameras();
+    if(!cameras || cameras.length === 0){
+      showMsg('Nenhuma câmera encontrada', false);
+      return;
+    }
+
+    const camId = pickFrontCamera(cameras);
+    activeCameraId = camId;
+
+    // qrbox dimension adaptativo
+    const size = Math.min(360, Math.floor(window.innerWidth * 0.8));
+    const config = { fps: 10, qrbox: { width: size, height: size } };
+
+    await html5QrScanner.start(
+      camId,
+      config,
+      decodedText => {
+        // bloqueia se mensagem visível
+        if(messageVisible) return;
+        handleScanned(decodedText);
+      },
+      errorMsg => {
+        // leitura em background, opcional log
+        // console.debug('scan error:', errorMsg);
+      }
+    );
+
+    // tentar pegar track para torch
+    // o html5-qrcode injeta um <video> dentro do container — procuramos por ele
+    setTimeout( () => {
+      try{
+        const v = document.querySelector('#reader video');
+        if(v && v.srcObject){
+          const tracks = v.srcObject.getVideoTracks();
+          if(tracks && tracks.length) activeTrack = tracks[0];
+        }
+      }catch(e){/*ignore*/}
+    }, 500);
+
+    showMsg('Câmera pronta — aponte para o QR', true, 1800);
+  } catch(err){
+    console.error('Erro ao iniciar scanner', err);
+    alert('Erro ao acessar câmera: ' + (err && err.message ? err.message : err));
+    if(html5QrScanner){
+      try{ html5QrScanner.clear(); }catch(e){}
+      html5QrScanner = null;
+    }
+  }
+}
+
+// STOP scanner / cleanup
+async function stopScanner(){
+  if(!html5QrScanner) return;
+  try{
+    await html5QrScanner.stop();
+    html5QrScanner.clear();
+  }catch(e){ /* ignore */ }
+  html5QrScanner = null;
+  activeCameraId = null;
+  activeTrack = null;
+}
+
+// Torch toggle (lanterna)
+async function toggleTorch(){
+  if(!activeTrack){
+    alert('Lanterna não disponível (câmera não pronta ou não exposta).');
+    return;
+  }
+  const caps = activeTrack.getCapabilities ? activeTrack.getCapabilities() : {};
+  if(!caps.torch){
+    alert('Lanterna (torch) não suportada por esta câmera.');
+    return;
+  }
+  try{
+    const current = activeTrack.getSettings ? !!activeTrack.getSettings().torch : false;
+    await activeTrack.applyConstraints({ advanced: [{ torch: !current }] });
+  }catch(err){
+    console.warn('Erro ao alternar torch', err);
+    alert('Não foi possível alternar a lanterna.');
+  }
+}
+
+// HANDLE SCANNED TEXT
+function handleScanned(text){
+  const trimmed = (text||'').toString().trim();
+  if(!trimmed) return;
+
+  // bloquear novas leituras até operador fechar a mensagem
+  messageVisible = true;
+
+  // tentar parse JSON
+  let codigo = null;
+  try {
+    const obj = JSON.parse(trimmed);
+    // procura chaves comuns
+    codigo = obj.codigo || obj.code || obj.id || obj.CODIGO || obj.ID;
+    // se obj for string/flat containing code like "ESIP-..." fallback
+    if(!codigo && typeof obj === 'string' && obj.startsWith('ESIP')) codigo = obj;
+  } catch(e){
+    // não JSON, talvez é uma string simples
+    if(trimmed.startsWith('ESIP')) codigo = trimmed;
+  }
+
+  // sons
+  const okSound = $('okSound');
+  const errSound = $('errSound');
+
+  if(!codigo){
+    // inválido
+    try{ errSound.play().catch(()=>{}); }catch(e){}
+    try{ navigator.vibrate && navigator.vibrate(200); }catch(e){}
+    showPersistentMessage('QR INVÁLIDO', false);
+    logPush(trimmed, 'inválido');
+    return;
+  }
+
+  // já usado?
+  if(used.has(codigo)){
+    try{ errSound.play().catch(()=>{}); }catch(e){}
+    try{ navigator.vibrate && navigator.vibrate(200); }catch(e){}
+    showPersistentMessage('INGRESSO JÁ UTILIZADO', false);
+    logPush(codigo, 'já usado');
+    return;
+  }
+
+  // válido
+  used.add(codigo);
+  count += 1;
+  $('count').innerText = count;
+  try{ okSound.play().catch(()=>{}); }catch(e){}
+  try{ navigator.vibrate && navigator.vibrate([80,40,80]); }catch(e){}
+  showPersistentMessage('INGRESSO VÁLIDO', true);
+  logPush(codigo, 'válido');
+}
+
+// show temporary message (auto hide ms)
+function showMsg(text, ok=true, ms=2000){
+  const area = $('msgArea');
+  area.innerHTML = `<div class="msg ${ok?'ok':'err'}">${escapeHtml(text)}</div>`;
+  if(ms>0) setTimeout(()=> area.innerHTML='', ms);
+}
+
+// show persistent message (operator closes)
+function showPersistentMessage(text, ok){
+  const area = $('msgArea');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (ok ? 'ok' : 'err');
+  const span = document.createElement('span'); span.textContent = text;
+  const btn = document.createElement('button');
+  btn.style.background = 'transparent';
+  btn.style.border = 'none';
+  btn.style.color = '#fff';
+  btn.style.fontSize = '20px';
+  btn.style.cursor = 'pointer';
+  btn.textContent = '×';
+  btn.onclick = () => {
+    div.remove();
+    messageVisible = false; // desbloqueia leitura
+  };
+  div.appendChild(span);
+  div.appendChild(btn);
+  area.appendChild(div);
+}
+
+// logging
+function logPush(codigo, status){
+  const entry = { codigo, status, hora: new Date().toLocaleString() };
+  log.push(entry);
+  renderLog();
+}
+
+function renderLog(){
+  const el = $('log');
+  el.innerHTML = log.slice().reverse().map(r => {
+    return `<div style="padding:8px 0;border-bottom:1px solid #0a0a0a"><b>${escapeHtml(r.codigo)}</b><br><small style="color:#8899a0">${escapeHtml(r.status)} — ${escapeHtml(r.hora)}</small></div>`;
+  }).join('');
+}
+
+function clearLog(){
+  if(!confirm('Limpar histórico?')) return;
+  log = [];
+  used.clear();
+  count = 0;
+  $('count').innerText = '0';
+  renderLog();
+}
+
+// CSV export
+function exportCSV(){
+  if(!log.length){ alert('Sem registros'); return; }
+  let csv = 'codigo,status,hora\n';
+  log.forEach(l => {
+    // wrap fields that may contain commas/quotes
+    csv += `"${l.codigo.replace(/"/g,'""')}","${l.status.replace(/"/g,'""')}","${l.hora.replace(/"/g,'""')}"\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'esip_entradas.csv'; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// theme toggle
+function toggleTheme(){
+  document.body.classList.toggle('light-mode');
+}
+
+// escape
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+// cleanup on unload
+window.addEventListener('beforeunload', () => {
+  try{ stopScanner(); }catch(e){}
+});
+
+// utility stop scanner wrapper
+async function stopScanner(){
+  if(html5QrScanner){
+    try{ await html5QrScanner.stop(); }catch(e){}
+    try{ html5QrScanner.clear(); }catch(e){}
+    html5QrScanner = null;
+  }
+  activeCameraId = null;
+  activeTrack = DOCTYPE; a.href = url; a.download = `${EVENT_ID}_entradas.csv`; a.click();
+    }
+
+    function toggleTheme(){ document.body.classList.toggle('light'); }
+
+    // detecção automática de ambiente escuro (se for útil para UI)
+    setTimeout(()=>{
+      try{
+        const lux = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if(lux) document.body.classList.add('light');
+      }catch(e){}
+    },800);
+  </script>
+</body>
+</html>
+;
+}
+</script>
+</body>
+</html>
