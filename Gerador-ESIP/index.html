@@ -91,13 +91,13 @@
 
 <script>
 let ingressosGerados = [];
-const URL_ADMINISTRADOR = "URL_DO_ADMINISTRADOR_AQUI"; // coloque sua URL real aqui
+const URL_ADMINISTRADOR = "URL_DO_ADMINISTRADOR_AQUI"; // Substitua pela sua URL real
 
 function gerarIngresso() {
-    let nome = document.getElementById("nome").value.trim();
-    let cpf  = document.getElementById("cpf").value.trim();
-    let evento = document.getElementById("evento").value.trim();
-    let quantidade = parseInt(document.getElementById("quantidade").value);
+    const nome = document.getElementById("nome").value.trim();
+    const cpf  = document.getElementById("cpf").value.trim();
+    const evento = document.getElementById("evento").value.trim();
+    const quantidade = parseInt(document.getElementById("quantidade").value);
 
     // Validação
     if (!nome || !cpf || !evento) {
@@ -120,11 +120,11 @@ function gerarIngresso() {
     qrContainer.innerHTML = "";
 
     for (let i = 1; i <= quantidade; i++) {
-        let codigo = "ESIP-" + Math.random().toString(36).substr(2, 8);
+        const codigo = "ESIP-" + Math.random().toString(36).substr(2, 8);
         ingressosGerados.push({ id: codigo });
 
         // Criar div individual para cada QR Code
-        let qrDiv = document.createElement("div");
+        const qrDiv = document.createElement("div");
         qrDiv.className = "qr-item";
         qrContainer.appendChild(qrDiv);
 
@@ -161,13 +161,13 @@ function baixarPDF() {
         return;
     }
 
-    let { jsPDF } = window.jspdf;
-    let doc = new jsPDF();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text("📡 ESIP-Sistemas – Ingresso", 20, 20);
 
     ingressosGerados.forEach((ingresso, index) => {
-        let y = 40 + (index % 10) * 40; // 10 ingressos por página
+        const y = 40 + (index % 10) * 40; // 10 ingressos por página
         if (index > 0 && index % 10 === 0) doc.addPage();
         doc.setFontSize(12);
         doc.text(`Ingresso ${index+1}`, 20, y);
