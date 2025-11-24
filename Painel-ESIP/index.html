@@ -1,1 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Controle - ESIP</title>
+
+<style>
+  body {margin:0; font-family:Arial; background:#000; color:#fff; padding:20px;}
+  h1 {color:#ffd700; text-align:center;}
+  .box {background:#111; padding:20px; border-radius:10px; max-width:900px; margin:20px auto;}
+  table {width:100%; border-collapse:collapse; margin-top:20px;}
+  th, td {border-bottom:1px solid #333; padding:10px; text-align:left;}
+  th {color:#ffd700;}
+  .empty {text-align:center; color:#777; padding:20px;}
+  input {padding:8px; border-radius:5px; border:none; margin-right:10px; width:150px;}
+  button {padding:8px 15px; border:none; border-radius:5px; background:#03a9f4; color:white; cursor:pointer; margin-right:10px;}
+  button:hover {background:#0288d1;}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+</head>
+<body>
+
+<h1>📡 ESIP-Sistemas — Painel do Administrador</h1>
+
+<div class="box">
+  <p>Este painel exibe todos os ingressos gerados pelo sistema do comprador.</p>
+  
+  <div>
+    <input type="text" id="filtroCPF" placeholder="Filtrar por CPF">
+    <input type="text" id="filtroEvento" placeholder="Filtrar por Evento">
+    <button onclick="carregar()">Filtrar</button>
+    <span id="contador"></span>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>CPF</th>
+        <th>Evento</th>
+        <th>ID</th>
+        <th>Data/Hora</th>
+      </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+  </table>
+  <div id="vazio" class="empty">Nenhum ingresso gerado ainda.</div>
+</div>
+
+<script>
+  // Configuração Firebase (mesma do gerador)
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_MESSAGING_ID",
+    appId: "SEU_APP_ID"
+  };
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  function carregar() {
+    const corpo = document.getElementById('lista');
+    const vazio = document.getElementById('vazio');
+
+    firebase.database().ref('ingressos').once('value').then(snapshot => {
+      let lista = snapshot.val() ? Object.values(snapshot.val()) : [];
+
+      const filtroCPF = document.getElementById('filtroCPF').value.trim();
+      const filtroEvento = document.getElementById('filtroEvento').value.trim().toLowerCase();
+      if(filtroCPF) lista = lista.filter(i => i.cpf.includes(filtroCPF));
+      if(filtroEvento) lista = lista.filter(i => i.evento.toLowerCase().includes(filtroEvento));
+
+      corpo.innerHTML = '';
+      if(lista.length === 0) { vazio.style.display = 'block'; } 
+      else {
+        vazio.style.display = 'none';
+        lista.forEach(item => {
+          const tr = document.createElement('tr');
+          const horaFormatada = new Date(item.hora).toLocaleString();
+          tr.innerHTML = `<td>${item.cpf}</td><td>${item.evento}</td><td>${item.id}</td><td>${horaFormatada}</td>`;
+          corpo.appendChild(tr);
+        });
+      }
+      document.getElementById('contador').textContent = `Total de ingressos: ${lista.length}`;
+    });
+  }
+
+  carregar();
+  setInterval(carregar, 5000); // Atualiza a cada 5s
+</script>
+
+</body>
+</html>
 
