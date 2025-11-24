@@ -1,1 +1,137 @@
 
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Ingressos - ESIP</title>
+
+<style>
+    body { font-family: Arial, sans-serif; background:#0d0d0d; color:white; text-align:center; margin:0; padding:0; }
+    header { background:#1b1b1b; padding:15px; font-size:22px; font-weight:bold; border-bottom:2px solid #333; }
+    .container { margin-top:25px; padding:20px; }
+    #titulo-editavel { font-size:24px; font-weight:bold; background:#333; color:white; padding:10px; border:none; border-radius:8px; width:80%; text-align:center; margin-bottom:20px; }
+    input, input[type=number] { width:90%; padding:12px; font-size:18px; border-radius:8px; border:none; margin-bottom:5px; }
+    .error-msg { color:#ff4d4d; font-size:14px; margin-bottom:10px; }
+    button { width:90%; padding:15px; background:#03a9f4; border:none; color:white; font-size:20px; border-radius:8px; cursor:pointer; margin-top:10px; }
+    button:hover { background:#0288d1; }
+    #qrcode { margin-top:25px; display:flex; flex-wrap:wrap; justify-content:center; }
+    .qr-item { margin:10px; }
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+</head>
+<body>
+
+<header>📡 ESIP-Sistemas – Anti-Fraude</header>
+
+<div class="container">
+
+    <input type="text" id="titulo-editavel" value="AUTORIZAR O ACESSO">
+
+    <input type="text" id="nome" placeholder="Nome completo">
+    <input type="text" id="cpf" placeholder="CPF apenas números">
+    <div id="cpf-error" class="error-msg"></div>
+    <input type="text" id="evento" placeholder="Nome do evento">
+    <input type="number" id="quantidade" placeholder="Quantidade de ingressos" min="1" value="1">
+
+    <button onclick="gerarIngresso()">Gerar QR Code</button>
+    <button onclick="baixarPDF()">Baixar PDF</button>
+
+    <div id="qrcode"></div>
+
+</div>
+
+<script>
+  // Substitua pelos dados do seu Firebase
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_MESSAGING_ID",
+    appId: "SEU_APP_ID"
+  };
+
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  let ingressosGerados = [];
+
+  function gerarIngresso() {
+      const nome = document.getElementById("nome").value.trim();
+      const cpf  = document.getElementById("cpf").value.trim();
+      const evento = document.getElementById("evento").value.trim();
+      const quantidade = parseInt(document.getElementById("quantidade").value);
+      const cpfError = document.getElementById("cpf-error");
+
+      cpfError.textContent = "";
+      if (!nome || !cpf || !evento || quantidade < 1) { alert("Preencha todos os campos corretamente!"); return; }
+      if (!/^\d{11}$/.test(cpf)) { cpfError.textContent = "⚠️ CPF inválido! Deve conter exatamente 11 números."; return; }
+
+      ingressosGerados = [];
+      const qrContainer = document.getElementById("qrcode");
+      qrContainer.innerHTML = "";
+
+      for (let i = 0; i < quantidade; i++) {
+          const codigo = "ESIP-" + Math.random().toString(36).slice(2,10);
+          const ingresso = { id: codigo, nome, cpf, evento, hora: new Date().toISOString() };
+          ingressosGerados.push(ingresso);
+
+          // Salvar no Firebase
+          firebase.database().ref('ingressos/' + codigo).set(ingresso);
+
+          // Gerar QR Code
+          const qrDiv = document.createElement("div");
+          qrDiv.className = "qr-item";
+          qrContainer.appendChild(qrDiv);
+          new QRCode(qrDiv, { text: `${ingresso.id}|${ingresso.cpf}`, width:150, height:150 });
+      }
+
+      // Salvar localmente
+      localStorage.setItem('ESIP_INGRESSOS', JSON.stringify(ingressosGerados));
+      alert("Ingresso(s) gerado(s) com sucesso!");
+  }
+
+  function baixarPDF() {
+      if (ingressosGerados.length === 0) { alert("Nenhum ingresso gerado para baixar!"); return; }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      doc.text("📡 ESIP-Sistemas – Ingresso", 20, 15);
+
+      ingressosGerados.forEach((ingresso, index) => {
+          const itemsPerPage = 5;
+          const yBase = 20;
+          const spacing = 60;
+          const y = yBase + (index % itemsPerPage) * spacing;
+          if (index > 0 && index % itemsPerPage === 0) doc.addPage();
+
+          doc.setFontSize(12);
+          doc.text(`ID: ${ingresso.id}`, 20, y);
+          doc.text(`CPF: ${ingresso.cpf}`, 20, y+6);
+          doc.text(`Nome: ${ingresso.nome}`, 20, y+12);
+          doc.text(`Evento: ${ingresso.evento}`, 20, y+18);
+          doc.text(`Quantidade: 1`, 20, y+24);
+
+          const qrImg = document.querySelectorAll(".qr-item img")[index];
+          if(qrImg) {
+              const qrX = (doc.internal.pageSize.width - 50) / 2;
+              const qrY = y + 35;
+              doc.addImage(qrImg.src,"PNG",qrX,qrY,50,50);
+          }
+      });
+
+      doc.save("ingresso.pdf");
+  }
+</script>
+
+</body>
+</html>
