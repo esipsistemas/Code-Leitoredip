@@ -1,1 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📡 ESIP-Sistemas - Painel</title>
+
+<style>
+  :root {
+    --bg-color: #121212;
+    --text-color: #eee;
+    --box-bg: #1e1e1e;
+    --primary: #03a9f4;
+    --primary-dark: #0288d1;
+    --empty-color: #aaa;
+  }
+  body {
+    margin:0; font-family:Arial; background:var(--bg-color); color:var(--text-color); padding:20px;
+  }
+  h1,h2{text-align:center;color:var(--primary);}
+  .box{
+    background:var(--box-bg); padding:20px; border-radius:10px; margin:20px auto; max-width:900px; box-shadow:0 2px 10px rgba(0,0,0,0.5);
+  }
+  input{padding:5px; margin-right:10px; border-radius:5px; border:1px solid #555; margin-bottom:5px; background:#222; color:#eee;}
+  button{padding:5px 10px; border:none; border-radius:5px; background:var(--primary); color:#fff; cursor:pointer; margin-right:10px;}
+  button:hover{background:var(--primary-dark);}
+  table{width:100%; border-collapse:collapse; margin-top:10px;}
+  th,td{border-bottom:1px solid #555; padding:10px; text-align:center;}
+  th{background:var(--primary); color:#fff;}
+  .empty{text-align:center; color:var(--empty-color); padding:20px;}
+  #qrGerado img{margin-top:10px;}
+  @media(max-width:600px){
+    input, button{width:100%; margin-bottom:10px;}
+    .filters, .qr-buttons{display:flex; flex-direction:column;}
+  }
+</style>
+
+<!-- Firebase compatível -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- QR Scanner UMD -->
+<script src="https://cdn.jsdelivr.net/npm/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="box" id="loginBox">
+  <h1>📡 ESIP-Sistemas — Login Admin</h1>
+  <div>
+    <input type="text" id="loginUser" placeholder="Digite seu usuário"><br>
+    <input type="password" id="loginPass" placeholder="Digite sua senha"><br>
+    <button>Entrar</button>
+  </div>
+</div>
+
+<!-- PAINEL -->
+<div id="painelBox" style="display:none;">
+  <div id="boasVindas" style="text-align:center; font-size:16px; margin-bottom:10px; color:#03a9f4; display:none;"></div>
+
+  <div class="box">
+    <h1>📡 Painel do Administrador</h1>
+    <div style="display:flex; justify-content:center; margin-bottom:20px; position:relative; width:120px; height:120px;">
+      <svg width="120" height="120">
+        <circle r="50" cx="60" cy="60" stroke="#555" stroke-width="10" fill="transparent"/>
+        <circle id="progressCircle" r="50" cx="60" cy="60" stroke="#03a9f4" stroke-width="10" fill="transparent"
+          stroke-dasharray="314" stroke-dashoffset="314" transform="rotate(-90 60 60)"/>
+      </svg>
+      <div id="contador" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:18px; font-weight:bold;">0</div>
+    </div>
+
+    <div class="filters" style="margin-bottom:15px;">
+      <input type="text" id="filtroCPF" placeholder="Filtrar por CPF" maxlength="11">
+      <input type="text" id="filtroEvento" placeholder="Filtrar por Evento">
+      <input type="text" id="filtroNomeEvento" placeholder="Filtrar por Nome do Evento">
+      <button onclick="carregar()">Filtrar</button>
+    </div>
+
+    <button onclick="exportarCSV()">Exportar CSV (Admin)</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>CPF</th>
+          <th>Evento</th>
+          <th>Nome do Evento</th>
+          <th>Data/Hora</th>
+          <th>QR Code</th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+    </table>
+
+    <div id="vazio" class="empty">Nenhum ingresso gerado ainda.</div>
+  </div>
+
+  <div class="box">
+    <h2>Gerador de QR e PDF do Cliente</h2>
+    <div class="qr-buttons">
+      <input type="text" id="geradorCPF" placeholder="CPF" maxlength="11">
+      <input type="text" id="geradorNomeEvento" placeholder="Nome do Evento">
+      <input type="text" id="geradorEvento" placeholder="Evento">
+      <button onclick="gerarIngresso()">Gerar Ingresso / QR</button>
+      <button onclick="exportarPDFCliente()">Exportar PDF</button>
+      <button onclick="scanQR()">Verificar Ingresso (QR Scanner)</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+    <div id="qrGerado"></div>
+    <video id="preview" style="width:100%; max-width:400px; display:none;"></video>
+  </div>
+</div>
+
+<script>
+  // ===== Usuário e senha configuráveis =====
+  const CONFIG_LOGIN = { usuario: "SOUSA", senha: "ESIP-2025" };
+
+  const loginBox = document.getElementById('loginBox');
+  const painelBox = document.getElementById('painelBox');
+
+  function mostrarPainel() {
+    loginBox.style.display = 'none';
+    painelBox.style.display = 'block';
+    const boasVindas = document.getElementById('boasVindas');
+    if(boasVindas){
+      boasVindas.textContent = `Bem-vindo, ${CONFIG_LOGIN.usuario}!`;
+      boasVindas.style.display = 'block';
+    }
+    carregar();
+    setInterval(carregar, 5000);
+  }
+
+  function login() {
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    if (!user || !pass) { alert('Preencha usuário e senha!'); return; }
+    if (user === CONFIG_LOGIN.usuario && pass === CONFIG_LOGIN.senha) {
+      localStorage.setItem('logado', 'true');
+      mostrarPainel();
+    } else {
+      alert('Usuário ou senha incorretos!');
+    }
+  }
+
+  document.querySelector('#loginBox button').addEventListener('click', login);
+  document.getElementById('loginPass').addEventListener('keypress', e => { if(e.key==='Enter') login(); });
+
+  function logout() {
+    localStorage.removeItem('logado');
+    painelBox.style.display = 'none';
+    loginBox.style.display = 'block';
+    document.getElementById('loginUser').value = '';
+    document.getElementById('loginPass').value = '';
+  }
+
+  if (localStorage.getItem('logado') === 'true') mostrarPainel();
+
+  // ===== Firebase =====
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+    projectId: "SEU_PROJETO",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_MESSAGING_ID",
+    appId: "SEU_APP_ID"
+  };
+  firebase.initializeApp(firebaseConfig);
+  let ingressos = [];
+
+  function atualizarContador(){
+    const total = ingressos.length;
+    const meta = 100;
+    const percentage = Math.min(total/meta,1);
+    const circle = document.getElementById('progressCircle');
+    const radius = 50;
+    const circumference = 2*Math.PI*radius;
+    const offset = circumference*(1-percentage);
+    circle.style.transition='stroke-dashoffset 0.5s ease';
+    circle.style.strokeDasharray=circumference;
+    circle.style.strokeDashoffset=offset;
+    document.getElementById('contador').textContent=total;
+  }
+
+  window.carregar = function(){
+    firebase.database().ref('ingressos').once('value').then(snapshot=>{
+      ingressos = snapshot.val()?Object.values(snapshot.val()):[];
+      const filtroCPF = document.getElementById('filtroCPF').value.trim();
+      const filtroEvento = document.getElementById('filtroEvento').value.trim().toLowerCase();
+      const filtroNome = document.getElementById('filtroNomeEvento').value.trim().toLowerCase();
+      let listaFiltrada = ingressos;
+      if(filtroCPF) listaFiltrada = listaFiltrada.filter(i=>i.cpf.includes(filtroCPF));
+      if(filtroEvento) listaFiltrada = listaFiltrada.filter(i=>i.evento.toLowerCase().includes(filtroEvento));
+      if(filtroNome) listaFiltrada = listaFiltrada.filter(i=>i.nomeEvento.toLowerCase().includes(filtroNome));
+      const corpo = document.getElementById('lista');
+      corpo.innerHTML='';
+      if(listaFiltrada.length===0){
+        document.getElementById('vazio').style.display='block';
+      } else {
+        document.getElementById('vazio').style.display='none';
+        listaFiltrada.forEach(i=>{
+          const tr=document.createElement('tr');
+          const dataHora=new Date(i.hora).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+          const qrURL=`https://chart.googleapis.com/chart?cht=qr&chs=100x100&chl=${encodeURIComponent(i.id)}`;
+          tr.innerHTML=`<td>${i.id}</td><td>${i.cpf}</td><td>${i.evento}</td><td>${i.nomeEvento}</td><td>${dataHora}</td><td><img src="${qrURL}" width="50"></td>`;
+          corpo.appendChild(tr);
+        });
+      }
+      atualizarContador();
+    });
+  };
+
+  window.gerarIngresso = function(){
+    const cpf = document.getElementById('geradorCPF').value.trim();
+    const nomeEvento = document.getElementById('geradorNomeEvento').value.trim();
+    const evento = document.getElementById('geradorEvento').value.trim();
+    if(!/^\d{11}$/.test(cpf)){ alert('CPF deve ter 11 dígitos'); return; }
+    if(!nomeEvento || !evento){ alert('Preencha todos os campos'); return; }
+    const id='ID'+Date.now();
+    const hora=Date.now();
+    const ingresso={id,cpf,evento,nomeEvento,hora};
+    firebase.database().ref('ingressos/'+id).set(ingresso);
+    document.getElementById('qrGerado').innerHTML=`<img src="https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(id)}">`;
+    carregar();
+  };
+
+  window.exportarCSV = function(){
+    if(ingressos.length===0){ alert('Nenhum ingresso para exportar'); return; }
+    const headers=['ID','CPF','Evento','Nome do Evento','Data/Hora'];
+    const rows=ingressos.map(i=>[
+      i.id,i.cpf,i.evento,i.nomeEvento,new Date(i.hora).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})
+    ]);
+    let csv=headers.join(',')+'\n';
+    rows.forEach(r=>csv+=r.map(f=>`"${f}"`).join(',')+'\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url; link.download='ingressos.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  window.exportarPDFCliente = async function(){
+    const cpf=document.getElementById('geradorCPF').value.trim();
+    if(!/^\d{11}$/.test(cpf)){ alert('CPF inválido'); return; }
+    const ingressosCliente=ingressos.filter(i=>i.cpf===cpf);
+    if(ingressosCliente.length===0){ alert('Nenhum ingresso encontrado'); return; }
+    const { jsPDF }=window.jspdf;
+    const doc=new jsPDF();
+    function toDataURL(url){return fetch(url).then(r=>r.blob()).then(blob=>new Promise(resolve=>{const reader = new FileReader();reader.onloadend = ()=>resolve(reader.result);reader.readAsDataURL(blob);}));}
+    for(let index=0; index<ingressosCliente.length; index++){
+      const i = ingressosCliente[index];
+      doc.setFontSize(16); doc.text("📡 ESIP-Sistemas — Ingresso",105,20,{align:"center"});
+      doc.setFontSize(12);
+      const dataHora=new Date(i.hora).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      doc.text(`ID: ${i.id}`,105,40,{align:"center"});
+      doc.text(`CPF: ${i.cpf}`,105,50,{align:"center"});
+      doc.text(`Evento: ${i.evento}`,105,60,{align:"center"});
+      doc.text(`Nome do Evento: ${i.nomeEvento}`,105,70,{align:"center"});
+      doc.text(`Data/Hora: ${dataHora}`,105,80,{align:"center"});
+      const qrURL=`https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(i.id)}`;
+      const qrDataUrl = await toDataURL(qrURL);
+      doc.addImage(qrDataUrl,'PNG',55,90,100,100);
+      if(index<ingressosCliente.length-1){ doc.addPage(); }
+    }
+    doc.save(`ingressos_${cpf}.pdf`);
+  };
+
+  window.scanQR = function(){
+    const video=document.getElementById('preview');
+    video.style.display='block';
+    let scanner = new QrScanner(video,result=>{
+      scanner.stop();
+      video.style.display='none';
+      const ingressoEncontrado=ingressos.find(i=>i.id===result);
+      if(ingressoEncontrado){
+        alert(`Ingresso válido!\nEvento: ${ingressoEncontrado.evento}\nNome do Evento: ${ingressoEncontrado.nomeEvento}`);
+      } else {
+        alert('Ingresso não encontrado!');
+      }
+    });
+    scanner.start();
+  };
+
+</script>
+</body>
+</html>
 
