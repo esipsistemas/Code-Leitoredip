@@ -1,1 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📡 ESIP-Sistemas — Painel de Controle</title>
+<style>
+  body {margin:0; font-family:Arial; background:#000; color:#fff; padding:20px;}
+  h1 {color:#ffd700; text-align:center;}
+  .box {background:#111; padding:20px; border-radius:10px; max-width:900px; margin:20px auto;}
+  table {width:100%; border-collapse:collapse; margin-top:20px;}
+  th, td {border-bottom:1px solid #333; padding:10px; text-align:left;}
+  th {color:#ffd700;}
+  .empty {text-align:center; color:#777; padding:20px;}
+  input {padding:8px; border-radius:5px; border:none; margin-right:10px; width:150px;}
+  button {padding:8px 15px; border:none; border-radius:5px; background:#03a9f4; color:white; cursor:pointer; margin-right:10px;}
+  button:hover {background:#0288d1;}
+</style>
+</head>
+<body>
+<h1>📡 ESIP-Sistemas — Painel do Administrador</h1>
+
+<div class="box">
+  <p>Este painel exibe todos os ingressos gerados pelo sistema do comprador.</p>
+  
+  <div>
+    <input type="text" id="filtroCPF" placeholder="Filtrar por CPF">
+    <input type="text" id="filtroEvento" placeholder="Filtrar por Evento">
+    <button onclick="carregar()">Filtrar</button>
+    <button onclick="exportarCSV()">Exportar lista</button>
+    <span id="contador"></span>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>CPF</th>
+        <th>Evento</th>
+        <th>Código QR</th>
+        <th>Data/Hora</th>
+      </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+  </table>
+  <div id="vazio" class="empty">Nenhum ingresso gerado ainda.</div>
+</div>
+
+<script>
+function carregar() {
+  let lista = JSON.parse(localStorage.getItem('ESIP_INGRESSOS') || '[]');
+  const corpo = document.getElementById('lista');
+  const vazio = document.getElementById('vazio');
+
+  // Aplicar filtros
+  const filtroCPF = document.getElementById('filtroCPF').value.trim();
+  const filtroEvento = document.getElementById('filtroEvento').value.trim().toLowerCase();
+
+  if(filtroCPF) lista = lista.filter(i => i.cpf.includes(filtroCPF));
+  if(filtroEvento) lista = lista.filter(i => i.evento.toLowerCase().includes(filtroEvento));
+
+  corpo.innerHTML = '';
+  
+  if (lista.length === 0) {
+    vazio.style.display = 'block';
+  } else {
+    vazio.style.display = 'none';
+    lista.forEach(item => {
+      const tr = document.createElement('tr');
+      const horaFormatada = new Date(item.hora).toLocaleString();
+      tr.innerHTML = `
+        <td>${item.cpf}</td>
+        <td>${item.evento}</td>
+        <td>
+          <img src="${item.qrImg || ''}" alt="QR Code" width="50" height="50"><br>
+          ${item.codigo}
+        </td>
+        <td>${horaFormatada}</td>
+      `;
+      corpo.appendChild(tr);
+    });
+  }
+
+  document.getElementById('contador').textContent = `Total de ingressos: ${lista.length}`;
+}
+
+// Atualização automática a cada 5 segundos
+carregar();
+setInterval(carregar, 5000);
+
+// Função para exportar CSV
+function exportarCSV() {
+  let lista = JSON.parse(localStorage.getItem('ESIP_INGRESSOS') || '[]');
+  if(lista.length === 0){
+    alert("Nenhum ingresso para exportar!");
+    return;
+  }
+  
+  const csv = [];
+  const headers = ['CPF','Evento','Código QR','Data/Hora'];
+  csv.push(headers.join(','));
+
+  lista.forEach(item => {
+    const linha = [
+      `"${item.cpf}"`,
+      `"${item.evento}"`,
+      `"${item.codigo}"`,
+      `"${new Date(item.hora).toLocaleString()}"`
+    ];
+    csv.push(linha.join(','));
+  });
+
+  const blob = new Blob([csv.join('\n')], {type: 'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ingressos_${new Date().toISOString()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
 
