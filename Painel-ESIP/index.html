@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leitor ESIP — Offline (Vermelho)</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+body{margin:0;font-family:Arial;background:#290000;color:#ffeaea;transition:background .4s;}
+body.dark{background:#000;color:#fff;}
+header{background:#8b0000;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;}
+header h1{margin:0;font-size:22px;}
+.box{background:#ffffff15;padding:18px;margin:20px auto;border-radius:14px;max-width:450px;color:#fff;}
+input{width:100%;padding:12px;border-radius:10px;border:none;margin-top:8px;background:rgba(255,255,255,0.03);color:#fff;}
+button{padding:12px;border:none;border-radius:12px;cursor:pointer;margin-top:8px;background:#8b0000;color:#fff;}
+.valid{background:#0e8f4f;color:#fff;padding:10px;border-radius:10px;margin-top:8px;}
+.invalid{background:#a00000;color:#fff;padding:10px;border-radius:10px;margin-top:8px;}
+.warning{background:#ffaa00;color:#000;padding:10px;border-radius:10px;margin-top:8px;}
+.counterBox{margin-top:10px;font-weight:bold;}
+#logBox{margin-top:10px;max-height:200px;overflow:auto;background:rgba(0,0,0,0.15);padding:8px;border-radius:8px;}
+.floatBtn{position:fixed;bottom:20px;right:20px;background:#ff0000;padding:18px;border-radius:50%;font-size:24px;z-index:999;border:4px solid #fff;}
+#flashBtn{bottom:88px;background:#ffaa00;border:4px solid #fff;}
+#switchCamBtn{bottom:156px;background:#00ff80;border:4px solid #fff;}
+#exportBtn{background:#0080ff;color:#fff;font-weight:bold;margin-top:10px;border-radius:10px;padding:10px;}
+.small{font-size:13px;color:#ffdede;opacity:0.9;}
+.msgArea div{margin-top:6px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📡 ESIP Leitor — Offline (Vermelho)</h1>
+</header>
+
+<div class="box" id="loginBox">
+  <h2>Login</h2>
+  <input id="senha" type="password" placeholder="Senha">
+  <button id="btnLogin">Entrar</button>
+  <div class="small" style="margin-top:8px">Senha padrão: <b>ESIP2025</b>. Primeiro login cria ADMIN.</div>
+</div>
+
+<div class="box" id="scanBox" style="display:none;">
+  <h2>Scanner de QR</h2>
+  <div id="reader" style="width:100%;position:relative;border-radius:8px;overflow:hidden;background:#000;"></div>
+
+  <div class="counterBox">
+    Entradas válidas: <span id="contadorValid">0</span><br>
+    Entradas inválidas: <span id="contadorInvalid">0</span>
+  </div>
+
+  <div id="msgArea"></div>
+  <div id="logBox"></div>
+  <div style="display:flex;gap:8px;margin-top:10px;">
+    <button id="exportBtn">💾 Exportar CSV</button>
+    <button id="clearBtn" style="background:#222;color:#fff;border-radius:10px;padding:10px;">🗑 Limpar Log</button>
+  </div>
+</div>
+
+<button class="floatBtn" id="darkBtn">🌓</button>
+<button class="floatBtn" id="flashBtn">🔦</button>
+<button class="floatBtn" id="switchCamBtn">🔄</button>
+
+<script>
+/* ===== Configuração e estado ===== */
+const SECRET_KEY = "ESIP-SECRETO-2025";
+const COOLDOWN = 1200; // ms entre leituras iguais
+const ID_PATTERN = /^ESIP-/; // o formato do seu gerador — ajuste se necessário
+
+let used = new Set();
+try { used = new Set(JSON.parse(localStorage.getItem("usedCodes")||"[]")); } catch(e){ used = new Set(); }
+let log = [];
+try { log = JSON.parse(localStorage.getItem("logESIP")||"[]"); if(!Array.isArray(log)) log = []; } catch(e){ log=[]; }
+
+let qrScanner = null;
+let camerasList = [];
+let currentCameraIndex = 0;
+let currentVideoTrack = null;
+let flashOn = false;
+let lastScanTimes = new Map();
+
+/* Sons (simples) */
+const beepValid = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=");
+const beepInvalid = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=");
+const beepUsed = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=");
+
+/* ===== UI helpers ===== */
+function updateLogUI(){
+  document.getElementById("logBox").innerHTML = log.slice().reverse().map(l=>`<div>${l.status} — ${l.codigo} — ${l.hora}</div>`).join("");
+}
+function updateCounters(){
+  document.getElementById("contadorValid").innerText = log.filter(l=>l.status==="válido").length;
+  document.getElementById("contadorInvalid").innerText = log.filter(l=>l.status==="inválido").length;
+}
+function showMsg(text,type){
+  const area = document.getElementById("msgArea");
+  const d = document.createElement("div");
+  if(type===true) d.className="valid"; 
+  else if(type===false) d.className="invalid"; 
+  else d.className="warning";
+  d.innerText = text;
+  area.appendChild(d);
+  setTimeout(()=>d.remove(), type===true?4000:5500);
+}
+
+/* ===== Validação (adequar ao gerador) ===== */
+function validateCode(code){
+  // Seu gerador original parecia usar "ESIP-<algo>-<hashBase64>"
+  // Ajuste se necessário. Aqui fazemos checagem simples + validação do hash.
+  try{
+    const parts = String(code).trim().split("-");
+    if(parts[0] !== "ESIP") return false;
+    if(parts.length < 3) return false;
+    const payload = parts[1];
+    const expected = btoa(payload + SECRET_KEY);
+    return parts[2] === expected;
+  }catch(e){ return false; }
+}
+
+/* ===== Log persistente ===== */
+function pushLog(codigo,status){
+  const entry = { codigo, status, hora: new Date().toLocaleString() };
+  log.push(entry);
+  localStorage.setItem("logESIP", JSON.stringify(log));
+  updateLogUI();
+  updateCounters();
+}
+
+/* ===== Processamento do QR ===== */
+function processQR(decodedText){
+  const now = Date.now();
+  if(lastScanTimes.get(decodedText) && now - lastScanTimes.get(decodedText) < COOLDOWN) return;
+  lastScanTimes.set(decodedText, now);
+
+  const code = decodedText.trim();
+
+  if(!validateCode(code)){
+    beepInvalid.play().catch(()=>{});
+    navigator.vibrate?.([120,30,120]);
+    pushLog(code,"inválido");
+    showMsg("QR INVÁLIDO ❌", false);
+    return;
+  }
+
+  if(!used.has(code)){
+    used.add(code);
+    localStorage.setItem("usedCodes", JSON.stringify([...used]));
+    beepValid.play().catch(()=>{});
+    navigator.vibrate?.([30,20,30]);
+    pushLog(code,"válido");
+    showMsg("Ingresso válido ✅", true);
+  } else {
+    beepUsed.play().catch(()=>{});
+    navigator.vibrate?.(80);
+    pushLog(code,"inválido");
+    showMsg("INGRESSO JÁ UTILIZADO ❌", "used");
+  }
+}
+
+/* ===== Iniciar scanner ===== */
+async function startScanner(cameraId=null){
+  if(qrScanner){
+    try{ await qrScanner.stop(); }catch(e){}
+    qrScanner = null;
+    currentVideoTrack = null;
+  }
+
+  try{
+    camerasList = await Html5Qrcode.getCameras();
+    if(!camerasList || !camerasList.length) { alert("Nenhuma câmera encontrada!"); return; }
+
+    let chosen;
+    if(cameraId) chosen = camerasList.find(c=>c.id===cameraId) || camerasList[0];
+    else chosen = camerasList.find(c=> c.label && /back|rear|environment|traseira/i.test(c.label)) || camerasList[0];
+
+    currentCameraIndex = camerasList.findIndex(c=>c.id===chosen.id);
+
+    qrScanner = new Html5Qrcode("reader");
+
+    await qrScanner.start(
+      { deviceId: { exact: chosen.id } },
+      { fps: 10, qrbox: 250 },
+      processQR,
+      err => { /* erros de leitura ignorados */ }
+    );
+
+    // try to capture track ASAP using loadedmetadata if available, else fallback retries
+    // html5-qrcode exposes internal video element as _scannerVideo sometimes
+    const internalVideo = qrScanner._scannerVideo || document.querySelector("#reader video");
+    if(internalVideo){
+      // se loadedmetadata já foi disparado, captura imediatamente
+      if(internalVideo.readyState >= 1 && internalVideo.srcObject && internalVideo.srcObject.getVideoTracks().length){
+        currentVideoTrack = internalVideo.srcObject.getVideoTracks()[0];
+        // enable flash button if supported
+        try { const caps = currentVideoTrack.getCapabilities?.(); document.getElementById("flashBtn").disabled = !(caps && caps.torch); } catch(e){}
+      } else {
+        // ouvir evento real
+        internalVideo.addEventListener("loadedmetadata", function onLoad(){
+          try {
+            if(internalVideo.srcObject && internalVideo.srcObject.getVideoTracks().length){
+              currentVideoTrack = internalVideo.srcObject.getVideoTracks()[0];
+              try { const caps = currentVideoTrack.getCapabilities?.(); document.getElementById("flashBtn").disabled = !(caps && caps.torch); } catch(e){}
+            }
+          } catch(e){}
+          internalVideo.removeEventListener("loadedmetadata", onLoad);
+        });
+      }
+    }
+
+    // adicional: retries rápidas para capturar track (não bloqueante)
+    waitForTrackRetries();
+
+  } catch(e){
+    alert("Erro ao iniciar scanner: " + (e && e.message ? e.message : e));
+  }
+}
+
+/* tenta capturar o track com retries rápidas (não bloqueante) */
+function waitForTrackRetries(attempt=0){
+  const v = document.querySelector("#reader video");
+  if(v && v.srcObject && v.srcObject.getVideoTracks().length){
+    currentVideoTrack = v.srcObject.getVideoTracks()[0];
+    try{ const caps = currentVideoTrack.getCapabilities?.(); document.getElementById("flashBtn").disabled = !(caps && caps.torch); }catch(e){}
+    return;
+  }
+  if(attempt < 30){ // ~3 segundos (30 * 100ms)
+    setTimeout(()=> waitForTrackRetries(attempt+1), 100);
+  } else {
+    // não encontrado dentro do tempo: não exibe erro ao operador, apenas mantém botão
+    currentVideoTrack = null;
+  }
+}
+
+/* trocar câmera */
+function switchCamera(){
+  if(!camerasList || !camerasList.length) return alert("Câmeras não carregadas.");
+  currentCameraIndex = (currentCameraIndex + 1) % camerasList.length;
+  startScanner(camerasList[currentCameraIndex].id);
+}
+
+/* ===== Lanterna com retry inteligente e fallback ===== */
+async function toggleFlash(){
+  // Tenta usar o track atual; se não tiver, faz retries rápidas (para evitar que o operador espere manualmente)
+  let track = currentVideoTrack;
+  if(!track){
+    // primeiras tentativas bem rápidas
+    for(let i=0;i<6 && !track;i++){
+      await new Promise(r=>setTimeout(r, 100));
+      track = document.querySelector("#reader video")?.srcObject?.getVideoTracks?.()[0];
+    }
+    // segunda leva de tentativas um pouco mais espaçadas
+    for(let i=0;i<8 && !track;i++){
+      await new Promise(r=>setTimeout(r, 150));
+      track = document.querySelector("#reader video")?.srcObject?.getVideoTracks?.()[0];
+    }
+    // atualiza variável global se encontrado
+    if(track) currentVideoTrack = track;
+  }
+
+  if(!track){
+    // não faça alerta rude; apenas um aviso leve no status
+    showMsg("Lanterna: aguardando câmera inicializar...", "warning");
+    return;
+  }
+
+  // checa se suporta torch
+  let caps = track.getCapabilities ? track.getCapabilities() : null;
+  if(!caps || !caps.torch){
+    alert("Lanterna não suportada nesta câmera.");
+    return;
+  }
+
+  flashOn = !flashOn;
+
+  try{
+    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+    document.getElementById("flashBtn").style.background = flashOn ? "#ffd60a" : "#ffaa00";
+  }catch(e){
+    // fallback: alguns navegadores/telefones exigem getUserMedia com deviceId e aplicar lá
+    try{
+      const settings = track.getSettings ? track.getSettings() : {};
+      const deviceId = settings.deviceId || (currentVideoTrack && currentVideoTrack.getSettings && currentVideoTrack.getSettings().deviceId);
+      if(deviceId){
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+        const t2 = stream.getVideoTracks()[0];
+        if(t2 && t2.getCapabilities && t2.getCapabilities().torch){
+          await t2.applyConstraints({ advanced: [{ torch: flashOn }] });
+          t2.stop();
+          document.getElementById("flashBtn").style.background = flashOn ? "#ffd60a" : "#ffaa00";
+          return;
+        }
+        t2.stop();
+      }
+    }catch(_){}
+    flashOn = false;
+    alert("Erro ao alternar a lanterna.");
+  }
+}
+
+/* ===== Export CSV / clear ===== */
+function exportCSV(){
+  let csv = "codigo,status,hora\n";
+  log.forEach(l => csv += `${l.codigo},${l.status},"${l.hora}"\n`);
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'log_entradas.csv';
+  a.click();
+}
+
+function clearLogs(){
+  if(!confirm("Deseja realmente limpar todo o log?")) return;
+  log = []; used.clear();
+  localStorage.removeItem("logESIP");
+  localStorage.removeItem("usedCodes");
+  updateLogUI();
+  updateCounters();
+}
+
+/* ===== Login simples (cria primeiro admin) ===== */
+function getUsers(){ try{ const u = JSON.parse(localStorage.getItem('usuarios')||'[]'); return Array.isArray(u)?u:[]; }catch{ return []; } }
+function saveUsers(u){ try{ localStorage.setItem('usuarios', JSON.stringify(u)); }catch{} }
+
+function doLogin(){
+  const u = (document.getElementById('loginUser')?.value || '').trim();
+  const p = (document.getElementById('loginPass')?.value || '').trim();
+  // mas mantemos a senha simples (compat com seu fluxo original)
+  // Se você quer manter apenas a senha simples do input 'senha', usamos abaixo do btnLogin
+}
+
+/* ===== Simple login using senha input (to preserve original UI) ===== */
+document.getElementById('btnLogin').addEventListener('click', ()=>{
+  const s = document.getElementById('senha').value.trim();
+  if(s === "ESIP2025"){
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('scanBox').style.display = 'block';
+    updateLogUI();
+    updateCounters();
+    startScanner();
+  } else {
+    alert('Senha incorreta!');
+  }
+});
+
+/* Bind float buttons */
+document.getElementById('darkBtn').addEventListener('click', ()=>document.body.classList.toggle('dark'));
+document.getElementById('flashBtn').addEventListener('click', toggleFlash);
+document.getElementById('switchCamBtn').addEventListener('click', switchCamera);
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
+document.getElementById('clearBtn').addEventListener('click', clearLogs);
+
+/* Inicializa interfaces a partir do localStorage */
+(function init(){
+  try { log = JSON.parse(localStorage.getItem("logESIP")||"[]"); if(!Array.isArray(log)) log = []; } catch(e){ log = []; }
+  try { used = new Set(JSON.parse(localStorage.getItem("usedCodes")||"[]")); } catch(e){ used = new Set(); }
+  updateLogUI();
+  updateCounters();
+})();
+</script>
+</body>
+</html>
 
