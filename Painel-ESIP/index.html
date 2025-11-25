@@ -1,1 +1,226 @@
 
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leitor ESIP — Offline</title>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+body{margin:0;font-family:Arial;background:#290000;color:#ffeaea;transition:background .4s;}
+body.dark{background:#000;color:#fff;}
+header{background:#8b0000;color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;}
+header h1{margin:0;font-size:22px;}
+.box{background:#ffffff15;padding:18px;margin:20px auto;border-radius:14px;max-width:450px;color:#fff;}
+input{width:100%;padding:12px;border-radius:10px;border:none;margin-top:8px;}
+button{padding:12px;border:none;border-radius:12px;cursor:pointer;margin-top:8px;}
+.valid{background:#0e8f4f;color:#fff;}
+.invalid{background:#a00000;color:#fff;}
+.warning{background:#ffaa00;color:#000;}
+.counterBox{margin-top:10px;font-weight:bold;}
+#logBox{margin-top:10px;max-height:200px;overflow:auto;}
+.floatBtn{position:fixed;bottom:20px;right:20px;background:#ff0000;padding:18px;border-radius:50%;font-size:24px;z-index:999;}
+#flashBtn{bottom:80px;background:#ffaa00;}
+#exportBtn{background:#0080ff;color:#fff;font-weight:bold;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📡 ESIP Leitor — Offline</h1>
+</header>
+
+<div class="box" id="loginBox">
+  <h2>Login</h2>
+  <input id="senha" type="password" placeholder="Senha">
+  <button onclick="login()">Entrar</button>
+</div>
+
+<div class="box" id="scanBox" style="display:none;">
+  <h2>Scanner de QR</h2>
+  <div id="reader" style="width:100%"></div>
+
+  <div class="counterBox">
+    Entradas válidas: <span id="contadorValid">0</span><br>
+    Entradas inválidas: <span id="contadorInvalid">0</span>
+  </div>
+
+  <div id="msgArea"></div>
+  <div id="logBox"></div>
+  <button id="exportBtn" onclick="exportCSV()">💾 Exportar CSV</button>
+  <button onclick="clearLog()">🗑 Limpar Log</button>
+</div>
+
+<button class="floatBtn" onclick="toggleDarkMode()">🌓</button>
+<button class="floatBtn" id="flashBtn" onclick="toggleFlash()">🔦</button>
+
+<script>
+const SECRET_KEY = "ESIP-SECRETO-2025";
+let used = new Set(JSON.parse(localStorage.getItem("usedCodes")||"[]"));
+let log = JSON.parse(localStorage.getItem("logESIP")||"[]");
+let countValid = log.filter(l=>l.status==="válido").length;
+let countInvalid = log.filter(l=>l.status==="inválido").length;
+let qrScanner = null;
+const cooldowns = new Map();
+const cooldownTime = 3000;
+let currentStream = null;
+let rearTrack = null;
+let flashOn = false;
+
+// ---------- Sons offline ----------
+const beepValid = new Audio("data:audio/wav;base64,UklGRrYAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YYAAAAD///8="); // exemplo beep curto
+const beepInvalid = new Audio("data:audio/wav;base64,UklGRpIAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="); // exemplo beep longo
+const beepUsed = new Audio("data:audio/wav;base64,UklGRlIAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="); // exemplo beep aviso
+
+// ---------- Login ----------
+function login(){
+  const s = document.getElementById("senha").value.trim();
+  if(s==="ESIP2025"){
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("scanBox").style.display="block";
+    updateCounters();
+    startScanner();
+  } else alert("Senha incorreta!");
+}
+
+// ---------- Scanner (somente traseira) ----------
+function startScanner() {
+  qrScanner = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(cameras => {
+    if (!cameras.length) return alert("Nenhuma câmera encontrada!");
+
+    let rear = cameras.find(c => c.facingMode && c.facingMode === "environment");
+    if (!rear) rear = cameras[0];
+
+    qrScanner.start(
+      rear.id,
+      { fps: 10, qrbox: 250 },
+      processQR,
+      err => console.log("Erro de leitura:", err)
+    ).then(() => {
+      const state = qrScanner.getState();
+      currentStream = state.stream;
+      rearTrack = currentStream.getVideoTracks()[0]; // track traseira
+    }).catch(err => alert("Não foi possível iniciar o scanner: " + err));
+
+  }).catch(err => alert("Erro ao acessar câmeras: " + err));
+}
+
+// ---------- Lanterna ----------
+function toggleFlash() {
+  if (!rearTrack) return alert("Câmera ainda não iniciada.");
+  const capabilities = rearTrack.getCapabilities();
+  if (!capabilities.torch) return alert("Lanterna não suportada nesta câmera.");
+
+  flashOn = !flashOn;
+  rearTrack.applyConstraints({ advanced: [{ torch: flashOn }] })
+           .catch(e => alert("Erro ao ativar lanterna: " + e));
+}
+
+// ---------- Valida QR ----------
+function validateCode(code){
+  const parts = code.split("-");
+  if(parts.length<3 || parts[0]!=="ESIP") return false;
+  const uuid = parts[1], hash = parts[2];
+  return hash === btoa(uuid + SECRET_KEY);
+}
+
+// ---------- Processa QR ----------
+function processQR(decodedText){
+  const now = Date.now();
+  if(cooldowns.get(decodedText) && now - cooldowns.get(decodedText)<cooldownTime) return;
+  cooldowns.set(decodedText, now);
+
+  if(!validateCode(decodedText)){
+    countInvalid++;
+    showMessage("QR INVÁLIDO ❌", false);
+    playBeep("invalid");
+    logEntry(decodedText,"inválido");
+    return updateCounters();
+  }
+
+  if(!used.has(decodedText)){
+    used.add(decodedText);
+    localStorage.setItem("usedCodes", JSON.stringify([...used]));
+    countValid++;
+    showMessage("Ingresso válido ✅", true);
+    playBeep("valid");
+    logEntry(decodedText,"válido");
+  } else {
+    countInvalid++;
+    showMessage("INGRESSO JÁ UTILIZADO ❌", "used");
+    playBeep("used");
+    logEntry(decodedText,"inválido");
+  }
+  updateCounters();
+}
+
+// ---------- Mensagem ----------
+function showMessage(msg, type){
+  const area = document.getElementById("msgArea");
+  const div = document.createElement("div");
+  if(type === true) div.className = "valid";
+  else if(type === false) div.className = "invalid";
+  else div.className = "warning"; // usado
+  div.innerText = msg;
+  area.appendChild(div);
+  const displayTime = (type === true) ? 5000 : 6000;
+  setTimeout(()=>div.remove(), displayTime);
+}
+
+// ---------- Beep ----------
+function playBeep(type){
+  if(type === "valid") beepValid.play();
+  else if(type === "invalid") beepInvalid.play();
+  else if(type === "used") beepUsed.play();
+}
+
+// ---------- Log ----------
+function logEntry(code,status){
+  log.push({codigo:code,status:status,hora:new Date().toLocaleString()});
+  localStorage.setItem("logESIP",JSON.stringify(log));
+  updateLog();
+}
+function updateLog(){
+  const box = document.getElementById("logBox");
+  box.innerHTML = log.slice().reverse()
+    .map(l=>`<div>${l.status} — ${l.codigo} — ${l.hora}</div>`).join("");
+}
+
+// ---------- Contadores ----------
+function updateCounters(){
+  document.getElementById("contadorValid").innerText = countValid;
+  document.getElementById("contadorInvalid").innerText = countInvalid;
+}
+
+// ---------- Export CSV ----------
+function exportCSV(){
+  let csv="codigo,status,hora\n";
+  log.forEach(l=>csv+=`${l.codigo},${l.status},${l.hora}\n`);
+  const blob = new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download="log_entradas.csv";
+  a.click();
+}
+
+// ---------- Limpar Log ----------
+function clearLog() {
+  if (!confirm("Deseja realmente limpar todo o log?")) return;
+  log = [];
+  used.clear();
+  localStorage.removeItem("logESIP");
+  localStorage.removeItem("usedCodes");
+  countValid = 0;
+  countInvalid = 0;
+  updateCounters();
+  updateLog();
+}
+
+// ---------- Modo escuro ----------
+function toggleDarkMode(){document.body.classList.toggle("dark");}
+</script>
+
+</body>
+</html>
