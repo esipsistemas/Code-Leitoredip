@@ -1,1 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Leitor de Ingressos</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f3f3f3;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+#app {
+  width: 100%; max-width: 480px;
+  background: white;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+button {
+  background: #0069ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+button:hover { background: #0053cc; }
+#scanner {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 15px;
+}
+#logArea {
+  margin-top: 20px;
+  max-height: 250px;
+  overflow-y: auto;
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+.valid { color: green; font-weight: bold; }
+.invalid { color: red; font-weight: bold; }
+.used { color: orange; font-weight: bold; }
+</style>
+<script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+<div id="app">
+
+  <div id="loginBox">
+    <h2>Login</h2>
+    <input id="user" placeholder="Usuário" />
+    <input id="pass" type="password" placeholder="Senha" />
+    <button id="btnLogin">Entrar</button>
+  </div>
+
+  <div id="main" style="display:none;">
+    <h2>Leitor de QR-Code</h2>
+
+    <div id="scanner"></div>
+    <button id="btnFlash">Lanterna</button>
+    <button id="btnExport">Exportar CSV</button>
+    <button id="btnClear">Limpar Registros</button>
+    <button id="btnLogout">Sair</button>
+
+    <h3>Registros</h3>
+    <div id="logArea"></div>
+  </div>
+</div>
+
+<script>
+let users = JSON.parse(localStorage.getItem("users") || "{}");
+let ingressos = JSON.parse(localStorage.getItem("ingressos") || "[]");
+let logs = JSON.parse(localStorage.getItem("logs") || "[]");
+let scanner;
+let flashOn = false;
+let lastRead = "";
+
+function saveUsers(){ localStorage.setItem("users", JSON.stringify(users)); }
+function saveLogs(){ localStorage.setItem("logs", JSON.stringify(logs)); }
+
+function updateLogArea(){
+  const box = document.getElementById("logArea");
+  box.innerHTML = logs.map(l => `<div class="${l.status.toLowerCase()}">[${l.hora}] ${l.code} - ${l.status}</div>`).join("");
+}
+
+function doLogin(){
+  const u = document.getElementById("user").value.trim();
+  const p = document.getElementById("pass").value.trim();
+  if(!u || !p){ alert("Preencha usuário e senha"); return; }
+
+  if(Object.keys(users).length === 0){
+    users[u] = p;
+    saveUsers();
+    alert("Administrador criado!");
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("main").style.display = "block";
+    startScanner();
+    return;
+  }
+
+  if(!users[u] || users[u] !== p){
+    alert("Usuário ou senha incorretos");
+    return;
+  }
+
+  document.getElementById("loginBox").style.display = "none";
+  document.getElementById("main").style.display = "block";
+  startScanner();
+}
+
+function startScanner(){
+  scanner = new Html5Qrcode("scanner");
+  const config = { fps: 10, qrbox: 250, experimentalFeatures: { useBarCodeDetector: true }};
+
+  Html5Qrcode.getCameras().then(cams => {
+    let cam = cams.find(c => c.label.toLowerCase().includes("back")) || cams[0];
+    scanner.start(cam.id, config, onScan);
+  });
+}
+
+function onScan(code){
+  if(code === lastRead) return;
+  lastRead = code;
+  setTimeout(()=> lastRead = "", 1500);
+
+  let status = "INVALIDO";
+  let ingresso = ingressos.find(i => i.id === code);
+
+  if(ingresso){
+    if(ingresso.usado){ status = "USADO"; }
+    else {
+      ingresso.usado = true;
+      localStorage.setItem("ingressos", JSON.stringify(ingressos));
+      status = "VALIDO";
+    }
+  }
+
+  logs.push({ code, status, hora: new Date().toLocaleString() });
+  saveLogs();
+  updateLogArea();
+}
+
+function toggleFlash(){
+  if(!scanner) return;
+  flashOn = !flashOn;
+  scanner.applyVideoConstraints({ advanced: [{ torch: flashOn }] });
+}
+
+function exportCSV(){
+  let csv = "codigo,status,hora\n" + logs.map(l => `${l.code},${l.status},${l.hora}`).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "registros.csv";
+  a.click();
+}
+
+function clearLogs(){
+  if(confirm("Deseja limpar os registros?")){
+    logs = [];
+    saveLogs();
+    updateLogArea();
+  }
+}
+
+// EVENTOS
+btnLogin.addEventListener("click", doLogin);
+btnFlash.addEventListener("click", toggleFlash);
+btnExport.addEventListener("click", exportCSV);
+btnClear.addEventListener("click", clearLogs);
+btnLogout.addEventListener("click", () => location.reload());
+
+updateLogArea();
+</script>
+</body>
+</html>
 
