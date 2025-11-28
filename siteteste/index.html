@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📡 ESIP-Sistemas – Controle de Acesso e Validação Antifraude</title>
+
+  <!-- Fav/icon optional: se tiver logo.png no mesmo diretório, aparece; caso contrário oculta -->
+  <link rel="icon" href="logo.png">
+
+  <!-- External libs (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="" crossorigin="anonymous" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="" crossorigin="anonymous" defer></script>
+
+  <style>
+    :root{--bg:#0a0f24;--card:#11182f;--accent:#1e2a78;--accent-2:#2840c0;--muted:#7eb6ff}
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);color:#fff;-webkit-font-smoothing:antialiased; -webkit-touch-callout:none; -webkit-tap-highlight-color: rgba(0,0,0,0)}
+    header{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:16px;
+      padding:22px 18px;
+      background:linear-gradient(180deg,#0d1540,#0a0f24);
+      border-bottom:3px solid var(--accent);
+    }
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand img{height:56px;width:auto;border-radius:8px;display:block}
+    .brand h1{font-size:20px;margin:0}
+    .brand p{margin:0;font-size:12px;opacity:.9;color:var(--muted)}
+    .hero{padding:28px 18px;text-align:center}
+    .hero h2{font-size:20px;margin:0 0 8px;color:var(--muted)}
+    .hero p{max-width:780px;margin:0 auto 18px;opacity:.9;line-height:1.5}
+
+    .container{max-width:980px;margin:18px auto;padding:0 18px}
+    .box{background:var(--card);padding:18px;border-radius:12px;border:1px solid var(--accent);margin-bottom:18px}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;background:var(--accent);border-radius:10px;color:#fff;text-decoration:none;font-weight:600;border:none;cursor:pointer}
+    .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,.06)}
+    .btn:active{transform:translateY(0)}
+    input[type=text]{width:100%;padding:12px;border-radius:8px;border:none;background:#0b1330;color:#fff;outline: none}
+    #qrResult{display:flex;justify-content:center;margin-top:16px}
+    #qrResult canvas, #qrResult img{border-radius:8px;display:block;max-width:100%}
+    footer{padding:18px;text-align:center;opacity:.75;font-size:13px}
+
+    /* mobile tweaks */
+    @media(max-width:600px){
+      header{justify-content:center;text-align:center}
+      .brand{flex-direction:column;gap:8px}
+      .brand img{height:48px}
+      .brand h1{font-size:18px}
+      .btn{padding:10px 14px;font-size:14px}
+    }
+
+    /* blocked placeholder style preserved */
+    section:empty {
+      position: relative;
+      min-height: 80px;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.02) !important;
+      border: 1px dashed #3b4b9c !important;
+      border-radius: 12px;
+    }
+    section:empty::before {
+      content: "🔒 BLOQUEADO ATÉ ATIVAÇÃO";
+      color: #7eb6ff;
+      font-size: 0.95rem;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <img src="logo.png" alt="ESIP-Sistemas" onerror="this.style.display='none'">
+    <div>
+      <h1>📡 ESIP - Sistemas Segurança Anti-fraude</h1>
+      <p style="color:#4da3ff; font-size:1.05rem; margin-top:6px;">A solução mais avançada em validação, segurança e controle de acesso.</p>
+      <p style="margin-top:6px;opacity:.9">Controle de Acesso • Validação Antifraude • QR Code</p>
+    </div>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <!-- leitor link removed (single file option) -->
+    <a class="btn" href="#gerador">🧩 Gerador</a>
+  </div>
+</header>
+
+<main class="container" role="main">
+  <!-- QR Generator -->
+  <section id="gerador" class="box" aria-labelledby="geradorTitle">
+    <h3 id="geradorTitle">🧩 Gerar QR Code de Teste</h3>
+    <p style="opacity:.9">Digite qualquer texto (nome / código) para gerar um QR válido. Limite: <strong>5 gerações</strong>.</p>
+
+    <input id="qrText" type="text" placeholder="Digite algo (ex: NOME - ID)" maxlength="120" aria-label="Texto para QR">
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <button class="btn" id="generateBtn" type="button">Gerar QR Code</button>
+      <button class="btn secondary" id="downloadPNGBtn" type="button" disabled>📥 Baixar PNG</button>
+      <button class="btn secondary" id="downloadPDFBtn" type="button" disabled>📄 Baixar PDF</button>
+    </div>
+
+    <div id="qrResult" aria-live="polite" style="margin-top:14px"></div>
+    <p id="limitMsg" style="color:#ff6b6b;margin-top:10px"></p>
+  </section>
+
+  <!-- About -->
+  <section class="box" aria-labelledby="aboutTitle">
+    <h3 id="aboutTitle">📦 Sobre o ESIP-Sistemas</h3>
+    <p style="text-align:left;line-height:1.6;opacity:.95">O <strong>ESIP-Sistemas</strong> é uma plataforma avançada de controle de acesso digital com validação antifraude via QR Code. Projetada para organizar entradas, identificar visitantes, controlar equipes e validar códigos com segurança.</p>
+
+    <p style="text-align:left;line-height:1.6;opacity:.95">Nosso sistema é utilizado em:</p>
+    <ul style="text-align:left;line-height:1.6;opacity:.95">
+      <li>🏢 Empresas e escritórios</li>
+      <li>🏫 Escolas e centros de ensino</li>
+      <li>🎫 Eventos, feiras e produções</li>
+      <li>🚚 Logística e entregas</li>
+      <li>👮 Portarias e segurança patrimonial</li>
+    </ul>
+
+    <p style="text-align:left;line-height:1.6;opacity:.95">O sistema pode funcionar sem instalação de app; quando configurado com o leitor sincronizado ele também suporta validação offline e sincronização posterior.</p>
+  </section>
+</main>
+
+<footer>© 2025 ESIP-Sistemas — Pronto para publicar no GitHub Pages</footer>
+
+<script>
+/* ---------- Behavior JS (no service worker, no manifest) ---------- */
+
+/* keep the generation limit in-memory (same behavior as seu código original) */
+let limit = 5;
+let currentQR = null;
+
+/* helper to enable/disable buttons safely */
+function setButtonsState(enabled) {
+  document.getElementById('downloadPNGBtn').disabled = !enabled;
+  document.getElementById('downloadPDFBtn').disabled = !enabled;
+}
+
+/* create QR: uses QRCode.js which is loaded by defer attribute above */
+function createQRCode(text, container) {
+  // Clean
+  container.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.style.padding = '12px';
+  wrapper.style.background = 'rgba(255,255,255,0.03)';
+  wrapper.style.display = 'inline-block';
+  wrapper.style.borderRadius = '10px';
+  // generate QR (prefix "INGR-" to keep same behavior)
+  new QRCode(wrapper, { text: 'INGR-' + text, width: 260, height: 260, correctLevel: QRCode.CorrectLevel.M });
+  container.appendChild(wrapper);
+  return wrapper;
+}
+
+/* try to obtain the image or canvas element */
+function resolveCurrentQR(wrapper) {
+  const img = wrapper.querySelector('img');
+  const canvas = wrapper.querySelector('canvas');
+  return img || canvas || null;
+}
+
+/* event handlers (touch/click friendly) */
+document.addEventListener('DOMContentLoaded', function () {
+  const txt = document.getElementById('qrText');
+  const genBtn = document.getElementById('generateBtn');
+  const downloadPNGBtn = document.getElementById('downloadPNGBtn');
+  const downloadPDFBtn = document.getElementById('downloadPDFBtn');
+  const qrResult = document.getElementById('qrResult');
+  const limitMsg = document.getElementById('limitMsg');
+
+  // ensure buttons use addEventListener (better compatibility)
+  genBtn.addEventListener('click', function () {
+    if (limit <= 0) {
+      limitMsg.innerText = 'Limite atingido! Esta versão é apenas para testes.';
+      return;
+    }
+    const text = (txt.value || '').trim();
+    if (!text) {
+      // friendly notifier
+      if (window.navigator && window.navigator.vibrate) navigator.vibrate(30);
+      alert('Digite algo para gerar o QR!');
+      return;
+    }
+
+    limit--;
+    limitMsg.innerText = 'Restam ' + limit + ' usos.';
+
+    // generate and then enable download buttons after render
+    const wrapper = createQRCode(text, qrResult);
+    // small delay to let library render fully
+    setTimeout(function () {
+      currentQR = resolveCurrentQR(wrapper);
+      setButtonsState(!!currentQR);
+    }, 180);
+  });
+
+  downloadPNGBtn.addEventListener('click', function () {
+    if (!currentQR) { alert('Gere um QR primeiro.'); return; }
+    if (currentQR.tagName.toLowerCase() === 'img') {
+      // image src is a data URL already
+      const a = document.createElement('a');
+      a.href = currentQR.src;
+      a.download = 'esip-qr.png';
+      // anchor click must be within a user gesture -> it's inside click handler
+      a.click();
+    } else {
+      // canvas -> toDataURL
+      const data = currentQR.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = data;
+      a.download = 'esip-qr.png';
+      a.click();
+    }
+  });
+
+  downloadPDFBtn.addEventListener('click', function () {
+    if (!currentQR) { alert('Gere um QR primeiro.'); return; }
+    // jsPDF UMD exposes window.jspdf
+    const { jsPDF } = window.jspdf || {};
+    if (!jsPDF) {
+      alert('Biblioteca de PDF não carregou. Tente novamente.');
+      return;
+    }
+    const doc = new jsPDF({ unit: 'pt', format: [300, 380] });
+    let dataUrl = '';
+    if (currentQR.tagName.toLowerCase() === 'img') dataUrl = currentQR.src;
+    else dataUrl = currentQR.toDataURL('image/png');
+
+    // add text + image
+    doc.setFontSize(12);
+    doc.text('ESIP-Sistemas - QR de Teste', 20, 30);
+    doc.addImage(dataUrl, 'PNG', 20, 50, 260, 260);
+    doc.save('esip-qr.pdf');
+  });
+
+  // minor accessibility: pressing Enter on input also generates
+  txt.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); genBtn.click(); }
+  });
+});
+</script>
+
+</body>
+</html>
