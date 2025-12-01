@@ -1,1 +1,377 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP - Sistemas</title>
 
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+    background: #1a0000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding-bottom: 40px;
+}
+
+h2 { margin-top: 20px; }
+
+#reader {
+    width: 350px;
+    margin: 20px auto;
+    border: 4px solid #ff0000;
+    border-radius: 12px;
+}
+
+.btn {
+    background: #ff0000;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    margin: 8px 0;
+    width: 90%;
+}
+
+#msg {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.green { color: #00ff88; }
+.red { color: #ff4444; }
+
+.flash-ok { animation: flashGreen 0.25s; }
+.flash-bad { animation: flashRed 0.25s; }
+
+@keyframes flashGreen {
+    0% { background: #00ff8860; }
+    100% { background: transparent; }
+}
+@keyframes flashRed {
+    0% { background: #ff444460; }
+    100% { background: transparent; }
+}
+
+/* HISTÓRICO */
+#history {
+    margin-top: 20px;
+    padding: 10px;
+}
+.badge {
+    display: inline-block;
+    margin: 5px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    font-size: 15px;
+    background: #330000;
+    border: 1px solid #ff4444;
+    text-align: center;
+}
+.badge.valid {
+    background: #003314;
+    border-color: #00ff88;
+}
+
+/* CONTADORES */
+#counters {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+.counter-box {
+    background: #330000;
+    border: 2px solid #ff0000;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+}
+
+/* Light mode */
+.theme-btn { margin-top: 10px; font-size: 14px; background:#444; }
+.light { background:#fafafa; color:#111; }
+.light #reader { border-color:#cc0000; }
+.light .btn { background:#cc0000; }
+.light .badge { background:#ddd; border-color:#999; }
+</style>
+</head>
+<body>
+
+<h2>📡 ESIP - Sistemas</h2>
+
+<div id="counters">
+    <div class="counter-box">Válidos: <span id="countValid">0</span></div>
+    <div class="counter-box">Usados: <span id="countUsed">0</span></div>
+    <div class="counter-box">Inválidos: <span id="countInvalid">0</span></div>
+</div>
+
+<button class="btn theme-btn" id="themeToggle">🌙 Alternar Tema</button>
+
+<div id="reader"></div>
+
+<button id="toggleLight" class="btn">🔦 Lanterna (Ligada)</button>
+<button id="switchCam" class="btn">🔄 Trocar Câmera</button>
+<button id="reset" class="btn">🗑️ Resetar Ingressos</button>
+
+<button id="exportPDF" class="btn">📄 Exportar PDF</button>
+<button id="export" class="btn">📤 Exportar CSV</button>
+
+<div id="msg"></div>
+
+<h3>📜 Histórico</h3>
+<div id="history"></div>
+
+<script>
+let html5Qr;
+let flashOn = true;
+let scanning = true;
+let currentCam = 0;
+let cameras = [];
+
+let used = new Set(JSON.parse(localStorage.getItem("usedCodes") || "[]"));
+
+/* HISTÓRICO COMPLETO */
+let historyData = JSON.parse(localStorage.getItem("historyData") || "[]");
+
+function saveHistory(code) {
+    const dataHora = new Date().toLocaleString("pt-BR");
+    historyData.push({ code: code, date: dataHora });
+    localStorage.setItem("historyData", JSON.stringify(historyData));
+}
+
+/* CONTADORES */
+let totalValid   = parseInt(localStorage.getItem("countValid")   || "0");
+let totalUsed    = parseInt(localStorage.getItem("countUsed")    || "0");
+let totalInvalid = parseInt(localStorage.getItem("countInvalid") || "0");
+
+document.getElementById("countValid").textContent = totalValid;
+document.getElementById("countUsed").textContent = totalUsed;
+document.getElementById("countInvalid").textContent = totalInvalid;
+
+function updateCounters() {
+    document.getElementById("countValid").textContent = totalValid;
+    document.getElementById("countUsed").textContent = totalUsed;
+    document.getElementById("countInvalid").textContent = totalInvalid;
+
+    localStorage.setItem("countValid", totalValid);
+    localStorage.setItem("countUsed", totalUsed);
+    localStorage.setItem("countInvalid", totalInvalid);
+}
+
+/* SONS */
+const sValid   = new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg");
+const sInvalid = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+const sUsed    = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+
+/* TEMA */
+document.getElementById("themeToggle").onclick = () =>
+    document.body.classList.toggle("light");
+
+/* FLASH VISUAL */
+function flash(type) {
+    const cls = type === "good" ? "flash-ok" : "flash-bad";
+    document.body.classList.add(cls);
+    setTimeout(()=>document.body.classList.remove(cls), 250);
+}
+
+/* HISTÓRICO VISUAL */
+function updateHistory() {
+    const box = document.getElementById("history");
+    box.innerHTML = "";
+
+    historyData.slice().reverse().forEach(item => {
+        const div = document.createElement("div");
+        div.className = "badge valid";
+        div.innerHTML = `
+            <strong>${item.code}</strong><br>
+            <span style="font-size:12px;">📅 ${item.date}</span>
+        `;
+        box.appendChild(div);
+    });
+}
+updateHistory();
+
+function validateCode(code) {
+    return code.startsWith("INGR-");
+}
+
+function processQR(decodedText) {
+    if (!scanning) return;
+    scanning = false;
+
+    const code = decodedText.trim();
+
+    if (!validateCode(code)) {
+        totalInvalid++;
+        updateCounters();
+
+        flash("bad");
+        sInvalid.play().catch(()=>{});
+        navigator.vibrate?.([200,50,200]);
+        showMsg("❌ QR inválido", false);
+    }
+    else if (!used.has(code)) {
+        used.add(code);
+        localStorage.setItem("usedCodes", JSON.stringify([...used]));
+
+        saveHistory(code);
+
+        totalValid++;
+        updateCounters();
+
+        flash("good");
+        sValid.play().catch(()=>{});
+        navigator.vibrate?.([50,40,50]);
+        showMsg("✅ Ingresso válido", true);
+        updateHistory();
+    }
+    else {
+        totalUsed++;
+        updateCounters();
+
+        flash("bad");
+        sUsed.play().catch(()=>{});
+        navigator.vibrate?.(120);
+        showMsg("⚠️ Já utilizado", false);
+    }
+
+    setTimeout(()=> scanning = true, 600);
+}
+
+function showMsg(text, ok=true) {
+    const m = document.getElementById("msg");
+    m.textContent = text;
+    m.className = ok ? "green" : "red";
+}
+
+/* INICIAR SCANNER */
+async function startScanner() {
+    html5Qr = new Html5Qrcode("reader");
+    cameras = await Html5Qrcode.getCameras();
+    if (!cameras.length) return;
+
+    await html5Qr.start(
+        cameras[currentCam].id,
+        { fps: 10, qrbox: 250 },
+        processQR
+    );
+
+    setTimeout(()=>toggleTorch(true), 800);
+}
+
+startScanner();
+
+/* LANTERNA */
+async function toggleTorch(forceState = null) {
+    const track = html5Qr.getRunningTrack();
+    if (!track) {
+        showMsg("⚠️ Câmera não pronta", false);
+        return;
+    }
+
+    const caps = track.getCapabilities?.();
+    if (!caps || !caps.torch) {
+        showMsg("⚠️ Lanterna não suportada no seu celular", false);
+        return;
+    }
+
+    flashOn = (forceState !== null) ? forceState : !flashOn;
+
+    try {
+        await track.applyConstraints({ advanced:[{ torch: flashOn }] });
+        document.getElementById("toggleLight").innerText =
+            flashOn ? "🔦 Lanterna (Ligada)" : "🔦 Lanterna (Desligada)";
+    }
+    catch (e) {
+        showMsg("⚠️ Erro ao ligar lanterna", false);
+    }
+}
+
+document.getElementById("toggleLight").onclick = () => toggleTorch();
+
+/* TROCAR CÂMERA */
+document.getElementById("switchCam").onclick = async () => {
+    if (!cameras.length) return;
+
+    currentCam = (currentCam + 1) % cameras.length;
+
+    await html5Qr.stop();
+    startScanner();
+};
+
+/* RESET */
+document.getElementById("reset").onclick = () => {
+    used.clear();
+    localStorage.removeItem("usedCodes");
+
+    historyData = [];
+    localStorage.removeItem("historyData");
+
+    totalValid = totalUsed = totalInvalid = 0;
+    updateCounters();
+
+    updateHistory();
+    showMsg("🔄 Histórico resetado", true);
+};
+
+/* EXPORT CSV */
+document.getElementById("export").onclick = () => {
+    let csv = "codigo,data_hora\n";
+
+    historyData.forEach(item => {
+        csv += `${item.code},${item.date}\n`;
+    });
+
+    const blob = new Blob([csv], {type:"text/csv"});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "ingressos.csv";
+    a.click();
+};
+
+/* EXPORTAR PDF */
+document.getElementById("exportPDF").onclick = () => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    const data = new Date().toLocaleString("pt-BR");
+
+    pdf.setFontSize(18);
+    pdf.text("Relatório de Entradas - ESIP Sistemas", 10, 20);
+
+    pdf.setFontSize(12);
+    pdf.text(`Gerado em: ${data}`, 10, 35);
+    pdf.text(`Total de entradas válidas: ${totalValid}`, 10, 45);
+
+    pdf.setFontSize(14);
+    pdf.text("Entradas:", 10, 60);
+    pdf.setFontSize(12);
+
+    let y = 70;
+    historyData.forEach((item, index) => {
+        pdf.text(`${index+1} - ${item.code}  |  ${item.date}`, 10, y);
+        y += 8;
+
+        if (y > 280) {
+            pdf.addPage();
+            y = 20;
+        }
+    });
+
+    pdf.save("relatorio_esip.pdf");
+};
+</script>
+
+</body>
+</html>
