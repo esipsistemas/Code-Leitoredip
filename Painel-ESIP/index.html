@@ -1,1 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP - Sistemas</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+    background: #1a0000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding-bottom: 40px;
+}
+h2 { margin-top: 20px; }
+
+#reader {
+    width: 350px;
+    margin: 20px auto;
+    border: 4px solid #ff0000;
+    border-radius: 12px;
+}
+
+.btn {
+    background: #ff0000;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    margin: 8px 0;
+    width: 90%;
+}
+
+#msg {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.green { color: #00ff88; }
+.red { color: #ff4444; }
+
+.flash-ok { animation: flashGreen 0.25s; }
+.flash-bad { animation: flashRed 0.25s; }
+
+@keyframes flashGreen {
+    0% { background: #00ff8860; }
+    100% { background: transparent; }
+}
+@keyframes flashRed {
+    0% { background: #ff444460; }
+    100% { background: transparent; }
+}
+
+/* Histórico */
+#history {
+    margin-top: 20px;
+    padding: 10px;
+}
+.badge {
+    display: inline-block;
+    margin: 5px;
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-size: 14px;
+    background: #330000;
+    border: 1px solid #ff4444;
+    color: #fff;
+}
+.badge.valid {
+    background: #003314;
+    border-color: #00ff88;
+}
+
+/* Contadores */
+#counters {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+.counter-box {
+    background: #330000;
+    border: 2px solid #ff0000;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 15px;
+}
+
+/* Light mode */
+.theme-btn { margin-top: 10px; font-size: 14px; background:#444; }
+.light { background:#fafafa; color:#111; }
+.light #reader { border-color:#cc0000; }
+.light .btn { background:#cc0000; }
+.light .badge { background:#ddd; border-color:#999; }
+</style>
+</head>
+<body>
+
+<h2>📡 ESIP - Sistemas</h2>
+
+<div id="counters">
+    <div class="counter-box">Válidos: <span id="countValid">0</span></div>
+    <div class="counter-box">Usados: <span id="countUsed">0</span></div>
+    <div class="counter-box">Inválidos: <span id="countInvalid">0</span></div>
+    <div class="counter-box">🧠 Memória: <span id="countMemory">0</span></div>
+</div>
+
+<button class="btn theme-btn" id="themeToggle">🌙 Alternar Tema</button>
+
+<div id="reader"></div>
+
+<button id="toggleLight" class="btn">🔦 Lanterna (Ligada)</button>
+<button id="switchCam" class="btn">🔄 Trocar Câmera</button>
+<button id="reset" class="btn">🗑️ Resetar Ingressos</button>
+<button id="export" class="btn">📤 Exportar CSV</button>
+<button id="exportPDF" class="btn">📄 Exportar PDF</button>
+
+<div id="msg"></div>
+
+<h3>📜 Histórico</h3>
+<div id="history"></div>
+
+<script>
+/* ===============================
+      SISTEMA ESIP - LEITOR 2025
+================================*/
+
+/* CONFIG */
+const STORAGE_USED_KEY = "usedCodesMap_v1";
+const STORAGE_COUNT_VALID = "countValid";
+const STORAGE_COUNT_USED = "countUsed";
+const STORAGE_COUNT_INVALID = "countInvalid";
+const RESET_PASSWORD = "ESIP2025";
+
+let html5Qr, flashOn = true, scanning = true;
+let currentCam = 0, cameras = [];
+
+let usedMap = {};
+loadUsedMap();
+
+/* CONTADORES */
+let totalValid   = parseInt(localStorage.getItem(STORAGE_COUNT_VALID)   || "0");
+let totalUsed    = parseInt(localStorage.getItem(STORAGE_COUNT_USED)    || "0");
+let totalInvalid = parseInt(localStorage.getItem(STORAGE_COUNT_INVALID) || "0");
+
+document.getElementById("countValid").textContent = totalValid;
+document.getElementById("countUsed").textContent = totalUsed;
+document.getElementById("countInvalid").textContent = totalInvalid;
+updateMemoryCount();
+
+/* UTILS */
+function nowTs(){ return Date.now(); }
+
+function saveCounts(){
+    localStorage.setItem(STORAGE_COUNT_VALID, totalValid);
+    localStorage.setItem(STORAGE_COUNT_USED, totalUsed);
+    localStorage.setItem(STORAGE_COUNT_INVALID, totalInvalid);
+}
+
+/* LOAD MAP */
+function loadUsedMap() {
+    try {
+        const raw = localStorage.getItem(STORAGE_USED_KEY);
+        usedMap = raw ? JSON.parse(raw) : {};
+    } catch {
+        usedMap = {};
+    }
+}
+
+/* SAVE MAP */
+function saveUsedMap(){
+    localStorage.setItem(STORAGE_USED_KEY, JSON.stringify(usedMap));
+    updateMemoryCount();
+}
+
+/* HISTÓRICO */
+function updateHistory(){
+    const box = document.getElementById("history");
+    box.innerHTML = "";
+
+    const entries = Object.entries(usedMap)
+        .sort((a,b)=> b[1] - a[1]);
+
+    for (const [code, ts] of entries) {
+        const div = document.createElement("div");
+        div.className = "badge valid";
+        div.textContent = `${code} · ${new Date(ts).toLocaleString()}`;
+        box.appendChild(div);
+    }
+}
+
+function updateMemoryCount(){
+    document.getElementById("countMemory").textContent = Object.keys(usedMap).length;
+}
+
+/* VALIDAÇÃO */
+function validateCode(code){
+    return code.startsWith("INGR-");
+}
+
+/* PROCESSAR QR */
+function processQR(decodedText){
+    if (!scanning) return;
+    scanning = false;
+
+    const code = decodedText.trim();
+
+    if (!validateCode(code)) {
+        totalInvalid++; saveCounts();
+        flash("bad");
+        showMsg("❌ QR inválido", false);
+    }
+    else if (!usedMap[code]) {
+        usedMap[code] = nowTs();
+        saveUsedMap();
+
+        totalValid++; saveCounts();
+        flash("good");
+        showMsg("✅ Ingresso válido", true);
+        updateHistory();
+    }
+    else {
+        totalUsed++; saveCounts();
+        flash("bad");
+        showMsg("⚠️ Já utilizado", false);
+    }
+
+    setTimeout(()=> scanning = true, 600);
+}
+
+function showMsg(txt, ok){
+    const m = document.getElementById("msg");
+    m.textContent = txt;
+    m.className = ok ? "green" : "red";
+}
+
+/* FLASH */
+function flash(type){
+    const cls = (type === "good") ? "flash-ok" : "flash-bad";
+    document.body.classList.add(cls);
+    setTimeout(()=> document.body.classList.remove(cls), 250);
+}
+
+/* CÂMERA */
+async function startScanner(){
+    html5Qr = new Html5Qrcode("reader");
+    cameras = await Html5Qrcode.getCameras();
+    if (!cameras.length) return;
+
+    await html5Qr.start(
+        cameras[currentCam].id,
+        { fps:10, qrbox:250 },
+        processQR
+    );
+
+    setTimeout(() => toggleTorch(true), 600);
+}
+startScanner();
+
+document.getElementById("switchCam").onclick = async () => {
+    currentCam = (currentCam + 1) % cameras.length;
+    await html5Qr.stop();
+    startScanner();
+};
+
+/* TORCH */
+async function toggleTorch(force=null){
+    const t = html5Qr.getRunningTrack();
+    if (!t) return;
+
+    const caps = t.getCapabilities?.();
+    if (!caps?.torch) return;
+
+    flashOn = force !== null ? force : !flashOn;
+    await t.applyConstraints({ advanced:[{torch:flashOn}] });
+
+    document.getElementById("toggleLight").textContent =
+        flashOn ? "🔦 Lanterna (Ligada)" : "🔦 Lanterna (Desligada)";
+};
+document.getElementById("toggleLight").onclick = ()=> toggleTorch();
+
+/* RESET PROTEGIDO */
+document.getElementById("reset").onclick = () => {
+    const senha = prompt("Digite a senha:");
+    if (senha !== RESET_PASSWORD) return alert("Senha incorreta!");
+
+    usedMap = {};
+    totalValid = totalUsed = totalInvalid = 0;
+
+    saveUsedMap();
+    saveCounts();
+    updateHistory();
+    updateMemoryCount();
+
+    showMsg("✔ Histórico apagado", true);
+};
+
+/* EXPORTAR CSV */
+document.getElementById("export").onclick = () => {
+    const rows = [["codigo","timestamp"]];
+    for (const [c,t] of Object.entries(usedMap)){
+        rows.push([c, new Date(t).toLocaleString()]);
+    }
+
+    const csv = rows.map(r=>r.join(";")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ingressos.csv";
+    a.click();
+};
+
+/* EXPORTAR PDF */
+document.getElementById("exportPDF").onclick = () => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+
+    pdf.setFontSize(18);
+    pdf.text("📄 Relatório - ESIP Sistemas", 10, 15);
+
+    pdf.setFontSize(12);
+    pdf.text("Exportado em: " + new Date().toLocaleString(), 10, 25);
+
+    pdf.setLineWidth(0.4);
+    pdf.line(10, 30, 200, 30);
+
+    let y = 40;
+
+    for (const [code, ts] of Object.entries(usedMap)) {
+        if (y > 280) { pdf.addPage(); y = 20; }
+        pdf.text(`${code}   |   ${new Date(ts).toLocaleString()}`, 10, y);
+        y += 10;
+    }
+
+    pdf.save("ingressos.pdf");
+};
+
+updateHistory();
+updateMemoryCount();
+saveCounts();
+</script>
+
+</body>
+</html>
 
