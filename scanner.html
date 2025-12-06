@@ -1,1 +1,512 @@
 
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>ESIP - Painel Profissional</title>
+
+<!-- Bibliotecas -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+  :root{
+    --primary:#0073b0; --accent:#33aaff;
+    --success:#28a745; --danger:#e53935;
+    --card:#ffffff; --glass: rgba(255,255,255,0.7);
+  }
+  body{font-family:Inter, Poppins, Arial; margin:0;background:linear-gradient(180deg,#eaf6ff,#f7fbff);color:#222}
+  .wrap{max-width:1100px;margin:26px auto;padding:22px;border-radius:12px;box-shadow:0 12px 30px rgba(10,20,40,0.08);background:var(--card)}
+  h1{color:var(--primary);margin:0 0 12px;font-family:'Playfair Display',serif}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .col{flex:1;min-width:260px}
+  .card{background:var(--glass);padding:14px;border-radius:10px;border:1px solid rgba(0,0,0,0.04)}
+  input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #ddd;margin-top:6px;box-sizing:border-box}
+  button{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+  .btn-primary{background:linear-gradient(135deg,var(--primary),var(--accent));color:white}
+  .btn-ghost{background:transparent;border:1px solid #ddd}
+  .small{font-size:13px;color:#666}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:8px;border-bottom:1px solid #efefef;text-align:left;font-size:13px}
+  .status-ok{color:var(--success);font-weight:700}
+  .status-no{color:var(--danger);font-weight:700}
+  .actions{display:flex;gap:8px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .badge{background:#f0f8ff;padding:6px 10px;border-radius:999px;border:1px solid rgba(0,115,176,0.08);font-weight:700;color:var(--primary)}
+  .search{display:flex;gap:8px;align-items:center}
+  .preview-qr{width:120px;height:120px;margin:auto}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="topbar">
+    <h1>📡 ESIP — Painel Profissional</h1>
+    <div>
+      <span class="badge" id="badgeTotal">0 ingressos</span>
+    </div>
+  </div>
+
+  <!-- CONTADORES E CONTROLES -->
+  <div class="row" style="margin-bottom:12px">
+    <div class="col card">
+      <h3 style="margin:0 0 8px">🔢 Contadores</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div><div class="small">Vendidos</div><div id="cntVend" style="font-size:20px;font-weight:700">0</div></div>
+        <div><div class="small">Validados</div><div id="cntVal" style="font-size:20px;font-weight:700">0</div></div>
+        <div><div class="small">Pendentes</div><div id="cntPend" style="font-size:20px;font-weight:700">0</div></div>
+        <div><div class="small">Limite</div><div id="cntLimit" style="font-size:16px">—</div></div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-primary" onclick="openScanner()">Abrir Leitor (nova aba)</button>
+        <button class="btn-ghost" onclick="exportarExcel()">Exportar .xlsx</button>
+        <button class="btn-ghost" onclick="exportarPDF()">Exportar PDF</button>
+        <button class="btn-ghost" onclick="abrirBackup()">Backup / Restaurar</button>
+      </div>
+    </div>
+
+    <!-- GERADOR -->
+    <div class="col card">
+      <h3 style="margin:0 0 8px">🎫 Gerar Ingresso</h3>
+
+      <label>Nome</label>
+      <input id="gNome" placeholder="Nome do comprador" />
+
+      <label>CPF</label>
+      <input id="gCpf" placeholder="000.000.000-00" />
+
+      <label>Categoria</label>
+      <select id="gCategoria">
+        <option value="VIP">VIP</option>
+      </select>
+
+      <label>Quantidade</label>
+      <input id="gQtd" type="number" min="1" value="1" />
+
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button class="btn-primary" onclick="gerarIngressos()">Gerar</button>
+        <button class="btn-ghost" onclick="imprimirUltimos()">Imprimir últimos</button>
+      </div>
+
+      <div style="margin-top:10px;font-size:13px;color:#666">
+        <strong>Último ingresso:</strong>
+        <div id="ultimoInfo" class="small">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BUSCA / FILTROS / GRÁFICOS -->
+  <div class="row" style="margin-bottom:12px">
+    <div class="col card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="search" style="flex:1">
+          <input id="busca" placeholder="Buscar por Nome, CPF, ID" oninput="renderLista()" />
+          <select id="filtroStatus" onchange="renderLista()" style="width:160px">
+            <option value="all">Todos</option>
+            <option value="validado">Validado</option>
+            <option value="pendente">Pendente</option>
+          </select>
+          <select id="filtroCategoria" onchange="renderLista()" style="width:140px;margin-left:6px">
+            <option value="all">Todas categorias</option>
+            <option value="VIP">VIP</option>
+          </select>
+        </div>
+
+        <div style="width:260px;text-align:right">
+          <div class="small">Dashboard Rápido</div>
+          <canvas id="chartResumo" style="width:220px;height:80px"></canvas>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;max-height:320px;overflow:auto">
+        <table id="tableIngressos">
+          <thead><tr><th>ID</th><th>Nome</th><th>CPF</th><th>Categoria</th><th>Status</th><th>Data</th><th> Ações</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- TELA AO VIVO -->
+    <div class="col card">
+      <h3 style="margin:0 0 8px">🎥 Validações ao vivo</h3>
+      <div id="feedAoVivo" style="min-height:220px;overflow:auto"></div>
+      <div style="margin-top:10px">
+        <label class="small">Exigir senha administrativa para ações:</label>
+        <input id="adminSenha" placeholder="Defina/Digite senha" />
+        <div style="margin-top:6px">
+          <button class="btn-ghost" onclick="definirSenha()">Salvar senha</button>
+          <button class="btn-ghost" onclick="limparSenha()">Remover senha</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAIS / BACKUP -->
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+    <div class="card" style="flex:1">
+      <h3 style="margin:0 0 8px">⚙️ Backup e Configurações</h3>
+      <div class="small">Salvar / restaurar banco local</div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn-ghost" onclick="downloadBackup()">Download Backup</button>
+        <input id="fileRestore" type="file" accept=".json" style="display:inline-block" onchange="restaurarBackup(event)" />
+      </div>
+
+      <div style="margin-top:12px">
+        <label>Limite de ingressos (0 = sem limite)</label>
+        <input id="limiteIngressos" type="number" min="0" value="0" />
+        <div style="margin-top:8px">
+          <button class="btn-primary" onclick="salvarLimite()">Salvar Limite</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="width:260px">
+      <h3 style="margin:0 0 8px">🔎 Visual do Ingresso</h3>
+      <div id="previewTicket" style="padding:8px;border-radius:8px;background:#fff;text-align:center">
+        <div class="preview-qr" id="previewQr"></div>
+        <div id="previewText" style="margin-top:6px;font-size:13px;color:#333">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;text-align:center;color:#777;font-size:13px">© 2025 ESIP-Sistemas — Rodando em localStorage (use scanner externo para validar)</div>
+</div>
+
+<script>
+/* ------------------------
+  Constantes e helpers
+   ------------------------*/
+const LS_KEY = 'ingressos_esip';
+const CFG_KEY = 'esip_cfg';
+const ADMIN_KEY = 'esip_admin_senha';
+const defaultCfg = { limite: 0, categories: ['VIP'] };
+
+function loadCfg() {
+  try {
+    return JSON.parse(localStorage.getItem(CFG_KEY)) || defaultCfg;
+  } catch(e){ return defaultCfg; }
+}
+function saveCfg(c){ localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+
+function loadIngressos(){ return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+function saveIngressos(list){ localStorage.setItem(LS_KEY, JSON.stringify(list)); }
+
+/* ------------------------
+  Inicialização
+   ------------------------*/
+let cfg = loadCfg();
+document.getElementById('gCategoria').value = cfg.categories[0] || 'VIP';
+document.getElementById('limiteIngressos').value = cfg.limite || 0;
+
+let chart = null;
+function atualizarContadores(){
+  const list = loadIngressos();
+  const vendidos = list.length;
+  const validados = list.filter(x=>x.validado).length;
+  const pendentes = vendidos - validados;
+  document.getElementById('cntVend').textContent = vendidos;
+  document.getElementById('cntVal').textContent = validados;
+  document.getElementById('cntPend').textContent = pendentes;
+  document.getElementById('badgeTotal').textContent = vendidos + ' ingressos';
+  document.getElementById('cntLimit').textContent = cfg.limite>0?cfg.limite:'—';
+
+  // Chart
+  const ctx = document.getElementById('chartResumo');
+  const data = { labels:['Validados','Pendentes'], datasets:[{data:[validados,pendentes]}] };
+  if(!chart){ chart = new Chart(ctx,{type:'doughnut',data,options:{plugins:{legend:{display:true}}}}); }
+  else { chart.data = data; chart.update(); }
+}
+
+/* ------------------------
+  Render lista com busca / filtros
+   ------------------------*/
+function renderLista(){
+  const list = loadIngressos().slice().reverse();
+  const busca = document.getElementById('busca').value.toLowerCase();
+  const filtro = document.getElementById('filtroStatus').value;
+  const fc = document.getElementById('filtroCategoria').value;
+
+  const tbody = document.querySelector('#tableIngressos tbody');
+  let html = '';
+  list.forEach(item=>{
+    if(busca){
+      const s = (item.id+' '+item.nome+' '+item.cpf).toLowerCase();
+      if(!s.includes(busca)) return;
+    }
+    if(filtro==='validado' && !item.validado) return;
+    if(filtro==='pendente' && item.validado) return;
+    if(fc!=='all' && item.categoria !== fc) return;
+
+    html += `<tr>
+      <td style="max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.id}</td>
+      <td>${item.nome}</td>
+      <td>${item.cpf}</td>
+      <td>${item.categoria||'—'}</td>
+      <td>${item.validado ? '<span class="status-ok">VALIDADO</span>' : '<span class="status-no">PENDENTE'}</td>
+      <td>${item.data || ''}</td>
+      <td class="actions">
+        <button class="btn-ghost" onclick="visualizar('${item.id}')">Visualizar</button>
+        <button class="btn-ghost" onclick="forcarValidacao('${item.id}')">Forçar validar</button>
+        <button class="btn-ghost" onclick="remover('${item.id}')">Remover</button>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html||'<tr><td colspan="7" style="text-align:center;color:#888">Nenhum ingresso</td></tr>';
+}
+
+/* ------------------------
+  Gerar ingressos
+   ------------------------*/
+function gerarIngressos(){
+  const nome = document.getElementById('gNome').value.trim();
+  const cpf = document.getElementById('gCpf').value.trim();
+  const categoria = document.getElementById('gCategoria').value;
+  const qtd = Math.max(1, parseInt(document.getElementById('gQtd').value || 1));
+
+  if(!nome || !cpf){ alert('Preencha nome e CPF'); return; }
+
+  let lista = loadIngressos();
+  if(cfg.limite>0 && lista.length + qtd > cfg.limite){ alert('Limite de ingressos atingido'); return; }
+
+  let gerados = [];
+  for(let i=0;i<qtd;i++){
+    const id = 'ESIP-'+Date.now()+'-'+Math.floor(Math.random()*90000+10000);
+    const item = { id, nome, cpf, categoria, data:new Date().toLocaleString(), validado:false };
+    lista.push(item);
+    gerados.push(item);
+  }
+
+  saveIngressos(lista);
+  atualizarContadores();
+  renderLista();
+
+  // Preview último
+  const ultimo = gerados[gerados.length-1];
+  document.getElementById('ultimoInfo').textContent = `${ultimo.id} — ${ultimo.nome} (${ultimo.categoria})`;
+  // QR preview
+  document.getElementById('previewQr').innerHTML = '';
+  new QRCode(document.getElementById('previewQr'), ultimo.id);
+  document.getElementById('previewText').textContent = `${ultimo.id}\n${ultimo.nome}`;
+
+  // Auto download PDF dos gerados (um por vez)
+  gerados.forEach((g, idx) => setTimeout(()=> baixarPdfUnico(g), idx*300));
+}
+
+/* ------------------------
+  PDF / Impressão
+   ------------------------*/
+function baixarPdfUnico(item){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:'pt',format:[340,470]});
+  doc.setFontSize(16); doc.setTextColor(0,115,176); doc.text('ESIP - Ingresso',170,36,{align:'center'});
+  doc.setFontSize(11); doc.setTextColor(20,20,20);
+  let y=70;
+  doc.text(`ID: ${item.id}`,20,y); y+=18;
+  doc.text(`Nome: ${item.nome}`,20,y); y+=18;
+  doc.text(`CPF: ${item.cpf}`,20,y); y+=18;
+  doc.text(`Categoria: ${item.categoria}`,20,y); y+=18;
+  doc.text(`Emitido: ${item.data}`,20,y);
+  // gerar QR canvas temporário
+  const qrDiv = document.createElement('div'); qrDiv.style.display='none'; document.body.appendChild(qrDiv);
+  const q = new QRCode(qrDiv, {text:item.id,width:180,height:180});
+  setTimeout(()=>{
+    const c = qrDiv.querySelector('canvas');
+    if(c) doc.addImage(c.toDataURL('image/png'),'PNG',80,200,180,180);
+    doc.save(`Ingresso-${item.id}.pdf`);
+    document.body.removeChild(qrDiv);
+  },220);
+}
+
+function imprimirUltimos(){
+  // abre nova aba com HTML simples para imprimir (últimos 10)
+  const lista = loadIngressos().slice(-10);
+  let html = '<html><head><title>Imprimir Ingressos</title></head><body>';
+  lista.forEach(l => html += `<div style="page-break-after:always;margin:10px;padding:10px;border:1px solid #ddd;"><h3>${l.categoria}</h3><p>${l.id}<br>${l.nome}<br>${l.cpf}</p></div>`);
+  html += '</body></html>';
+  const w = window.open('about:blank','_blank'); w.document.write(html); w.document.close(); w.print();
+}
+
+/* ------------------------
+  Export Excel / PDF completo
+   ------------------------*/
+function exportarExcel(){
+  const data = loadIngressos().map(i=>({ID:i.id,Nome:i.nome,CPF:i.cpf,Categoria:i.categoria,Validado:i.validado?'Sim':'Nao',Emitido:i.data}));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Ingressos');
+  const wbout = XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  saveAs(new Blob([wbout],{type:'application/octet-stream'}), 'ingressos_esip.xlsx');
+}
+
+function exportarPDF(){
+  const list = loadIngressos();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14); doc.text('Relatório de Ingressos',14,20);
+  let y=30;
+  list.forEach((it,idx)=>{
+    doc.setFontSize(10);
+    doc.text(`${it.id} | ${it.nome} | ${it.cpf} | ${it.categoria} | ${it.validado?'VALIDADO':'PENDENTE'}`,14,y);
+    y+=8;
+    if(y>280){ doc.addPage(); y=20; }
+  });
+  doc.save('relatorio_ingressos.pdf');
+}
+
+/* ------------------------
+  Backup / Restore / Limite
+   ------------------------*/
+function downloadBackup(){
+  const blob = new Blob([localStorage.getItem(LS_KEY) || '[]'], {type:'application/json'});
+  saveAs(blob, 'backup_ingressos.json');
+}
+function restaurarBackup(e){
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=> {
+    try{
+      const arr = JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw 'Inválido';
+      localStorage.setItem(LS_KEY, JSON.stringify(arr));
+      alert('Backup restaurado');
+      atualizarContadores(); renderLista();
+    }catch(err){ alert('Arquivo inválido'); }
+  };
+  r.readAsText(f);
+}
+
+function abrirBackup(){ document.getElementById('fileRestore').click(); }
+
+function salvarLimite(){
+  const v = parseInt(document.getElementById('limiteIngressos').value || 0);
+  cfg.limite = isNaN(v)?0:v;
+  saveCfg(cfg);
+  alert('Limite salvo');
+  atualizarContadores();
+}
+
+/* ------------------------
+  Ações sobre ingressos (visualizar, forçar validar, remover)
+   ------------------------*/
+function visualizar(id){
+  const item = loadIngressos().find(x=>x.id===id);
+  if(!item) return alert('Não encontrado');
+  const w = window.open('','_blank');
+  w.document.write(`<pre>${JSON.stringify(item, null, 2)}</pre>`);
+}
+
+function forcarValidacao(id){
+  const senha = localStorage.getItem(ADMIN_KEY);
+  if(senha){
+    const entrada = prompt('Senha admin:');
+    if(entrada !== senha) return alert('Senha inválida');
+  }
+  let list = loadIngressos();
+  const idx = list.findIndex(x=>x.id===id);
+  if(idx===-1) return alert('Não encontrado');
+  if(list[idx].validado) return alert('Já validado');
+  list[idx].validado = true;
+  list[idx].dataValidacao = new Date().toLocaleString();
+  saveIngressos(list);
+  pushAoVivo(list[idx]);
+  atualizarContadores(); renderLista();
+  alert('Válidado manualmente');
+}
+
+function remover(id){
+  if(!confirm('Remover este ingresso?')) return;
+  let list = loadIngressos().filter(x=>x.id!==id);
+  saveIngressos(list);
+  atualizarContadores(); renderLista();
+}
+
+/* ------------------------
+  Admin senha
+   ------------------------*/
+function definirSenha(){
+  const v = document.getElementById('adminSenha').value;
+  if(!v){ alert('Digite a senha'); return; }
+  localStorage.setItem(ADMIN_KEY, v);
+  alert('Senha salva localmente');
+}
+
+function limparSenha(){ localStorage.removeItem(ADMIN_KEY); alert('Senha removida'); }
+
+/* ------------------------
+  Live feed (exibe eventos vindos do scanner)
+   ------------------------*/
+function pushAoVivo(item){
+  const feed = document.getElementById('feedAoVivo');
+  const el = document.createElement('div');
+  el.style.padding='8px'; el.style.borderBottom='1px solid #f0f0f0';
+  el.innerHTML = `<strong>${item.id}</strong> — ${item.nome} <div class="small">${item.dataValidacao||new Date().toLocaleString()}</div>`;
+  feed.prepend(el);
+}
+
+/* ------------------------
+  Comunicação: scanner abre a aba e atualiza localStorage.
+  Para garantir atualização em outra aba usamos "storage" event listener
+   ------------------------*/
+window.addEventListener('storage', (e) => {
+  if(e.key === LS_KEY){
+    atualizarContadores();
+    renderLista();
+    // detectar último validado e mostrar no feed
+    try {
+      const newList = JSON.parse(e.newValue || '[]');
+      const oldList = JSON.parse(e.oldValue || '[]');
+      const newVal = newList.find(n => {
+        const old = oldList.find(o => o.id === n.id);
+        return n.validado && (!old || !old.validado);
+      });
+      if(newVal) pushAoVivo(newVal);
+    }catch(err){}
+  }
+});
+
+/* ------------------------
+  Função openScanner (abre scanner.html em nova aba)
+   ------------------------*/
+function openScanner(){
+  const base = location.origin + location.pathname.replace(/\/[^\/]*$/,'/');
+  const scannerUrl = base + 'scanner.html'; // se você hospedar ao lado
+  window.open(scannerUrl, '_blank');
+}
+
+/* ------------------------
+  Funções chamadas pelo scanner (forçar validação via localStorage)
+   ------------------------*/
+function marcarValidadoPorScanner(id){
+  let list = loadIngressos();
+  const idx = list.findIndex(x=>x.id===id);
+  if(idx === -1) return false;
+  if(list[idx].validado) return false; // já validado
+  list[idx].validado = true;
+  list[idx].dataValidacao = new Date().toLocaleString();
+  saveIngressos(list);
+  return list[idx];
+}
+
+/* ------------------------
+  Inicial startup
+   ------------------------*/
+atualizarContadores();
+renderLista();
+
+/* ---------- util: baixar backup via botão invisible ---------- */
+function restaurarBackupFile(fileJson){
+  try{
+    const arr = JSON.parse(fileJson);
+    localStorage.setItem(LS_KEY, JSON.stringify(arr));
+    atualizarContadores(); renderLista();
+    alert('Backup restaurado');
+  }catch(e){ alert('Arquivo inválido'); }
+}
+</script>
+</body>
+</html>
