@@ -1,1 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador ESIP + Admin</title>
+
+<!-- QRCode.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body {
+    background: #2b0000;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+.container {
+    max-width: 420px;
+    margin: auto;
+    background: #3a0000;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 0 12px #ff000033;
+}
+label {
+    display: block;
+    text-align: left;
+    margin-top: 15px;
+}
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    margin-top: 5px;
+    background: #550000;
+    color: white;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    background: #ff0000;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    margin-top: 18px;
+    cursor: pointer;
+}
+#qrcode {
+    margin-top: 20px;
+}
+
+/* ÁREA OCULTA DO ADMIN */
+#loginBox, #adminArea {
+    display: none;
+    background: #1a0000;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 900px;
+    margin: 40px auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    table-layout: fixed;
+    word-wrap: break-word;
+}
+th, td {
+    border: 1px solid #660000;
+    padding: 6px;
+    text-align: left;
+    font-size: 14px;
+}
+th {
+    background: #330000;
+}
+.small {
+    font-size: 13px;
+    opacity: 0.9;
+}
+.row-actions button {
+    width: auto;
+    padding: 6px 10px;
+    margin-right: 6px;
+    font-size: 13px;
+}
+
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 900px;
+    margin: 0 auto 18px auto;
+}
+.header-row h2 { margin: 0; }
+.top-buttons { display: flex; gap: 10px; }
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  button { font-size: 16px; }
+  th, td { font-size: 12px; }
+}
+.notice {
+    margin-top: 8px;
+    color: #aaffcc;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header-row">
+  <h2>📡 ESIP - Gerador de Ingressos</h2>
+  <div class="top-buttons">
+    <button onclick="mostrarLogin()">🔐 Área do Administrador</button>
+  </div>
+</div>
+
+<!-- ======================== GERADOR ======================== -->
+<div class="container">
+
+    <label>Nome:</label>
+    <input id="nome" type="text" placeholder="Digite seu nome">
+
+    <label>Evento:</label>
+    <input id="evento" type="text" placeholder="Nome do evento" oninput="this.value = this.value.toUpperCase()">
+
+    <label>CPF (11 dígitos):</label>
+    <input id="cpf" type="text" maxlength="11" placeholder="Somente números" oninput="formatCPFInput(this)">
+
+    <button onclick="gerarQR()">Gerar QR</button>
+
+    <div id="qrcode"></div>
+
+    <button onclick="baixarPDF()">📄 Baixar PDF</button>
+
+    <p id="status" class="notice"></p>
+</div>
+
+<!-- ======================== LOGIN ADMIN ======================== -->
+<div id="loginBox">
+    <h3>🔐 Login do Administrador</h3>
+    <input id="senhaAdmin" type="password" placeholder="Digite a senha">
+    <button onclick="validarAdmin()">Entrar</button>
+    <button onclick="fecharLogin()">Cancelar</button>
+</div>
+
+<!-- ======================== ÁREA ADMIN ======================== -->
+<div id="adminArea">
+    <h2>📋 Lista de Registros</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="small">Total de registros: <span id="contadorRegistros">0</span></div>
+      <div>
+        <button onclick="exportCSV()">📤 Exportar CSV</button>
+        <button onclick="limparRegistros()">🗑️ Limpar Registros</button>
+        <button onclick="fecharAdmin()">🔙 Voltar</button>
+      </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th width="22%">Nome</th>
+                <th width="18%">Evento</th>
+                <th width="14%">CPF</th>
+                <th width="18%">ID</th>
+                <th width="28%">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="registrosTabela"></tbody>
+    </table>
+</div>
+
+<script>
+let ultimoID = "";
+
+/* ======================== HELPERS ======================== */
+function formatCPFInput(el) {
+    // remove tudo que não for dígito
+    el.value = el.value.replace(/\D/g, '').substring(0, 11);
+}
+
+function _getRegistros() {
+    return JSON.parse(localStorage.getItem("esipRegistros") || "[]");
+}
+function _setRegistros(arr) {
+    localStorage.setItem("esipRegistros", JSON.stringify(arr));
+}
+
+/* ======================== GERADOR ======================== */
+function gerarQR() {
+    const nome = document.getElementById("nome").value.trim();
+    const evento = document.getElementById("evento").value.trim();
+    const cpf = document.getElementById("cpf").value.trim();
+
+    if (!nome || !evento || cpf.length !== 11) {
+        alert("Preencha todos os campos corretamente.\nCPF deve ter 11 dígitos numéricos.");
+        return;
+    }
+
+    ultimoID = "INGR-" + Math.random().toString(36).substring(2, 10).toUpperCase();
+
+    // remove QR anterior se existir
+    const qrcodeEl = document.getElementById("qrcode");
+    qrcodeEl.innerHTML = "";
+
+    new QRCode(qrcodeEl, {
+        text: ultimoID,
+        width: 200,
+        height: 200
+    });
+
+    salvarRegistro(nome, evento, cpf, ultimoID);
+
+    document.getElementById("status").textContent = "QR gerado com sucesso! ID: " + ultimoID;
+}
+
+/* ======================== SALVAR REGISTRO ======================== */
+function salvarRegistro(nome, evento, cpf, id) {
+    let registros = _getRegistros();
+
+    registros.push({ nome, evento, cpf, id, criadoEm: new Date().toISOString() });
+
+    _setRegistros(registros);
+}
+
+/* ======================== PDF ======================== */
+async function baixarPDF() {
+    if (!ultimoID) {
+        alert("Gere um QR primeiro.");
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("📡 ESIP - Sistemas de Segurança", 14, 18);
+
+    let y = 36;
+    doc.setFontSize(14);
+    doc.text("Nome: " + document.getElementById("nome").value, 14, y); y += 8;
+    doc.text("Evento: " + document.getElementById("evento").value, 14, y); y += 8;
+    doc.text("CPF: " + document.getElementById("cpf").value, 14, y); y += 8;
+    doc.text("ID: " + ultimoID, 14, y); y += 14;
+
+    const canvasQR = document.querySelector("#qrcode canvas");
+
+    if (!canvasQR) {
+        alert("Erro ao gerar QR.");
+        return;
+    }
+
+    const imgData = canvasQR.toDataURL("image/png");
+    // centraliza a imagem
+    const docWidth = doc.internal.pageSize.getWidth();
+    const imgWidth = 80;
+    const xPos = (docWidth - imgWidth) / 2;
+    doc.addImage(imgData, "PNG", xPos, y, imgWidth, imgWidth);
+
+    doc.save("Ingresso_" + ultimoID + ".pdf");
+}
+
+/* ======================== ÁREA ADMIN ======================== */
+function mostrarLogin() {
+    document.getElementById("loginBox").style.display = "block";
+    // limpa campo senha
+    document.getElementById("senhaAdmin").value = "";
+}
+
+function fecharLogin() {
+    document.getElementById("loginBox").style.display = "none";
+}
+
+function validarAdmin() {
+    const senha = document.getElementById("senhaAdmin").value;
+
+    // senha padrão: ADMIN2025 -> você pode alterar aqui
+    if (senha === "ADMIN2025") {
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminArea").style.display = "block";
+        carregarRegistros();
+    } else {
+        alert("Senha incorreta");
+    }
+}
+
+function fecharAdmin() {
+    document.getElementById("adminArea").style.display = "none";
+}
+
+/* CARREGA E EXIBE A TABELA */
+function carregarRegistros() {
+    const tabela = document.getElementById("registrosTabela");
+    tabela.innerHTML = "";
+
+    let registros = _getRegistros();
+
+    // atualiza contador
+    document.getElementById("contadorRegistros").textContent = registros.length;
+
+    if (registros.length === 0) {
+        tabela.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:12px;">Nenhum registro encontrado.</td></tr>`;
+        return;
+    }
+
+    registros.forEach((r, idx) => {
+        // escape simples para HTML (nome/evento podem ter chars)
+        const nomeSafe = escapeHtml(r.nome);
+        const eventoSafe = escapeHtml(r.evento);
+        const cpfSafe = escapeHtml(r.cpf);
+        const idSafe = escapeHtml(r.id);
+
+        tabela.innerHTML += `
+            <tr>
+                <td>${nomeSafe}</td>
+                <td>${eventoSafe}</td>
+                <td>${cpfSafe}</td>
+                <td>${idSafe}</td>
+                <td class="row-actions">
+                    <button onclick="downloadPDFRegistro(${idx})">📄 PDF</button>
+                    <button onclick="regerarQRRegistro(${idx})">🔃 QR</button>
+                    <button onclick="apagarRegistro(${idx})" style="background:#aa0000">🗑️ Apagar</button>
+                </td>
+            </tr>`;
+    });
+}
+
+/* ESCAPAR HTML para evitar que alguém injete markup na tabela */
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+}
+
+/* APAGAR registro individual */
+function apagarRegistro(index) {
+    if (!confirm("Apagar este registro?")) return;
+    let registros = _getRegistros();
+    registros.splice(index, 1);
+    _setRegistros(registros);
+    carregarRegistros();
+}
+
+/* REGERAR QR a partir do registro (mostra na tela principal) */
+function regerarQRRegistro(index) {
+    let registros = _getRegistros();
+    const r = registros[index];
+    if (!r) return alert("Registro não encontrado.");
+
+    // atualiza campos no form principal
+    document.getElementById("nome").value = r.nome;
+    document.getElementById("evento").value = r.evento;
+    document.getElementById("cpf").value = r.cpf;
+    ultimoID = r.id;
+
+    // gera QR (substitui o que existir)
+    document.getElementById("qrcode").innerHTML = "";
+    new QRCode(document.getElementById("qrcode"), {
+        text: ultimoID,
+        width: 200,
+        height: 200
+    });
+
+    document.getElementById("status").textContent = "QR recarregado: " + ultimoID;
+}
+
+/* DOWNLOAD PDF direto do registro */
+function downloadPDFRegistro(index) {
+    let registros = _getRegistros();
+    const r = registros[index];
+    if (!r) return alert("Registro não encontrado.");
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("📡 ESIP - Sistemas de Segurança", 14, 18);
+
+    let y = 36;
+    doc.setFontSize(14);
+    doc.text("Nome: " + r.nome, 14, y); y += 8;
+    doc.text("Evento: " + r.evento, 14, y); y += 8;
+    doc.text("CPF: " + r.cpf, 14, y); y += 8;
+    doc.text("ID: " + r.id, 14, y); y += 14;
+
+    // gerar QR temporário em canvas para adicionar no PDF
+    const tmpDiv = document.createElement("div");
+    tmpDiv.style.position = "absolute";
+    tmpDiv.style.left = "-9999px";
+    document.body.appendChild(tmpDiv);
+
+    const qr = new QRCode(tmpDiv, { text: r.id, width: 200, height: 200 });
+    // o QRCode.js cria um <img> ou <canvas> imediatamente, mas pode levar um frame.
+    setTimeout(() => {
+        const img = tmpDiv.querySelector("img") || tmpDiv.querySelector("canvas");
+        if (img) {
+            // converter para dataURL
+            let imgData;
+            if (img.tagName.toLowerCase() === "img") {
+                // imagem já tem src em dataURL
+                imgData = img.src;
+            } else {
+                imgData = img.toDataURL("image/png");
+            }
+            const docWidth = doc.internal.pageSize.getWidth();
+            const imgWidth = 80;
+            const xPos = (docWidth - imgWidth) / 2;
+            doc.addImage(imgData, "PNG", xPos, y, imgWidth, imgWidth);
+            doc.save("Ingresso_" + r.id + ".pdf");
+        } else {
+            alert("Erro ao gerar QR temporário para o PDF.");
+        }
+        // limpar
+        tmpDiv.remove();
+    }, 150);
+}
+
+/* EXPORTAR CSV */
+function exportCSV() {
+    let registros = _getRegistros();
+
+    if (registros.length === 0) {
+        alert("Não há registros para exportar.");
+        return;
+    }
+
+    // Função para escapar aspas e envolver em ""
+    function q(v) {
+        if (v === null || v === undefined) return '""';
+        return '"' + String(v).replace(/"/g, '""') + '"';
+    }
+
+    let csv = "NOME,EVENTO,CPF,ID,CRIA_EM\n";
+    registros.forEach(r => {
+        csv += `${q(r.nome)},${q(r.evento)},${q(r.cpf)},${q(r.id)},${q(r.criadoEm)}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "registros_esip.csv";
+    link.click();
+}
+
+/* LIMPAR REGISTROS */
+function limparRegistros() {
+    if (!confirm("Tem certeza que deseja apagar todos os registros?")) return;
+
+    localStorage.removeItem("esipRegistros");
+    carregarRegistros();
+}
+
+/* Inicializa tabela se abrir admin direto (se já estiver visível) */
+document.addEventListener("DOMContentLoaded", () => {
+    // mantém status inicial vazio
+    document.getElementById("status").textContent = "";
+});
+</script>
+
+</body>
+</html>
 
