@@ -1,1 +1,173 @@
 
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📡 ESIP-Sistemas – Controle de Acesso</title>
+
+<!-- Libs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- LEITOR 100% COMPATÍVEL -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<style>
+:root{--bg:#0a0f24;--card:#11182f;--accent:#1e2a78;--muted:#7eb6ff}
+body{margin:0;background:var(--bg);font-family:Arial;color:white}
+header{padding:20px;text-align:center;background:#0d1540}
+section{max-width:900px;margin:auto;padding:20px}
+.box{background:var(--card);padding:20px;border:1px solid var(--accent);border-radius:12px;margin-bottom:20px}
+.btn{padding:12px 16px;border:none;border-radius:10px;background:var(--accent);color:white;font-weight:bold;cursor:pointer}
+.btn.secondary{background:transparent;border:1px solid #3a4a9a}
+#qrResult{text-align:center;margin-top:12px}
+footer{text-align:center;opacity:.7;padding:20px;font-size:14px}
+
+/* leitor */
+#leitorArea{display:none}
+#reader{width:100%;margin-top:12px;border-radius:12px;overflow:hidden}
+.controls{display:flex;gap:10px;justify-content:center;margin-top:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📡 ESIP - SISTEMAS</h1>
+  <p>Controle de Acesso • Validação Antifraude • QR Code Inteligente</p>
+</header>
+
+<section>
+
+<!-- ==================== GERADOR ==================== -->
+<div class="box">
+<h2>🧩 Gerar QR Code</h2>
+<p>Digite qualquer texto para gerar um QR. Limite: <b>5 usos</b>.</p>
+
+<input id="qrText" type="text" placeholder="Digite algo..." style="width:100%;padding:12px;border-radius:8px;border:none;background:#0b1330;color:#fff">
+
+<div style="margin-top:15px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+  <button class="btn" onclick="generateQR()">Gerar QR</button>
+  <button class="btn secondary" onclick="downloadPNG()" id="btnPNG" disabled>📥 PNG</button>
+  <button class="btn secondary" onclick="downloadPDF()" id="btnPDF" disabled>📄 PDF</button>
+</div>
+
+<div id="qrResult"></div>
+<p id="limitMsg" style="color:#ff6b6b"></p>
+</div>
+
+<!-- ==================== LEITOR ==================== -->
+<div class="box">
+<h2>📲 Leitor de QR Code</h2>
+<button class="btn" onclick="openLeitor()">Iniciar Leitura</button>
+
+<div id="leitorArea">
+  <div id="reader"></div>
+
+  <div class="controls">
+    <button class="btn secondary" onclick="stopScan()">⏹ Parar</button>
+  </div>
+
+  <div id="output" style="margin-top:12px;text-align:center;background:#0b1330;padding:12px;border-radius:8px">
+    Aguardando leitura...
+  </div>
+</div>
+</div>
+
+<!-- ==================== BOTÃO VOLTAR ==================== -->
+<div style="text-align:center;margin-top:20px">
+  <a href="https://esipsistemas.github.io/Code-Leitoredip/Gerador-ESIP/" class="btn">⬅️ VOLTAR PARA PRINCIPAL</a>
+</div>
+
+</section>
+
+<footer>© 2025 ESIP-Sistemas – Versão GitHub Pages</footer>
+
+<script>
+// =================== GERADOR ===================
+let limit = 5;
+let currentQR = null;
+
+function generateQR(){
+  if(limit <= 0){
+    limitMsg.innerText = "Limite atingido!";
+    return;
+  }
+  const t = qrText.value.trim();
+  if(!t){ alert("Digite algo!"); return; }
+
+  limit--;
+  limitMsg.innerText = "Restam " + limit + " usos.";
+
+  qrResult.innerHTML = "";
+  let box = document.createElement("div");
+  qrResult.appendChild(box);
+
+  new QRCode(box, {
+    text: "INGR-" + t,
+    width: 260,
+    height: 260
+  });
+
+  setTimeout(()=>{
+    currentQR = box.querySelector("canvas");
+    btnPNG.disabled = !currentQR;
+    btnPDF.disabled = !currentQR;
+  }, 300);
+}
+
+function downloadPNG(){
+  if(!currentQR) return;
+  let url = currentQR.toDataURL("image/png");
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "esip-qr.png";
+  a.click();
+}
+
+function downloadPDF(){
+  if(!currentQR) return;
+  const { jsPDF } = window.jspdf;
+  let pdf = new jsPDF({unit:"mm", format:"a4"});
+  let img = currentQR.toDataURL("image/png");
+
+  pdf.text("ESIP - QR Code", 15, 15);
+  pdf.addImage(img, "PNG", 25, 25, 160, 160);
+  pdf.save("esip-qr.pdf");
+}
+
+// =================== LEITOR ===================
+let html5Qr = null;
+
+function openLeitor(){
+  leitorArea.style.display = "block";
+
+  html5Qr = new Html5Qrcode("reader");
+
+  html5Qr.start(
+    { facingMode: "environment" },
+    { fps: 10, qrbox: 250 },
+    (decoded) => {
+      showResult(decoded);
+      html5Qr.stop();
+    },
+    () => {}
+  );
+}
+
+function showResult(v){
+  output.innerHTML =
+    "Lido: <b>" + v + "</b><br>" +
+    (v.startsWith("INGR-") ? "Status: ✅ VÁLIDO" : "Status: ❌ Inválido");
+}
+
+function stopScan(){
+  if(html5Qr){
+    html5Qr.stop();
+  }
+  output.innerText = "Leitura parada.";
+}
+</script>
+
+</body>
+</html>
