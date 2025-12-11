@@ -1,1 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle de Estacionamento Offline</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<style>
+body { background:#0A1A2A; font-family:Arial; margin:0; padding:15px; color:#fff; }
+h2,h3{text-align:center;}
+button{width:100%; padding:14px; margin-top:10px; background:#0D47A1; color:#fff; border:none; border-radius:6px; font-size:18px; cursor:pointer;}
+button.red{background:#b71c1c;}
+input,select{width:100%; padding:12px; margin-top:10px; border-radius:6px; border:none; font-size:16px;}
+.box{background:#10263D; padding:15px; border-radius:10px; margin-top:20px; box-shadow:0 0 8px #0005;}
+.flash-btn{background:#ffb300; color:#000;}
+.operator{padding:12px; margin-top:10px; background:#083860; border-radius:6px;}
+.qr-container{text-align:center; margin-top:10px;}
+.small{font-size:12px; color:#aaa; margin-top:6px;}
+footer{text-align:center; font-size:12px; color:#aaa; margin-top:20px;}
+.msg{
+    position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    background:#ffb300; color:#000; padding:10px 20px;
+    border-radius:8px; font-weight:bold; z-index:9999; box-shadow:0 0 10px #000;
+}
+</style>
+</head>
+<body>
+
+<h2>🚗 Controle de Estacionamento Offline</h2>
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+<h3>Entrar como Operador</h3>
+<select id="operadorSelect"></select>
+<input id="operadorSenha" type="password" placeholder="Senha do operador">
+<button onclick="login()">Entrar</button>
+<hr>
+<button onclick="modoAdmin()">Entrar como ADMIN</button>
+<p class="small">Se for a primeira vez, entre como ADMIN para criar operadores.</p>
+</div>
+
+<!-- HOME -->
+<div id="home" class="box" style="display:none;">
+<h3 id="welcome"></h3>
+<button onclick="startCamera()">📷 Iniciar Leitor QR</button>
+<button onclick="showStatus()">📊 Status das Vagas</button>
+<button onclick="showExport()">📤 Exportar PDF</button>
+<button onclick="showQRGenerator()">🖨️ Gerar QR</button>
+<button onclick="showAdmin()" id="adminBtn" style="display:none;">⚙️ Área Administrativa</button>
+<button onclick="stopCamera()" id="stopBtn" style="display:none;margin-top:6px;" class="red">⛔ Parar Leitor</button>
+<button onclick="logout()" id="logoutBtn" class="red" style="display:none;margin-top:6px;">🚪 SAIR</button>
+</div>
+
+<!-- LEITOR -->
+<div id="readerContainer" style="display:none;">
+<button class="flash-btn" onclick="toggleFlash()">🔦 Ligar/Desligar Lanterna</button>
+<div id="reader" style="margin-top:10px;"></div>
+</div>
+
+<!-- STATUS -->
+<div id="statusBox" class="box" style="display:none;">
+<h3>Status das Vagas</h3>
+<p><b>Limite:</b> <span id="limiteVagas"></span></p>
+<p><b>Dentro:</b> <span id="totalDentro"></span></p>
+<p><b>Disponíveis:</b> <span id="disponiveis"></span></p>
+<div id="lista"></div>
+</div>
+
+<!-- EXPORTAR PDF -->
+<div id="exportBox" class="box" style="display:none;">
+<h3>Exportar Registros</h3>
+<button onclick="exportPDF()">📤 Baixar PDF</button>
+</div>
+
+<!-- GERAR QR -->
+<div id="qrBox" class="box" style="display:none;">
+<h3>Gerador de QR</h3>
+
+<input id="placaInput" placeholder="Placa">
+<input id="modeloInput" placeholder="Modelo">
+<input id="corInput" placeholder="Cor">
+<input id="proprietarioInput" placeholder="Nome do Proprietário">
+<input id="telInput" placeholder="Telefone">
+<select id="tipoInput">
+  <option value="">Tipo do Veículo</option>
+  <option>Carro</option>
+  <option>Moto</option>
+  <option>Caminhão</option>
+</select>
+<input id="obsInput" placeholder="Observações (opcional)">
+<button onclick="gerarQR()">Gerar QR + Registrar Entrada</button>
+
+<div class="qr-container" id="qrResult"></div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminBox" class="box" style="display:none;">
+<h3>Administração</h3>
+<input id="limiteInput" type="number" placeholder="Limite de vagas">
+<button onclick="salvarLimite()">Salvar limite</button>
+
+<h4>Operadores</h4>
+<input id="newOpName" placeholder="Nome do operador">
+<input id="newOpPass" type="password" placeholder="Senha do operador">
+<button onclick="addOperador()">Adicionar operador</button>
+<div id="operadoresLista"></div>
+
+<h4>Limpar Dados</h4>
+<input id="senhaMaster" type="password" placeholder="Senha master">
+<button onclick="limparDados()">Apagar tudo</button>
+<p class="small">Senha master padrão: <b>admin123</b>.</p>
+
+<h4>Alterar Senha Master</h4>
+<input id="novaSenhaMaster" type="password" placeholder="Nova senha master">
+<input id="confirmaNovaMaster" type="password" placeholder="Confirme a nova senha">
+<button onclick="alterarSenhaMaster()">Salvar nova senha</button>
+
+</div>
+
+<footer>⚠️ Área restrita. Uso exclusivo de operadores autorizados.</footer>
+
+<script>
+// =========================
+// HASH DE SENHA
+// =========================
+async function hashSenha(senha){
+    const encoder = new TextEncoder();
+    const data = encoder.encode(senha);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// =========================
+// UTIL
+// =========================
+function msg(t){
+    const d=document.createElement("div");
+    d.className="msg"; d.innerText=t;
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),1800);
+}
+
+let estacionamento=JSON.parse(localStorage.getItem("estacionamento"))||[];
+let operadores=JSON.parse(localStorage.getItem("operadores"))||[];
+let veiculosGerados=JSON.parse(localStorage.getItem("veiculosGerados"))||[];
+let limite=Number(localStorage.getItem("limite")??100);
+let qrReader=null;
+let FLASH=false;
+let currentUser=null;
+
+// Hash da senha master
+let senhaMasterHash = localStorage.getItem("senhaMasterHash") || null;
+
+async function initMaster(){
+    if(!senhaMasterHash){
+        senhaMasterHash = await hashSenha("admin123");
+        localStorage.setItem("senhaMasterHash", senhaMasterHash);
+    }
+}
+initMaster();
+
+if(operadores.length===0) operadores.push({nome:"admin", senha: senhaMasterHash});
+
+function save(){
+    localStorage.setItem("estacionamento",JSON.stringify(estacionamento));
+    localStorage.setItem("operadores",JSON.stringify(operadores));
+    localStorage.setItem("veiculosGerados",JSON.stringify(veiculosGerados));
+    localStorage.setItem("limite",String(limite));
+    localStorage.setItem("senhaMasterHash", senhaMasterHash);
+}
+
+function loadOperadores(){
+    operadorSelect.innerHTML="";
+    operadores.forEach(op=>operadorSelect.innerHTML+=`<option>${op.nome}</option>`);
+}
+loadOperadores();
+
+// =========================
+// LOGIN
+// =========================
+async function login(){
+    const nome = operadorSelect.value;
+    const senha = operadorSenha.value;
+    const hashed = await hashSenha(senha);
+    const op = operadores.find(o => o.nome === nome && o.senha === hashed);
+    if(!op) return msg("Senha inválida!");
+    currentUser = nome;
+    loginBox.style.display="none";
+    home.style.display="block";
+    welcome.innerText = "Operador: " + nome;
+    logoutBtn.style.display="inline-block";
+}
+
+async function modoAdmin(){
+    const senha = prompt("Senha master:");
+    const hashed = await hashSenha(senha);
+    if(hashed !== senhaMasterHash) return msg("Senha incorreta!");
+    currentUser = "ADMIN";
+    loginBox.style.display="none";
+    home.style.display="block";
+    adminBtn.style.display="block";
+    welcome.innerText = "Administrador";
+    logoutBtn.style.display="inline-block";
+}
+
+// =========================
+// LOGOUT
+// =========================
+function logout(){
+    if(!confirm("Tem certeza que deseja sair?")) return;
+
+    stopCamera();
+
+    ["home","adminBox","qrBox","exportBox","statusBox","readerContainer"]
+    .forEach(id=>document.getElementById(id).style.display="none");
+
+    loginBox.style.display="block";
+    operadorSenha.value="";
+    currentUser=null;
+    msg("Operador desconectado");
+}
+
+// =========================
+// ALTERAR SENHA MASTER
+// =========================
+async function alterarSenhaMaster() {
+    const nova = novaSenhaMaster.value.trim();
+    const confirma = confirmaNovaMaster.value.trim();
+
+    if(!nova || !confirma) return msg("Preencha ambos os campos!");
+    if(nova !== confirma) return msg("As senhas não coincidem!");
+
+    senhaMasterHash = await hashSenha(nova);
+    save();
+    novaSenhaMaster.value = "";
+    confirmaNovaMaster.value = "";
+    msg("Senha master alterada com sucesso!");
+}
+
+// =========================
+// O restante do código (QR, PDF, Admin, Status) permanece igual ao que você já tinha
+// incluindo startCamera(), stopCamera(), gerarQR(), exportPDF(), limparDados(), etc.
+// =========================
+</script>
+</body>
+</html>
 
