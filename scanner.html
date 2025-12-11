@@ -1,1 +1,273 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle de Estacionamento Offline</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body { background: #0A1A2A; font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 15px; color: #fff; }
+h2, h3 { text-align: center; }
+button { width: 100%; padding: 14px; margin-top: 10px; background: #0D47A1; color: white; border: none; border-radius: 6px; font-size: 18px; cursor: pointer; }
+input, select { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: none; font-size: 16px; }
+.box { background: #10263D; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 8px #0005; }
+.flash-btn { background: #ffb300; color: #000; }
+.operator { padding: 12px; margin-top: 10px; background: #083860; border-radius: 6px; }
+.small { font-size: 13px; opacity: 0.9; }
+</style>
+</head>
+
+<body>
+<h2>🚗 Controle de Estacionamento (Offline)</h2>
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+    <h3>Entrar como Operador</h3>
+    <select id="operadorSelect"></select>
+    <input id="operadorSenha" type="password" placeholder="Senha do operador">
+    <button onclick="login()">Entrar</button>
+    <hr>
+    <button onclick="modoAdmin()">Entrar como ADMIN</button>
+    <p class="small">Se for a primeira vez, crie um operador no menu Admin (após logar como ADMIN).</p>
+</div>
+
+<!-- HOME -->
+<div id="home" class="box" style="display:none;">
+    <h3 id="welcome"></h3>
+    <button onclick="startCamera()">📷 Iniciar Leitor Inteligente</button>
+    <button onclick="showStatus()">📊 Status das Vagas</button>
+    <button onclick="showExport()">📤 Exportar Dados</button>
+    <button onclick="showAdmin()" id="adminBtn" style="display:none;">⚙️ Área Administrativa</button>
+    <button onclick="stopCamera()" id="stopBtn" style="display:none;margin-top:6px;background:#b71c1c;">⛔ Parar Leitor</button>
+</div>
+
+<!-- LEITOR -->
+<div id="readerContainer" style="display:none;">
+    <button class="flash-btn" onclick="toggleFlash()">🔦 Ligar / Desligar Lanterna</button>
+    <div id="reader" style="margin-top:10px;"></div>
+</div>
+
+<!-- STATUS -->
+<div id="statusBox" class="box" style="display:none;">
+    <h3>Status das Vagas</h3>
+    <p><b>Limite:</b> <span id="limiteVagas"></span></p>
+    <p><b>Dentro:</b> <span id="totalDentro"></span></p>
+    <p><b>Disponíveis:</b> <span id="disponiveis"></span></p>
+    <div id="lista"></div>
+</div>
+
+<!-- EXPORTAR -->
+<div id="exportBox" class="box" style="display:none;">
+    <h3>Exportar Registros</h3>
+    <button onclick="exportarCSV()">📤 Baixar CSV</button>
+</div>
+
+<!-- ADMIN -->
+<div id="adminBox" class="box" style="display:none;">
+    <h3>Administração</h3>
+    <input id="limiteInput" type="number" placeholder="Limite de vagas">
+    <button onclick="salvarLimite()">Salvar limite</button>
+
+    <h4>Operadores</h4>
+    <input id="newOpName" placeholder="Nome do operador">
+    <input id="newOpPass" placeholder="Senha do operador">
+    <button onclick="addOperador()">Adicionar operador</button>
+    <div id="operadoresLista"></div>
+
+    <h4>Limpar Dados</h4>
+    <input id="senhaMaster" type="password" placeholder="Senha master">
+    <button onclick="limparDados()">Apagar tudo</button>
+    <p class="small">A senha master é protegida por hash. Se for a primeira vez, a senha padrão é <b>admin123</b> (recomende trocar).</p>
+</div>
+
+<script>
+// ------------------------------
+// BANCO LOCAL
+let estacionamento = JSON.parse(localStorage.getItem("estacionamento")) || [];
+let operadores = JSON.parse(localStorage.getItem("operadores")) || [];
+let limite = Number(localStorage.getItem("limite") ?? 100);
+let FLASH = false;
+let qrReader = null;
+let currentUser = null;
+const recentScans = new Map();
+const audioEntrada = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+const audioSaida   = new Audio("https://actions.google.com/sounds/v1/cartoon/pop.ogg");
+
+function save() {
+    localStorage.setItem("estacionamento", JSON.stringify(estacionamento));
+    localStorage.setItem("operadores", JSON.stringify(operadores));
+    localStorage.setItem("limite", String(limite));
+}
+
+function formatISO(isoString){ if(!isoString) return ""; try{ return new Date(isoString).toLocaleString(); }catch(e){return isoString;} }
+
+async function sha256Hex(text){
+    const data = new TextEncoder().encode(text);
+    const hash = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// MASTER PASSWORD
+(async function(){
+    if(!localStorage.getItem('masterHash')){
+        localStorage.setItem('masterHash', await sha256Hex("admin123"));
+    }
+})();
+
+// OPERADORES / LOGIN
+function loadOperadores(){
+    const sel = document.getElementById("operadorSelect");
+    sel.innerHTML = "";
+    operadores.forEach(op => {
+        const opt = document.createElement("option");
+        opt.value = op.nome; opt.textContent = op.nome; sel.appendChild(opt);
+    });
+}
+loadOperadores();
+
+function login(){
+    const nome = document.getElementById("operadorSelect").value;
+    const senha = document.getElementById("operadorSenha").value;
+    if(!nome) return alert("Nenhum operador disponível. Entre como ADMIN e crie um operador.");
+    const op = operadores.find(o => o.nome===nome && o.senha===senha);
+    if(!op) return alert("Senha inválida!");
+    currentUser = nome;
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("home").style.display="block";
+    document.getElementById("welcome").innerText="Operador: "+nome;
+}
+
+async function modoAdmin(){
+    const senha = prompt("Digite a senha master:"); if(senha===null) return;
+    const hash = await sha256Hex(senha);
+    if(hash!==localStorage.getItem('masterHash')) return alert("Senha incorreta!");
+    currentUser="ADMIN";
+    document.getElementById("loginBox").style.display="none";
+    document.getElementById("home").style.display="block";
+    document.getElementById("welcome").innerText="Administrador";
+    document.getElementById("adminBtn").style.display="block";
+}
+
+// ------------------------------
+// CÂMERA + QR
+async function startCamera(){
+    document.getElementById("readerContainer").style.display="block";
+    document.getElementById("stopBtn").style.display="inline-block";
+
+    // parar instância antiga
+    if(qrReader){
+        try{ await qrReader.stop(); }catch(e){}
+        try{ qrReader.clear(); }catch(e){}
+        qrReader=null;
+    }
+
+    qrReader = new Html5Qrcode("reader");
+    try{
+        const cams = await Html5Qrcode.getCameras();
+        if(!cams || cams.length===0) throw new Error("Nenhuma câmera encontrada.");
+        // seleciona traseira, se disponível
+        let camId = cams.find(c=>/back|rear/gi.test(c.label))?.id || cams[0].id;
+
+        await qrReader.start(camId, { fps: 10, qrbox: { width: 250, height: 250 } }, onScanSuccess);
+    }catch(e){ alert("Erro ao iniciar câmera: "+e.message); console.error(e);}
+}
+
+async function stopCamera(){
+    if(!qrReader) return;
+    try{ await qrReader.stop(); }catch(e){}
+    try{ qrReader.clear(); }catch(e){}
+    qrReader=null;
+    document.getElementById("readerContainer").style.display="none";
+    document.getElementById("stopBtn").style.display="none";
+}
+
+async function onScanSuccess(qr){
+    if(!qr) return;
+    const id=String(qr).trim();
+    if(!id) return;
+    const now=Date.now();
+    if(recentScans.has(id)&&(now-recentScans.get(id)<2000)) return;
+    recentScans.set(id, now);
+    setTimeout(()=>recentScans.delete(id),3000);
+
+    let veiculo = estacionamento.find(v=>v.id===id && v.saida===null);
+    const nowIso=new Date().toISOString();
+
+    if(!veiculo){
+        const dentro = estacionamento.filter(v=>v.saida===null);
+        if(dentro.length>=limite){ alert("🚫 Estacionamento LOTADO!"); return; }
+        estacionamento.push({id, entrada:nowIso, saida:null, operadorEntrada:currentUser||"—"});
+        save(); audioEntrada.play(); alert("🚗 Entrada registrada!\nID: "+id+"\nHora: "+formatISO(nowIso));
+    }else{
+        veiculo.saida=nowIso; veiculo.operadorSaida=currentUser||"—"; save(); audioSaida.play(); alert("🏁 Saída registrada!\nID: "+id+"\nHora: "+formatISO(nowIso));
+    }
+}
+
+// ------------------------------
+// LANTERNA
+async function toggleFlash(){
+    try{
+        if(!qrReader) return alert("Leitor não iniciado.");
+        const stream = qrReader.getState()?.stream;
+        if(!stream) return alert("Câmera não carregou ainda.");
+        const track = stream.getVideoTracks()[0];
+        const cap = track.getCapabilities?.();
+        if(!cap || !cap.torch) return alert("Lanterna não suportada.");
+
+        FLASH = !FLASH;
+        await track.applyConstraints({advanced:[{torch:FLASH}]});
+    }catch(e){ console.error(e); alert("Erro lanterna: "+(e.message||e)); }
+}
+
+// ------------------------------
+// STATUS
+function showStatus(){
+    document.getElementById("statusBox").style.display="block";
+    document.getElementById("exportBox").style.display="none";
+    const dentro=estacionamento.filter(v=>v.saida===null);
+    document.getElementById("limiteVagas").innerText=limite;
+    document.getElementById("totalDentro").innerText=dentro.length;
+    document.getElementById("disponiveis").innerText=limite-dentro.length;
+    const lista=document.getElementById("lista"); lista.innerHTML="";
+    dentro.forEach(v=>{
+        lista.innerHTML+=`<div class="operator"><b>ID:</b> ${v.id}<br>Entrada: ${formatISO(v.entrada)}<br>Operador: ${v.operadorEntrada||'—'}</div>`;
+    });
+}
+
+// ------------------------------
+// EXPORTAR CSV
+function showExport(){ document.getElementById("exportBox").style.display="block"; document.getElementById("statusBox").style.display="none"; }
+function exportarCSV(){
+    let csv="ID,Entrada(ISO),Entrada(Local),Saída(ISO),Saída(Local),OperadorEntrada,OperadorSaída\n";
+    estacionamento.forEach(v=>{
+        const entradaISO=v.entrada||"", entradaLocal=entradaISO?`"${formatISO(entradaISO)}"`:"";
+        const saidaISO=v.saida||"", saidaLocal=saidaISO?`"${formatISO(saidaISO)}"`:"";
+        csv+=[`"${v.id}"`,entradaISO,entradaLocal,saidaISO,saidaLocal,`"${v.operadorEntrada||''}"`,`"${v.operadorSaida||''}"`].join(",")+"\n";
+    });
+    const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob);
+    const a=document.createElement("a"); a.href=url; a.download="estacionamento.csv"; a.click();
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+
+// ------------------------------
+// ADMIN
+function showAdmin(){ document.getElementById("adminBox").style.display="block"; listarOperadores(); document.getElementById("limiteInput").value=limite; }
+function salvarLimite(){ const v=Number(document.getElementById("limiteInput").value); if(!v||v<=0) return alert("Informe um limite válido (>0)."); limite=v; save(); alert("Limite salvo!"); }
+function addOperador(){
+    const nome=document.getElementById("newOpName").value.trim(); const senha=document.getElementById("newOpPass").value;
+    if(!nome||!senha) return alert("Preencha tudo.");
+    if(operadores.some(o=>o.nome.toLowerCase()===nome.toLowerCase())) return alert("Já existe um operador com este nome.");
+    operadores.push({nome,senha}); save(); listarOperadores();
+    document.getElementById("newOpName").value=""; document.getElementById("newOpPass").value="";
+}
+function listarOperadores(){ const div=document.getElementById("operadoresLista"); div.innerHTML=""; operadores.forEach(op=>{ div.innerHTML+=`<div class="operator">${op.nome}</div>`; }); loadOperadores(); }
+async function limparDados(){ const pass=document.getElementById("senhaMaster").value; if(!pass) return alert("Digite a senha master."); const hash=await sha256Hex(pass); if(hash!==localStorage.getItem('masterHash')) return alert("Senha incorreta!"); estacionamento=[]; operadores=[]; limite=100; save(); listarOperadores(); alert("Dados apagados!"); document.getElementById("senhaMaster").value=""; }
+
+// ------------------------------
+// SAIR DA PÁGINA
+window.addEventListener('beforeunload', async ()=>{ try{ await stopCamera(); }catch(e){} });
+</script>
+</body>
+</html>
