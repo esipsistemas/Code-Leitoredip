@@ -1,1 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle de Estacionamento Offline</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bcryptjs/2.4.3/bcrypt.min.js"></script>
+
+<style>
+body { background:#0A1A2A; font-family:Arial; margin:0; padding:15px; color:#fff; }
+h2,h3{text-align:center;}
+button{width:100%; padding:14px; margin-top:10px; background:#0D47A1; color:#fff; border:none; border-radius:6px; font-size:18px; cursor:pointer;}
+button.red{background:#b71c1c;}
+input,select{width:100%; padding:12px; margin-top:10px; border-radius:6px; border:none; font-size:16px;}
+.box{background:#10263D; padding:15px; border-radius:10px; margin-top:20px; box-shadow:0 0 8px #0005;}
+.flash-btn{background:#ffb300; color:#000;}
+.operator{padding:12px; margin-top:10px; background:#083860; border-radius:6px;}
+.qr-container{text-align:center; margin-top:10px;}
+.small{font-size:12px; color:#aaa; margin-top:6px;}
+footer{text-align:center; font-size:12px; color:#aaa; margin-top:20px;}
+.msg{
+    position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    background:#ffb300; color:#000; padding:10px 20px;
+    border-radius:8px; font-weight:bold; z-index:9999; box-shadow:0 0 10px #000;
+}
+</style>
+</head>
+<body>
+
+<h2>🚗 Controle de Estacionamento Offline</h2>
+
+<!-- LOGIN -->
+<div id="loginBox" class="box">
+<h3>Entrar como Operador</h3>
+<select id="operadorSelect"></select>
+<input id="operadorSenha" type="password" placeholder="Senha do operador">
+<button id="loginBtn">Entrar</button>
+<hr>
+<button id="adminBtnHtml">Entrar como ADMIN</button>
+<p class="small">Se for a primeira vez, entre como ADMIN para criar operadores.</p>
+</div>
+
+<!-- HOME -->
+<div id="home" class="box" style="display:none;">
+<h3 id="welcome"></h3>
+<button onclick="startCamera()">📷 Iniciar Leitor QR</button>
+<button onclick="showStatus()">📊 Status das Vagas</button>
+<button onclick="showExport()">📤 Exportar PDF</button>
+<button onclick="showQRGenerator()">🖨️ Gerar QR</button>
+<button onclick="showAdmin()" id="adminBtn" style="display:none;">⚙️ Área Administrativa</button>
+<button onclick="stopCamera()" id="stopBtn" style="display:none;margin-top:6px;" class="red">⛔ Parar Leitor</button>
+<button onclick="logout()" id="logoutBtn" class="red" style="display:none;margin-top:6px;">🚪 SAIR</button>
+</div>
+
+<!-- LEITOR -->
+<div id="readerContainer" style="display:none;">
+<button class="flash-btn" onclick="toggleFlash()">🔦 Ligar/Desligar Lanterna</button>
+<div id="reader" style="margin-top:10px;"></div>
+</div>
+
+<!-- STATUS -->
+<div id="statusBox" class="box" style="display:none;">
+<h3>Status das Vagas</h3>
+<p><b>Limite:</b> <span id="limiteVagas"></span></p>
+<p><b>Dentro:</b> <span id="totalDentro"></span></p>
+<p><b>Disponíveis:</b> <span id="disponiveis"></span></p>
+<div id="lista"></div>
+</div>
+
+<!-- EXPORTAR PDF -->
+<div id="exportBox" class="box" style="display:none;">
+<h3>Exportar Registros</h3>
+<button onclick="exportPDF()">📤 Baixar PDF</button>
+</div>
+
+<!-- GERAR QR -->
+<div id="qrBox" class="box" style="display:none;">
+<h3>Gerador de QR</h3>
+
+<input id="placaInput" placeholder="Placa">
+<input id="modeloInput" placeholder="Modelo">
+<input id="corInput" placeholder="Cor">
+<input id="proprietarioInput" placeholder="Nome do Proprietário">
+<input id="telInput" placeholder="Telefone">
+<select id="tipoInput">
+  <option value="">Tipo do Veículo</option>
+  <option>Carro</option>
+  <option>Moto</option>
+  <option>Caminhão</option>
+</select>
+<input id="obsInput" placeholder="Observações (opcional)">
+<button id="addQRBtn">Gerar QR + Registrar Entrada</button>
+
+<div class="qr-container" id="qrResult"></div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminBox" class="box" style="display:none;">
+<h3>Administração</h3>
+<input id="limiteInput" type="number" placeholder="Limite de vagas">
+<button id="saveLimitBtn">Salvar limite</button>
+
+<h4>Operadores</h4>
+<input id="newOpName" placeholder="Nome do operador">
+<input id="newOpPass" type="password" placeholder="Senha do operador">
+<button id="addOpBtn">Adicionar operador</button>
+<div id="operadoresLista"></div>
+
+<h4>Limpar Dados</h4>
+<input id="senhaMaster" type="password" placeholder="Senha master">
+<button id="clearBtn">Apagar tudo</button>
+<p class="small">Senha master padrão: <b>admin123</b>.</p>
+</div>
+
+<footer>⚠️ Área restrita. Uso exclusivo de operadores autorizados.</footer>
+
+<script>
+let estacionamento=JSON.parse(localStorage.getItem("estacionamento"))||[];
+let operadores=JSON.parse(localStorage.getItem("operadores"))||[];
+let veiculosGerados=JSON.parse(localStorage.getItem("veiculosGerados"))||[];
+let limite=Number(localStorage.getItem("limite")??100);
+let qrReader=null;
+let FLASH=false;
+let currentUser=null;
+
+function msg(t){
+    const d=document.createElement("div");
+    d.className="msg"; d.innerText=t;
+    document.body.appendChild(d);
+    setTimeout(()=>d.remove(),1800);
+}
+
+function save(){
+    localStorage.setItem("estacionamento",JSON.stringify(estacionamento));
+    localStorage.setItem("operadores",JSON.stringify(operadores));
+    localStorage.setItem("veiculosGerados",JSON.stringify(veiculosGerados));
+    localStorage.setItem("limite",String(limite));
+}
+
+function loadOperadores(){
+    operadorSelect.innerHTML="";
+    operadores.forEach(op=>operadorSelect.innerHTML+=`<option>${op.nome}</option>`);
+}
+
+async function migrarSenhasAntigas(){
+    for(let op of operadores){
+        if(!op.senha.startsWith("$2")){ 
+            op.senha = await bcrypt.hash(op.senha, 10);
+        }
+    }
+    save();
+}
+
+async function init(){
+    if(operadores.length===0){
+        const hash = await bcrypt.hash("admin123", 10);
+        operadores.push({nome:"admin", senha: hash});
+    }
+    await migrarSenhasAntigas();
+    loadOperadores();
+}
+init();
+
+// =========================
+// FUNÇÕES ASYNC
+// =========================
+async function login(){
+    const nome = operadorSelect.value;
+    const senha = operadorSenha.value;
+    const op = operadores.find(o => o.nome===nome);
+    if(!op) return msg("Senha inválida!");
+    const match = await bcrypt.compare(senha, op.senha);
+    if(!match) return msg("Senha inválida!");
+    currentUser=nome;
+    loginBox.style.display="none";
+    home.style.display="block";
+    welcome.innerText="Operador: "+nome;
+    logoutBtn.style.display="inline-block";
+}
+
+async function modoAdmin(){
+    const senha = prompt("Senha master:");
+    const adminOp = operadores.find(o => o.nome==="admin");
+    if(!adminOp) return msg("Admin não encontrado!");
+    const match = await bcrypt.compare(senha, adminOp.senha);
+    if(!match) return msg("Senha incorreta!");
+    currentUser="ADMIN";
+    loginBox.style.display="none";
+    home.style.display="block";
+    adminBtn.style.display="block";
+    welcome.innerText="Administrador";
+    logoutBtn.style.display="inline-block";
+}
+
+async function addOperador(){
+    const nome = newOpName.value.trim();
+    const senha = newOpPass.value.trim();
+    if(!nome||!senha) return msg("Preencha tudo");
+    if(operadores.some(o=>o.nome.toLowerCase()===nome.toLowerCase())) return msg("Já existe");
+    const hash = await bcrypt.hash(senha, 10);
+    operadores.push({nome, senha: hash});
+    save();
+    listarOperadores();
+    newOpName.value=""; newOpPass.value="";
+}
+
+async function limparDados(){
+    const senhaDigitada = senhaMaster.value;
+    const adminOp = operadores.find(o => o.nome==="admin");
+    if(!adminOp) return msg("Admin não encontrado!");
+    const match = await bcrypt.compare(senhaDigitada, adminOp.senha);
+    if(!match) return msg("Senha incorreta!");
+    estacionamento=[];
+    operadores=[{nome:"admin", senha: adminOp.senha}];
+    veiculosGerados=[];
+    limite=100;
+    save();
+    listarOperadores();
+    msg("Dados apagados!");
+}
+
+// =========================
+// BOTÕES EVENT LISTENER
+// =========================
+document.getElementById("loginBtn").addEventListener("click", async ()=>{ await login(); });
+document.getElementById("adminBtnHtml").addEventListener("click", async ()=>{ await modoAdmin(); });
+document.getElementById("addOpBtn").addEventListener("click", async ()=>{ await addOperador(); });
+document.getElementById("clearBtn").addEventListener("click", async ()=>{ await limparDados(); });
+
+// =========================
+// Funções auxiliares e QR / PDF / Status
+// =========================
+listarOperadores = () => {
+    operadoresLista.innerHTML="";
+    operadores.forEach(op=>{
+        operadoresLista.innerHTML+=`<div class="operator">${op.nome}</div>`;
+    });
+    loadOperadores();
+}
+listarOperadores();
+
+function logout(){
+    if(!confirm("Tem certeza que deseja sair?")) return;
+    stopCamera();
+    ["home","adminBox","qrBox","exportBox","statusBox","readerContainer"]
+        .forEach(id=>document.getElementById(id).style.display="none");
+    loginBox.style.display="block";
+    operadorSenha.value="";
+    currentUser=null;
+    msg("Operador desconectado");
+}
+
+function hideAll(){ ["statusBox","exportBox","adminBox","qrBox"].forEach(id=>document.getElementById(id).style.display="none"); }
+
+function showQRGenerator(){ hideAll(); qrBox.style.display="block"; }
+function showStatus(){ hideAll(); statusBox.style.display="block"; 
+    limiteVagas.innerText=limite; 
+    const dentro = estacionamento.filter(v=>!v.saida).length;
+    totalDentro.innerText=dentro;
+    disponiveis.innerText=limite-dentro;
+    lista.innerHTML="";
+    estacionamento.filter(v=>!v.saida).forEach(v=>{
+        const d=document.createElement("div");
+        d.className="operator";
+        d.innerText = `ID: ${v.id} | Placa: ${v.dados?.placa||"-"} | Entrada: ${new Date(v.entrada).toLocaleString()} | Op: ${v.operadorEntrada}`;
+        lista.appendChild(d);
+    });
+}
+
+function showExport(){ hideAll(); exportBox.style.display="block"; }
+
+function showAdmin(){ hideAll(); adminBox.style.display="block"; limiteInput.value=limite; listarOperadores(); }
+
+async function gerarQR(){
+    const placa=placaInput.value.trim();
+    const modelo=modeloInput.value.trim();
+    const cor=corInput.value.trim();
+    const prop=proprietarioInput.value.trim();
+    const tel=telInput.value.trim();
+    const tipo=tipoInput.value;
+    const obs=obsInput.value.trim();
+    if(!placa||!modelo||!cor||!prop||!tipo) return msg("Preencha os campos obrigatórios!");
+    const id="ESIP-"+Date.now()+"-"+Math.floor(Math.random()*9999);
+    veiculosGerados.push(id);
+    save();
+    const now=new Date();
+    estacionamento.push({id,dados:{placa,modelo,cor,prop,tel,tipo,obs},entrada:now.toISOString(),saida:null,operadorEntrada:currentUser});
+    save();
+    const box=qrResult;
+    box.innerHTML="";
+    const canvas=document.createElement("canvas");
+    box.appendChild(canvas);
+    QRCode.toCanvas(canvas,id,{width:220},()=>{
+        const link=document.createElement("a");
+        link.href=canvas.toDataURL("image/png");
+        link.download=id+"_QR.png";
+        link.innerText="⬇️ Baixar QR";
+        link.style.display="block";
+        link.style.marginTop="10px";
+        box.appendChild(link);
+    });
+    msg("QR gerado!");
+}
+
+document.getElementById("addQRBtn").addEventListener("click", async ()=>{ await gerarQR(); });
+
+// =========================
+// QR Reader, PDF, Camera etc.
+// =========================
+async function startCamera(){
+    readerContainer.style.display="block";
+    stopBtn.style.display="inline-block";
+    if(qrReader){ try{await qrReader.stop();}catch(e){} try{qrReader.clear();}catch(e){} qrReader=null; }
+    qrReader=new Html5Qrcode("reader");
+    try{
+        const cams=await Html5Qrcode.getCameras();
+        const rear=cams.filter(c=>/back|rear/gi.test(c.label));
+        let camId = rear.length?rear[0].id:cams[0].id;
+        await qrReader.start(camId,{fps:10,qrbox:{width:250,height:250}},onScanSuccess);
+    }catch(e){ msg("Erro ao iniciar câmera"); }
+}
+
+async function stopCamera(){
+    if(!qrReader) return;
+    try{await qrReader.stop();}catch(e){}
+    try{qrReader.clear();}catch(e){}
+    qrReader=null;
+    readerContainer.style.display="none";
+    stopBtn.style.display="none";
+}
+
+const recentScans=new Map();
+function onScanSuccess(qr){
+    const id=String(qr).trim();
+    if(!veiculosGerados.includes(id)) return msg("❌ QR inválido!");
+    if(recentScans.has(id) && Date.now()-recentScans.get(id)<2000) return;
+    recentScans.set(id,Date.now());
+    setTimeout(()=>recentScans.delete(id),2500);
+    const now=new Date();
+    let v=estacionamento.find(x=>x.id===id && !x.saida);
+    if(!v){
+        if(estacionamento.filter(x=>!x.saida).length>=limite) return msg("🚫 Estacionamento LOTADO!");
+        estacionamento.push({id,entrada:now.toISOString(),saida:null,operadorEntrada:currentUser});
+        msg("✅ Entrada registrada!");
+    } else {
+        v.saida=now.toISOString();
+        v.operadorSaida=currentUser;
+        msg("⚠️ Saída registrada!");
+    }
+    save();
+}
+
+async function toggleFlash() {
+    if (!qrReader) return;
+    try {
+        const track = qrReader.getState().stream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        if (!capabilities.torch) return msg("Lanterna não suportada neste dispositivo");
+        FLASH = !FLASH;
+        await track.applyConstraints({ advanced: [{ torch: FLASH }] });
+        msg(FLASH ? "Lanterna ligada" : "Lanterna desligada");
+    } catch (e) { msg("Erro ao alternar lanterna"); }
+}
+
+</script>
+</body>
+</html>
 
