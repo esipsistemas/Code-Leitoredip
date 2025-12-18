@@ -1,1 +1,259 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Gestor Financeiro</title>
+
+<style>
+:root {
+  --azul: #081a33;
+  --azul2: #0f2a52;
+  --azul3: #1b3f7a;
+  --branco: #ffffff;
+  --verde: #2ecc71;
+  --vermelho: #e74c3c;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: var(--azul);
+  color: var(--branco);
+}
+
+header {
+  background: var(--azul2);
+  padding: 20px;
+  text-align: center;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 20px;
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--azul2);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.valor {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.entrada { color: var(--verde); }
+.saida { color: var(--vermelho); }
+
+.form {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+input, select, button {
+  padding: 12px;
+  border-radius: 6px;
+  border: none;
+}
+
+button {
+  font-weight: bold;
+  cursor: pointer;
+}
+
+input#valor {
+  font-size: 22px;
+  font-weight: bold;
+  transition: box-shadow 0.25s, transform 0.15s;
+}
+
+input#valor:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46,204,113,.4);
+  transform: scale(1.02);
+}
+
+.input-pulse {
+  animation: pulse 0.15s ease;
+}
+
+@keyframes pulse {
+  50% { transform: scale(1.03); }
+}
+
+table {
+  width: 100%;
+  margin-top: 30px;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px;
+}
+
+th {
+  background: var(--azul3);
+}
+
+tr:nth-child(even) { background: var(--azul2); }
+tr:nth-child(odd) { background: #0c2447; }
+
+canvas {
+  background: var(--azul2);
+  border-radius: 10px;
+  padding: 10px;
+  margin-top: 30px;
+}
+</style>
+</head>
+
+<body>
+
+<header>💰 Gestor Financeiro</header>
+
+<div class="container">
+
+  <div class="dashboard">
+    <div class="card">
+      <h2>Entradas</h2>
+      <div class="valor entrada" id="totalEntradas">R$ 0,00</div>
+    </div>
+    <div class="card">
+      <h2>Saídas</h2>
+      <div class="valor saida" id="totalSaidas">R$ 0,00</div>
+    </div>
+    <div class="card">
+      <h2>Saldo</h2>
+      <div class="valor" id="saldo">R$ 0,00</div>
+    </div>
+  </div>
+
+  <div class="card form">
+    <input id="descricao" placeholder="Descrição">
+    <input id="categoria" placeholder="Categoria">
+    <input id="valor" type="text" value="R$ 0,00">
+    <select id="tipo">
+      <option value="entrada">Entrada</option>
+      <option value="saida">Saída</option>
+    </select>
+    <button onclick="adicionar()">Adicionar</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Descrição</th>
+        <th>Categoria</th>
+        <th>Tipo</th>
+        <th>Valor</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody id="tabela"></tbody>
+  </table>
+
+  <canvas id="grafico1"></canvas>
+  <canvas id="grafico2"></canvas>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const valorEl = document.getElementById("valor");
+const tabelaEl = document.getElementById("tabela");
+const totalEntradasEl = document.getElementById("totalEntradas");
+const totalSaidasEl = document.getElementById("totalSaidas");
+const saldoEl = document.getElementById("saldo");
+
+let transacoes = JSON.parse(localStorage.getItem("transacoes")) || [];
+let g1, g2;
+
+function vibrar(p) {
+  if (navigator.vibrate) navigator.vibrate(p);
+}
+
+function formatarMoeda(v) {
+  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+valorEl.addEventListener("input", () => {
+  let v = valorEl.value.replace(/\D/g, "");
+  v = (v / 100).toFixed(2);
+  v = Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+  valorEl.value = "R$ " + v;
+
+  valorEl.classList.remove("input-pulse");
+  void valorEl.offsetWidth;
+  valorEl.classList.add("input-pulse");
+
+  vibrar(10);
+  setTimeout(() => valorEl.setSelectionRange(valorEl.value.length, valorEl.value.length), 0);
+});
+
+valorEl.addEventListener("keydown", e => {
+  if (valorEl.selectionStart <= 3 && ["Backspace","Delete"].includes(e.key)) {
+    e.preventDefault();
+  }
+});
+
+function adicionar() {
+  const descricao = descricao.value;
+  const categoria = categoria.value;
+  const tipo = tipo.value;
+  const valor = parseFloat(valorEl.value.replace("R$", "").replace(/\./g, "").replace(",", "."));
+
+  if (!descricao || !categoria || valor <= 0) {
+    vibrar([100,50,100]);
+    alert("Dados inválidos");
+    return;
+  }
+
+  transacoes.push({ descricao, categoria, tipo, valor });
+  localStorage.setItem("transacoes", JSON.stringify(transacoes));
+  vibrar(30);
+  atualizar();
+}
+
+function atualizar() {
+  let entradas = 0, saidas = 0;
+  tabelaEl.innerHTML = "";
+
+  transacoes.forEach((t, i) => {
+    t.tipo === "entrada" ? entradas += t.valor : saidas += t.valor;
+    tabelaEl.innerHTML += `
+      <tr>
+        <td>${t.descricao}</td>
+        <td>${t.categoria}</td>
+        <td>${t.tipo}</td>
+        <td>${formatarMoeda(t.valor)}</td>
+        <td><button onclick="transacoes.splice(${i},1); atualizar()">X</button></td>
+      </tr>`;
+  });
+
+  totalEntradasEl.textContent = formatarMoeda(entradas);
+  totalSaidasEl.textContent = formatarMoeda(saidas);
+  saldoEl.textContent = formatarMoeda(entradas - saidas);
+}
+
+atualizar();
+</script>
+
+</body>
+</html>
 
