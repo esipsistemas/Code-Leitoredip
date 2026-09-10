@@ -1,1 +1,611 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<title>ESIP-Sistemas - Cliente</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    background:#071426;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    min-height:100vh;
+}
+
+.container{
+    width:100%;
+    max-width:380px;
+    margin:auto;
+    padding:20px;
+}
+
+.logo{
+    text-align:center;
+    font-size:42px;
+    margin-top:20px;
+}
+
+h1{
+    text-align:center;
+    color:#00d9ff;
+    margin:10px 0 5px;
+}
+
+.subtitulo{
+    text-align:center;
+    color:#9fb4c8;
+    font-size:13px;
+    margin-bottom:25px;
+}
+
+.card{
+    background:#0d2038;
+    border:1px solid #193a5d;
+    border-radius:15px;
+    padding:20px;
+    box-shadow:0 8px 25px rgba(0,0,0,.35);
+}
+
+input{
+    width:100%;
+    padding:14px;
+    border-radius:10px;
+    border:1px solid #315777;
+    background:#06101e;
+    color:#fff;
+    outline:none;
+    margin-bottom:12px;
+    font-size:15px;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    border:0;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:15px;
+    margin-top:8px;
+}
+
+.btn-login{
+    background:#00bfe8;
+    color:#00131c;
+}
+
+.btn-emergencia{
+    background:#d40000;
+    color:#fff;
+    font-size:22px;
+    padding:22px;
+    margin-top:20px;
+}
+
+.btn-emergencia:active{
+    background:#ff0000;
+    transform:scale(.98);
+}
+
+.btn-emergencia:disabled{
+    background:#555;
+    cursor:not-allowed;
+}
+
+.hidden{
+    display:none!important;
+}
+
+.status{
+    margin:12px 0;
+    padding:10px;
+    border-radius:8px;
+    background:#06101e;
+    color:#9edfff;
+    font-size:13px;
+    text-align:center;
+}
+
+.gps{
+    margin-top:12px;
+    padding:12px;
+    background:#06101e;
+    border-radius:8px;
+    color:#8cffb0;
+    font-size:12px;
+    line-height:1.7;
+    text-align:center;
+}
+
+.aviso{
+    margin-top:12px;
+    color:#9fb4c8;
+    font-size:11px;
+    text-align:center;
+    line-height:1.5;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="logo">
+        🆘
+    </div>
+
+    <h1>
+        ESIP-Sistemas
+    </h1>
+
+    <div class="subtitulo">
+        Sistema de Emergência
+    </div>
+
+
+    <div
+        id="login"
+        class="card">
+
+        <h3 style="text-align:center;">
+            Conectar Cliente
+        </h3>
+
+        <input
+            type="text"
+            id="licenca"
+            placeholder="Digite a licença do cliente"
+            autocomplete="off"
+        >
+
+        <button
+            class="btn-login"
+            onclick="conectarCliente()">
+
+            CONECTAR
+
+        </button>
+
+    </div>
+
+
+    <div
+        id="painel"
+        class="card hidden">
+
+        <h3 style="text-align:center;">
+            Cliente conectado
+        </h3>
+
+        <div
+            id="status"
+            class="status">
+
+            🟡 Conectando...
+
+        </div>
+
+        <div
+            id="gps"
+            class="gps">
+
+            📍 Obtendo localização precisa...
+
+        </div>
+
+        <button
+            id="btnEmergencia"
+            class="btn-emergencia"
+            onclick="enviarEmergencia()"
+            disabled>
+
+            🚨 EMERGÊNCIA
+
+        </button>
+
+        <div class="aviso">
+
+            O botão envia a localização GPS atual
+            para a Central de Monitoramento.
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const API_KEY =
+"COLOQUE_AQUI_A_MESMA_API_KEY_DO_SEU_PIESOCKET";
+
+let socket = null;
+
+let salaAtiva = null;
+
+let latitude = null;
+
+let longitude = null;
+
+let precisao = null;
+
+let gpsWatch = null;
+
+
+function conectarCliente(){
+
+    const campo =
+        document.getElementById(
+            "licenca"
+        );
+
+    const sala =
+        campo.value
+        .trim()
+        .toUpperCase();
+
+    if(!sala){
+
+        alert(
+            "Digite a chave/licença do cliente."
+        );
+
+        return;
+    }
+
+    salaAtiva = sala;
+
+    document
+        .getElementById("login")
+        .classList.add("hidden");
+
+    document
+        .getElementById("painel")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("status")
+        .innerText =
+        "🟡 Conectando...";
+
+    const url =
+        "wss://free.blr2.piesocket.com/v3/" +
+        encodeURIComponent(sala) +
+        "?api_key=" +
+        encodeURIComponent(API_KEY) +
+        "&notify_self=1";
+
+    try{
+
+        socket =
+            new WebSocket(url);
+
+    }
+
+    catch(erro){
+
+        document
+            .getElementById("status")
+            .innerText =
+            "🔴 FALHA AO CONECTAR";
+
+        return;
+    }
+
+
+    socket.onopen =
+        function(){
+
+            document
+                .getElementById("status")
+                .innerText =
+                "🟢 CLIENTE CONECTADO";
+
+            iniciarGPS();
+
+        };
+
+
+    socket.onerror =
+        function(erro){
+
+            console.error(
+                "Erro WebSocket:",
+                erro
+            );
+
+            document
+                .getElementById("status")
+                .innerText =
+                "🔴 ERRO NA CONEXÃO";
+
+        };
+
+
+    socket.onclose =
+        function(){
+
+            document
+                .getElementById("status")
+                .innerText =
+                "🔴 CONEXÃO ENCERRADA";
+
+            document
+                .getElementById(
+                    "btnEmergencia"
+                )
+                .disabled = true;
+
+        };
+
+}
+
+
+function iniciarGPS(){
+
+    if(!navigator.geolocation){
+
+        document
+            .getElementById("gps")
+            .innerText =
+            "⚠️ Este aparelho não suporta GPS.";
+
+        return;
+    }
+
+
+    document
+        .getElementById("gps")
+        .innerText =
+        "📍 Solicitando localização precisa...";
+
+
+    gpsWatch =
+        navigator.geolocation.watchPosition(
+
+            function(posicao){
+
+                latitude =
+                    posicao.coords.latitude;
+
+                longitude =
+                    posicao.coords.longitude;
+
+                precisao =
+                    posicao.coords.accuracy;
+
+
+                document
+                    .getElementById("gps")
+                    .innerHTML =
+
+                    "📍 Latitude: " +
+                    latitude.toFixed(6) +
+
+                    "<br>" +
+
+                    "📍 Longitude: " +
+                    longitude.toFixed(6) +
+
+                    "<br>" +
+
+                    "🎯 Precisão estimada: " +
+                    Math.round(precisao) +
+                    " metros";
+
+
+                if(
+                    socket &&
+                    socket.readyState ===
+                    WebSocket.OPEN
+                ){
+
+                    document
+                        .getElementById(
+                            "btnEmergencia"
+                        )
+                        .disabled = false;
+
+                }
+
+            },
+
+            function(erro){
+
+                console.error(
+                    "Erro GPS:",
+                    erro
+                );
+
+                let mensagem =
+                    "⚠️ Não foi possível obter o GPS.";
+
+                if(
+                    erro.code ===
+                    1
+                ){
+
+                    mensagem =
+                        "⚠️ Permita o acesso à localização.";
+
+                }
+
+                if(
+                    erro.code ===
+                    2
+                ){
+
+                    mensagem =
+                        "⚠️ Localização indisponível.";
+
+                }
+
+                if(
+                    erro.code ===
+                    3
+                ){
+
+                    mensagem =
+                        "⚠️ Tempo esgotado para obter GPS.";
+
+                }
+
+                document
+                    .getElementById("gps")
+                    .innerText =
+                    mensagem;
+
+            },
+
+            {
+                enableHighAccuracy:true,
+                maximumAge:0,
+                timeout:15000
+            }
+
+        );
+
+}
+
+
+function enviarEmergencia(){
+
+    if(
+        !socket ||
+        socket.readyState !==
+        WebSocket.OPEN
+    ){
+
+        alert(
+            "O sistema não está conectado."
+        );
+
+        return;
+    }
+
+
+    if(
+        latitude === null ||
+        longitude === null
+    ){
+
+        alert(
+            "Aguarde a localização GPS ser obtida."
+        );
+
+        return;
+    }
+
+
+    const agora =
+        new Date();
+
+
+    const dados = {
+
+        status:
+            "ALERTA_CRITICO",
+
+        mensagem:
+            "EMERGÊNCIA SOLICITADA PELO CLIENTE",
+
+        hora:
+            agora.toLocaleTimeString(
+                "pt-BR"
+            ),
+
+        data:
+            agora.toLocaleDateString(
+                "pt-BR"
+            ),
+
+        localizacao:{
+
+            latitude:
+                latitude,
+
+            longitude:
+                longitude,
+
+            precisao_metros:
+                precisao,
+
+            mapa_link:
+                "https://www.google.com/maps?q=" +
+                latitude +
+                "," +
+                longitude
+
+        }
+
+    };
+
+
+    try{
+
+        socket.send(
+            JSON.stringify(dados)
+        );
+
+
+        document
+            .getElementById("status")
+            .innerText =
+            "🚨 EMERGÊNCIA ENVIADA";
+
+
+        console.log(
+            "Alerta enviado:",
+            dados
+        );
+
+
+    }
+
+    catch(erro){
+
+        console.error(
+            "Erro ao enviar:",
+            erro
+        );
+
+        alert(
+            "Não foi possível enviar o alerta."
+        );
+
+    }
+
+}
+
+
+document
+    .getElementById("licenca")
+    .addEventListener(
+        "keydown",
+        function(event){
+
+            if(
+                event.key === "Enter"
+            ){
+
+                conectarCliente();
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+</html>
