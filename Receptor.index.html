@@ -1,1 +1,2731 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP-Sistemas - Central de Emergência</title>
 
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+
+<!-- Biblioteca para gerar PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#111;
+    color:#fff;
+    min-height:100vh;
+}
+
+header{
+    background:#050505;
+    padding:20px;
+    text-align:center;
+    border-bottom:2px solid #333;
+}
+
+.logo{
+    font-size:25px;
+    font-weight:bold;
+}
+
+.status{
+    margin-top:10px;
+    font-size:15px;
+    color:#aaa;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:20px;
+}
+
+#ativar{
+    width:100%;
+    padding:18px;
+    border:0;
+    border-radius:10px;
+    background:#1769aa;
+    color:#fff;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#alerta{
+    display:none;
+    background:#d40000;
+    border-radius:15px;
+    padding:25px;
+    margin-top:20px;
+    box-shadow:0 0 30px rgba(255,0,0,.8);
+    animation:pulsar .8s infinite alternate;
+}
+
+@keyframes pulsar{
+
+    from{
+        transform:scale(1);
+    }
+
+    to{
+        transform:scale(1.015);
+    }
+
+}
+
+.titulo{
+    font-size:32px;
+    font-weight:bold;
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.dado{
+    background:rgba(0,0,0,.25);
+    padding:12px;
+    margin:8px 0;
+    border-radius:8px;
+    font-size:16px;
+}
+
+.mapa-container{
+    margin-top:20px;
+    background:#fff;
+    border-radius:12px;
+    overflow:hidden;
+    border:4px solid #fff;
+}
+
+#mapa{
+    width:100%;
+    height:350px;
+    border:0;
+    display:block;
+}
+
+#abrirMapa{
+    display:block;
+    width:100%;
+    margin-top:12px;
+    background:#fff;
+    color:#000;
+    padding:15px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:bold;
+    text-align:center;
+}
+
+#silenciar{
+    display:none;
+    width:100%;
+    margin-top:15px;
+    padding:17px;
+    border:0;
+    border-radius:10px;
+    background:#111;
+    color:#fff;
+    font-size:18px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* =========================================
+   NOVOS BOTÕES
+========================================= */
+
+.acoes{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.botao{
+    width:100%;
+    padding:15px;
+    border:0;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+#gerarPDF{
+    background:#1976d2;
+    color:#fff;
+}
+
+#backupHistorico{
+    background:#388e3c;
+    color:#fff;
+}
+
+#restaurarBackup{
+    background:#f57c00;
+    color:#fff;
+}
+
+#limparHistorico{
+    background:#555;
+    color:#fff;
+}
+
+#inputBackup{
+    display:none;
+}
+
+/* =========================================
+   HISTÓRICO
+========================================= */
+
+#historicoContainer{
+    margin-top:25px;
+    background:#181818;
+    border-radius:12px;
+    padding:15px;
+    border:1px solid #333;
+}
+
+#historicoContainer h2{
+    margin-top:0;
+    text-align:center;
+}
+
+.historico-item{
+    background:#252525;
+    border-radius:8px;
+    padding:12px;
+    margin-top:10px;
+    border-left:4px solid #d40000;
+}
+
+.historico-item strong{
+    color:#fff;
+}
+
+.historico-vazio{
+    color:#aaa;
+    text-align:center;
+    padding:15px;
+}
+
+.semMapa{
+    display:none;
+    background:#222;
+    padding:20px;
+    text-align:center;
+    border-radius:10px;
+    margin-top:20px;
+}
+
+/* =========================================
+   STATUS DE CONEXÃO
+========================================= */
+
+.online{
+    color:#00e676 !important;
+}
+
+.offline{
+    color:#ff9800 !important;
+}
+
+.erro{
+    color:#ff5252 !important;
+}
+
+@media(max-width:600px){
+
+    .container{
+        padding:12px;
+    }
+
+    .titulo{
+        font-size:26px;
+    }
+
+    .acoes{
+        grid-template-columns:1fr;
+    }
+
+    #mapa{
+        height:280px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div class="logo">
+        📡 ESIP-Sistemas
+    </div>
+
+    <div class="status" id="status">
+        Conectando a Central...
+    </div>
+
+</header>
+
+
+<div class="container">
+
+    <button id="ativar" onclick="ativarCentral()">
+        🔊 ATIVAR CENTRAL
+    </button>
+
+
+    <div id="alerta">
+
+        <div class="titulo">
+            🚨 EMERGÊNCIA
+        </div>
+
+
+        <div class="dado">
+            <strong>Cliente:</strong>
+            <span id="cliente">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Licença:</strong>
+            <span id="licenca">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Protocolo:</strong>
+            <span id="protocolo">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Data:</strong>
+            <span id="data">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Hora:</strong>
+            <span id="hora">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Latitude:</strong>
+            <span id="latitude">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Longitude:</strong>
+            <span id="longitude">---</span>
+        </div>
+
+
+        <div class="dado">
+            <strong>Precisão GPS:</strong>
+            <span id="precisao">---</span>
+        </div>
+
+
+        <!-- MAPA -->
+
+        <div class="mapa-container" id="mapaContainer">
+
+            <iframe
+                id="mapa"
+                src="about:blank"
+                loading="lazy"
+                allowfullscreen>
+            </iframe>
+
+        </div>
+
+
+        <div
+            class="semMapa"
+            id="semMapa">
+
+            📍 Localização GPS não disponível.
+
+        </div>
+
+
+        <!-- LINK GOOGLE MAPS -->
+
+        <a
+            id="abrirMapa"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer">
+
+            📍 ABRIR NO GOOGLE MAPS
+
+        </a>
+
+
+        <!-- BOTÃO SILENCIAR -->
+
+        <button
+            id="silenciar"
+            onclick="silenciarAlerta()">
+
+            🔇 SILENCIAR ALERTA
+
+        </button>
+
+
+        <!-- NOVAS AÇÕES -->
+
+        <div class="acoes">
+
+            <button
+                id="gerarPDF"
+                class="botao"
+                onclick="gerarPDF()">
+
+                📄 GERAR PDF
+
+            </button>
+
+            <button
+                id="backupHistorico"
+                class="botao"
+                onclick="backupHistorico()">
+
+                💾 BACKUP HISTÓRICO
+
+            </button>
+
+            <button
+                id="restaurarBackup"
+                class="botao"
+                onclick="abrirRestauracao()">
+
+                📂 RESTAURAR BACKUP
+
+            </button>
+
+            <button
+                id="limparHistorico"
+                class="botao"
+                onclick="limparHistorico()">
+
+                🗑️ LIMPAR HISTÓRICO
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================
+         HISTÓRICO
+    ====================================== -->
+
+    <div id="historicoContainer">
+
+        <h2>
+            📋 Histórico de Emergências
+        </h2>
+
+        <div id="historicoLista">
+
+            <div class="historico-vazio">
+                Nenhuma emergência registrada.
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <input
+        type="file"
+        id="inputBackup"
+        accept=".json"
+        onchange="restaurarBackup(event)">
+
+</div>
+
+
+<script>
+
+/* =========================================
+   CONFIGURAÇÃO DA CENTRAL
+========================================= */
+
+const CENTRAL_ID =
+    "ESIP-CENTRAL-CLINICA-001";
+
+
+let peer = null;
+
+let conexao = null;
+
+let audioContext = null;
+
+let oscilador = null;
+
+let ganho = null;
+
+let tocando = false;
+
+let centralAtiva = false;
+
+let reconectando = false;
+
+let timerReconexao = null;
+
+let timerHeartbeat = null;
+
+let ultimoHeartbeat = Date.now();
+
+let emergenciaAtual = null;
+
+
+/* =========================================
+   WAKE LOCK
+   MANTER CELULAR ACORDADO
+========================================= */
+
+let wakeLock = null;
+
+
+/*
+   Solicita ao navegador que mantenha
+   a tela ligada enquanto a Central
+   estiver ativa.
+*/
+
+async function ativarWakeLock(){
+
+    try{
+
+        if(
+            !("wakeLock" in navigator)
+        ){
+
+            console.warn(
+                "Wake Lock não é suportado neste navegador."
+            );
+
+            return;
+
+        }
+
+
+        if(
+            wakeLock &&
+            !wakeLock.released
+        ){
+
+            return;
+
+        }
+
+
+        wakeLock =
+            await navigator.wakeLock.request(
+                "screen"
+            );
+
+
+        console.log(
+            "Wake Lock ativado."
+        );
+
+
+        wakeLock.addEventListener(
+            "release",
+            function(){
+
+                console.log(
+                    "Wake Lock liberado."
+                );
+
+                wakeLock = null;
+
+            }
+        );
+
+
+    }catch(e){
+
+        console.error(
+            "Não foi possível ativar o Wake Lock:",
+            e
+        );
+
+    }
+
+}
+
+
+/*
+   Tenta renovar o Wake Lock quando
+   a página volta a ficar visível.
+*/
+
+async function renovarWakeLock(){
+
+    if(
+        !centralAtiva
+    ){
+
+        return;
+
+    }
+
+
+    if(
+        document.visibilityState !==
+        "visible"
+    ){
+
+        return;
+
+    }
+
+
+    await ativarWakeLock();
+
+}
+
+
+/*
+   Quando a página volta para a tela,
+   tenta ativar novamente.
+*/
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(
+            document.visibilityState ===
+            "visible"
+        ){
+
+            renovarWakeLock();
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   HISTÓRICO
+========================================= */
+
+const CHAVE_HISTORICO =
+    "ESIP_HISTORICO_EMERGENCIAS";
+
+
+let historico =
+    carregarHistorico();
+
+
+/* =========================================
+   CARREGAR HISTÓRICO
+========================================= */
+
+function carregarHistorico(){
+
+    try{
+
+        const dados =
+            localStorage.getItem(
+                CHAVE_HISTORICO
+            );
+
+        if(!dados){
+
+            return [];
+
+        }
+
+        const lista =
+            JSON.parse(dados);
+
+        return Array.isArray(lista)
+            ? lista
+            : [];
+
+    }catch(e){
+
+        console.error(
+            "Erro ao carregar histórico:",
+            e
+        );
+
+        return [];
+
+    }
+
+}
+
+
+/* =========================================
+   SALVAR HISTÓRICO
+========================================= */
+
+function salvarHistorico(){
+
+    try{
+
+        localStorage.setItem(
+            CHAVE_HISTORICO,
+            JSON.stringify(historico)
+        );
+
+    }catch(e){
+
+        console.error(
+            "Erro ao salvar histórico:",
+            e
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   MOSTRAR HISTÓRICO
+========================================= */
+
+function mostrarHistorico(){
+
+    const lista =
+        document.getElementById(
+            "historicoLista"
+        );
+
+
+    if(!historico.length){
+
+        lista.innerHTML =
+            '<div class="historico-vazio">' +
+            'Nenhuma emergência registrada.' +
+            '</div>';
+
+        return;
+
+    }
+
+
+    lista.innerHTML = "";
+
+
+    historico.forEach(
+        function(item,index){
+
+            const div =
+                document.createElement("div");
+
+            div.className =
+                "historico-item";
+
+
+            div.innerHTML =
+
+                "<strong>🚨 Emergência #" +
+                (historico.length - index) +
+                "</strong><br><br>" +
+
+                "<strong>Cliente:</strong> " +
+                escaparHTML(item.cliente) +
+                "<br>" +
+
+                "<strong>Licença:</strong> " +
+                escaparHTML(item.licenca) +
+                "<br>" +
+
+                "<strong>Protocolo:</strong> " +
+                escaparHTML(item.protocolo) +
+                "<br>" +
+
+                "<strong>Data:</strong> " +
+                escaparHTML(item.data) +
+                "<br>" +
+
+                "<strong>Hora:</strong> " +
+                escaparHTML(item.hora);
+
+
+            div.onclick =
+                function(){
+
+                    mostrarEmergenciaDoHistorico(
+                        item
+                    );
+
+                };
+
+
+            div.style.cursor =
+                "pointer";
+
+
+            lista.appendChild(div);
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   PROTEÇÃO CONTRA HTML
+========================================= */
+
+function escaparHTML(valor){
+
+    if(valor === null ||
+       valor === undefined){
+
+        return "---";
+
+    }
+
+
+    const div =
+        document.createElement("div");
+
+    div.textContent =
+        String(valor);
+
+    return div.innerHTML;
+
+}
+
+
+/* =========================================
+   MOSTRAR ITEM DO HISTÓRICO
+========================================= */
+
+function mostrarEmergenciaDoHistorico(item){
+
+    emergenciaAtual =
+        item;
+
+
+    preencherTela(
+        item
+    );
+
+
+    document.getElementById(
+        "alerta"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "silenciar"
+    ).style.display =
+        "block";
+
+}
+
+
+/* =========================================
+   SOM DA SIRENE
+========================================= */
+
+function iniciarSom(){
+
+    try{
+
+        if(!audioContext){
+
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
+
+        }
+
+
+        if(
+            audioContext.state ===
+            "suspended"
+        ){
+
+            audioContext.resume();
+
+        }
+
+
+        if(tocando){
+
+            return;
+
+        }
+
+
+        tocando = true;
+
+
+        oscilador =
+            audioContext.createOscillator();
+
+
+        ganho =
+            audioContext.createGain();
+
+
+        oscilador.type =
+            "square";
+
+
+        oscilador.frequency.value =
+            850;
+
+
+        ganho.gain.value =
+            0.18;
+
+
+        oscilador.connect(
+            ganho
+        );
+
+
+        ganho.connect(
+            audioContext.destination
+        );
+
+
+        oscilador.start();
+
+
+        let ligado = true;
+
+
+        function sirene(){
+
+            if(!tocando){
+
+                return;
+
+            }
+
+
+            oscilador.frequency.value =
+                ligado
+                    ? 850
+                    : 500;
+
+
+            ligado = !ligado;
+
+
+            setTimeout(
+                sirene,
+                450
+            );
+
+        }
+
+
+        sirene();
+
+    }catch(e){
+
+        console.error(
+            "Erro no áudio:",
+            e
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   PARAR SOM
+========================================= */
+
+function pararSom(){
+
+    tocando = false;
+
+
+    if(oscilador){
+
+        try{
+
+            oscilador.stop();
+
+        }catch(e){}
+
+
+        try{
+
+            oscilador.disconnect();
+
+        }catch(e){}
+
+
+        oscilador = null;
+
+    }
+
+}
+
+
+/* =========================================
+   ATIVAR CENTRAL
+========================================= */
+
+function ativarCentral(){
+
+    /*
+       Ativa o áudio através de
+       uma ação do usuário.
+    */
+
+    iniciarSom();
+
+    pararSom();
+
+
+    centralAtiva = true;
+
+
+    /*
+       Tenta manter o celular acordado.
+    */
+
+    ativarWakeLock();
+
+
+    document.getElementById(
+        "ativar"
+    ).style.display =
+        "none";
+
+
+    atualizarStatus(
+        "🟡 Iniciando conexão com a Central...",
+        "offline"
+    );
+
+
+    conectarCentral();
+
+}
+
+
+/* =========================================
+   CRIAR PEERJS
+========================================= */
+
+function criarPeer(){
+
+    if(!centralAtiva){
+
+        return;
+
+    }
+
+
+    if(peer){
+
+        try{
+
+            peer.destroy();
+
+        }catch(e){}
+
+        peer = null;
+
+    }
+
+
+    conexao = null;
+
+
+    try{
+
+        peer =
+            new Peer(
+                CENTRAL_ID,
+                {
+                    debug: 1
+                }
+            );
+
+
+        configurarPeer();
+
+    }catch(e){
+
+        console.error(
+            "Erro criando Peer:",
+            e
+        );
+
+        agendarReconexao();
+
+    }
+
+}
+
+
+/* =========================================
+   CONECTAR CENTRAL
+========================================= */
+
+function conectarCentral(){
+
+    if(!centralAtiva){
+
+        return;
+
+    }
+
+
+    if(reconectando){
+
+        return;
+
+    }
+
+
+    criarPeer();
+
+}
+
+
+/* =========================================
+   CONFIGURAR PEER
+========================================= */
+
+function configurarPeer(){
+
+    if(!peer){
+
+        return;
+
+    }
+
+
+    peer.on(
+        "open",
+        function(id){
+
+            reconectando = false;
+
+            ultimoHeartbeat =
+                Date.now();
+
+
+            atualizarStatus(
+                "🟢 CENTRAL ONLINE — ID: " +
+                id,
+                "online"
+            );
+
+
+            iniciarHeartbeat();
+
+        }
+    );
+
+
+    peer.on(
+        "connection",
+        function(conn){
+
+            configurarConexao(
+                conn
+            );
+
+        }
+    );
+
+
+    peer.on(
+        "disconnected",
+        function(){
+
+            atualizarStatus(
+                "🟡 conexão perdida — reconectando...",
+                "offline"
+            );
+
+
+            pararHeartbeat();
+
+
+            tentarReconectarPeer();
+
+        }
+    );
+
+
+    peer.on(
+        "close",
+        function(){
+
+            atualizarStatus(
+                "🟡 Central desconectada — reconectando...",
+                "offline"
+            );
+
+
+            pararHeartbeat();
+
+
+            agendarReconexao();
+
+        }
+    );
+
+
+    peer.on(
+        "error",
+        function(err){
+
+            console.error(
+                "Erro PeerJS:",
+                err
+            );
+
+
+            atualizarStatus(
+                "🟡 conexão temporariamente indisponível — reconectando...",
+                "offline"
+            );
+
+
+            if(
+                err.type ===
+                "unavailable-id"
+            ){
+
+                agendarReconexao(
+                    5000
+                );
+
+                return;
+
+            }
+
+
+            if(
+                err.type ===
+                "network"
+                ||
+                err.type ===
+                "server-error"
+                ||
+                err.type ===
+                "socket-error"
+                ||
+                err.type ===
+                "socket-closed"
+            ){
+
+                tentarReconectarPeer();
+
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   CONFIGURAR CONEXÃO
+========================================= */
+
+function configurarConexao(conn){
+
+    if(
+        conexao &&
+        conexao !== conn
+    ){
+
+        try{
+
+            conexao.close();
+
+        }catch(e){}
+
+    }
+
+
+    conexao = conn;
+
+
+    conn.on(
+        "open",
+        function(){
+
+            ultimoHeartbeat =
+                Date.now();
+
+
+            atualizarStatus(
+                "🟢 CENTRAL ONLINE — aguardando alertas",
+                "online"
+            );
+
+
+            enviarHeartbeat();
+
+        }
+    );
+
+
+    conn.on(
+        "data",
+        function(dados){
+
+            ultimoHeartbeat =
+                Date.now();
+
+
+            if(
+                dados &&
+                dados.tipo ===
+                "heartbeat"
+            ){
+
+                enviarHeartbeat();
+
+                return;
+
+            }
+
+
+            receberEmergencia(
+                dados
+            );
+
+        }
+    );
+
+
+    conn.on(
+        "close",
+        function(){
+
+            if(
+                conexao === conn
+            ){
+
+                conexao = null;
+
+            }
+
+
+            atualizarStatus(
+                "🟡 conexão encerrada — reconectando automaticamente",
+                "offline"
+            );
+
+
+            agendarReconexao();
+
+        }
+    );
+
+
+    conn.on(
+        "error",
+        function(err){
+
+            console.error(
+                "Erro na conexão:",
+                err
+            );
+
+
+            atualizarStatus(
+                "🟡 problema na conexão — reconectando...",
+                "offline"
+            );
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   RECONEXÃO DO PEER
+========================================= */
+
+function tentarReconectarPeer(){
+
+    if(!centralAtiva){
+
+        return;
+
+    }
+
+
+    if(
+        !peer
+        ||
+        peer.destroyed
+    ){
+
+        agendarReconexao();
+
+        return;
+
+    }
+
+
+    try{
+
+        if(peer.disconnected){
+
+            peer.reconnect();
+
+            atualizarStatus(
+                "🟡 tentando reconectar...",
+                "offline"
+            );
+
+        }
+
+    }catch(e){
+
+        console.error(
+            "Falha ao reconectar:",
+            e
+        );
+
+        agendarReconexao();
+
+    }
+
+}
+
+
+/* =========================================
+   AGENDAR RECONEXÃO
+========================================= */
+
+function agendarReconexao(
+    tempo = 3000
+){
+
+    if(!centralAtiva){
+
+        return;
+
+    }
+
+
+    if(timerReconexao){
+
+        return;
+
+    }
+
+
+    reconectando = true;
+
+
+    timerReconexao =
+        setTimeout(
+            function(){
+
+                timerReconexao =
+                    null;
+
+
+                reconectando =
+                    false;
+
+
+                if(
+                    navigator.onLine === false
+                ){
+
+                    atualizarStatus(
+                        "🟡 Sem internet — aguardando conexão...",
+                        "offline"
+                    );
+
+
+                    agendarReconexao(
+                        5000
+                    );
+
+
+                    return;
+
+                }
+
+
+                if(
+                    peer &&
+                    !peer.destroyed
+                ){
+
+                    tentarReconectarPeer();
+
+                }else{
+
+                    conectarCentral();
+
+                }
+
+            },
+            tempo
+        );
+
+}
+
+
+/* =========================================
+   HEARTBEAT
+========================================= */
+
+function iniciarHeartbeat(){
+
+    pararHeartbeat();
+
+
+    timerHeartbeat =
+        setInterval(
+            function(){
+
+                if(
+                    !centralAtiva
+                ){
+
+                    return;
+
+                }
+
+
+                if(
+                    navigator.onLine === false
+                ){
+
+                    atualizarStatus(
+                        "🟡 Sem internet — aguardando...",
+                        "offline"
+                    );
+
+                    return;
+
+                }
+
+
+                if(
+                    peer &&
+                    peer.disconnected
+                ){
+
+                    tentarReconectarPeer();
+
+                    return;
+
+                }
+
+
+                enviarHeartbeat();
+
+            },
+            10000
+        );
+
+}
+
+
+/* =========================================
+   PARAR HEARTBEAT
+========================================= */
+
+function pararHeartbeat(){
+
+    if(timerHeartbeat){
+
+        clearInterval(
+            timerHeartbeat
+        );
+
+        timerHeartbeat =
+            null;
+
+    }
+
+}
+
+
+/* =========================================
+   ENVIAR HEARTBEAT
+========================================= */
+
+function enviarHeartbeat(){
+
+    if(
+        !conexao ||
+        !conexao.open
+    ){
+
+        return;
+
+    }
+
+
+    try{
+
+        conexao.send({
+            tipo:"heartbeat",
+            timestamp:Date.now()
+        });
+
+        ultimoHeartbeat =
+            Date.now();
+
+    }catch(e){
+
+        console.error(
+            "Erro heartbeat:",
+            e
+        );
+
+        agendarReconexao();
+
+    }
+
+}
+
+
+/* =========================================
+   INTERNET
+========================================= */
+
+window.addEventListener(
+    "online",
+    function(){
+
+        if(!centralAtiva){
+
+            return;
+
+        }
+
+
+        atualizarStatus(
+            "🟢 Internet restaurada — reconectando...",
+            "online"
+        );
+
+
+        agendarReconexao(
+            500
+        );
+
+    }
+);
+
+
+window.addEventListener(
+    "offline",
+    function(){
+
+        atualizarStatus(
+            "🟡 Sem internet — aguardando conexão...",
+            "offline"
+        );
+
+    }
+);
+
+
+/* =========================================
+   VISIBILIDADE DA PÁGINA
+========================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    function(){
+
+        if(
+            document.visibilityState ===
+            "visible"
+        ){
+
+            if(
+                centralAtiva &&
+                navigator.onLine
+            ){
+
+                if(
+                    !peer ||
+                    peer.destroyed ||
+                    peer.disconnected
+                ){
+
+                    agendarReconexao(
+                        500
+                    );
+
+                }
+
+            }
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   STATUS
+========================================= */
+
+function atualizarStatus(
+    texto,
+    classe
+){
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    status.textContent =
+        texto;
+
+
+    status.classList.remove(
+        "online",
+        "offline",
+        "erro"
+    );
+
+
+    if(classe){
+
+        status.classList.add(
+            classe
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   RECEBER EMERGÊNCIA
+========================================= */
+
+function receberEmergencia(dados){
+
+    if(!dados){
+
+        return;
+
+    }
+
+
+    if(
+        dados.tipo ===
+        "heartbeat"
+    ){
+
+        return;
+
+    }
+
+
+    emergenciaAtual =
+        normalizarEmergencia(
+            dados
+        );
+
+
+    preencherTela(
+        emergenciaAtual
+    );
+
+
+    adicionarHistorico(
+        emergenciaAtual
+    );
+
+
+    document.getElementById(
+        "alerta"
+    ).style.display =
+        "block";
+
+
+    document.getElementById(
+        "silenciar"
+    ).style.display =
+        "block";
+
+
+    iniciarSom();
+
+}
+
+
+/* =========================================
+   NORMALIZAR DADOS
+========================================= */
+
+function normalizarEmergencia(dados){
+
+    return {
+
+        cliente:
+            dados.cliente || "---",
+
+        licenca:
+            dados.licenca || "---",
+
+        protocolo:
+            dados.protocolo || "---",
+
+        data:
+            dados.data || "---",
+
+        hora:
+            dados.hora || "---",
+
+        latitude:
+            dados.latitude ?? null,
+
+        longitude:
+            dados.longitude ?? null,
+
+        precisao:
+            dados.precisao ?? null,
+
+        recebidoEm:
+            new Date().toISOString()
+
+    };
+
+}
+
+
+/* =========================================
+   PREENCHER TELA
+========================================= */
+
+function preencherTela(dados){
+
+    document.getElementById(
+        "cliente"
+    ).textContent =
+        dados.cliente || "---";
+
+
+    document.getElementById(
+        "licenca"
+    ).textContent =
+        dados.licenca || "---";
+
+
+    document.getElementById(
+        "protocolo"
+    ).textContent =
+        dados.protocolo || "---";
+
+
+    document.getElementById(
+        "data"
+    ).textContent =
+        dados.data || "---";
+
+
+    document.getElementById(
+        "hora"
+    ).textContent =
+        dados.hora || "---";
+
+
+    document.getElementById(
+        "latitude"
+    ).textContent =
+        dados.latitude ?? "---";
+
+
+    document.getElementById(
+        "longitude"
+    ).textContent =
+        dados.longitude ?? "---";
+
+
+    document.getElementById(
+        "precisao"
+    ).textContent =
+        dados.precisao
+        ? dados.precisao + " metros"
+        : "---";
+
+
+    const lat =
+        Number(dados.latitude);
+
+
+    const lon =
+        Number(dados.longitude);
+
+
+    if(
+        Number.isFinite(lat) &&
+        Number.isFinite(lon)
+    ){
+
+        const mapaUrl =
+            "https://maps.google.com/maps" +
+            "?q=" +
+            encodeURIComponent(
+                lat + "," + lon
+            ) +
+            "&z=17" +
+            "&output=embed";
+
+
+        document.getElementById(
+            "mapa"
+        ).src =
+            mapaUrl;
+
+
+        document.getElementById(
+            "mapaContainer"
+        ).style.display =
+            "block";
+
+
+        const googleMaps =
+            "https://www.google.com/maps/search/" +
+            "?api=1&query=" +
+            encodeURIComponent(
+                lat + "," + lon
+            );
+
+
+        document.getElementById(
+            "abrirMapa"
+        ).href =
+            googleMaps;
+
+
+        document.getElementById(
+            "abrirMapa"
+        ).style.display =
+            "block";
+
+
+        document.getElementById(
+            "semMapa"
+        ).style.display =
+            "none";
+
+    }
+
+    else{
+
+        document.getElementById(
+            "mapaContainer"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "abrirMapa"
+        ).style.display =
+            "none";
+
+
+        document.getElementById(
+            "semMapa"
+        ).style.display =
+            "block";
+
+    }
+
+}
+
+
+/* =========================================
+   ADICIONAR AO HISTÓRICO
+========================================= */
+
+function adicionarHistorico(dados){
+
+    if(
+        dados.protocolo &&
+        dados.protocolo !== "---"
+    ){
+
+        const existe =
+            historico.some(
+                function(item){
+
+                    return (
+                        item.protocolo ===
+                        dados.protocolo
+                    );
+
+                }
+            );
+
+
+        if(existe){
+
+            return;
+
+        }
+
+    }
+
+
+    historico.unshift(
+        dados
+    );
+
+
+    if(
+        historico.length > 500
+    ){
+
+        historico =
+            historico.slice(
+                0,
+                500
+            );
+
+    }
+
+
+    salvarHistorico();
+
+    mostrarHistorico();
+
+}
+
+
+/* =========================================
+   GERAR PDF
+========================================= */
+
+function gerarPDF(){
+
+    if(!emergenciaAtual){
+
+        alert(
+            "Nenhuma emergência selecionada para gerar o PDF."
+        );
+
+        return;
+
+    }
+
+
+    if(
+        !window.jspdf ||
+        !window.jspdf.jsPDF
+    ){
+
+        alert(
+            "A biblioteca de PDF ainda não foi carregada. Verifique sua conexão com a internet."
+        );
+
+        return;
+
+    }
+
+
+    const {
+        jsPDF
+    } =
+        window.jspdf;
+
+
+    const doc =
+        new jsPDF();
+
+
+    const margem =
+        20;
+
+
+    let y =
+        20;
+
+
+    doc.setFontSize(
+        20
+    );
+
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+
+    doc.text(
+        "ESIP-Sistemas",
+        margem,
+        y
+    );
+
+
+    y += 10;
+
+
+    doc.setFontSize(
+        16
+    );
+
+
+    doc.text(
+        "RELATÓRIO DE EMERGÊNCIA",
+        margem,
+        y
+    );
+
+
+    y += 15;
+
+
+    doc.setDrawColor(
+        200,
+        0,
+        0
+    );
+
+
+    doc.line(
+        margem,
+        y,
+        190,
+        y
+    );
+
+
+    y += 15;
+
+
+    doc.setFontSize(
+        12
+    );
+
+
+    doc.setTextColor(
+        0,
+        0,
+        0
+    );
+
+
+    const campos = [
+
+        [
+            "Cliente",
+            emergenciaAtual.cliente
+        ],
+
+        [
+            "Licença",
+            emergenciaAtual.licenca
+        ],
+
+        [
+            "Protocolo",
+            emergenciaAtual.protocolo
+        ],
+
+        [
+            "Data",
+            emergenciaAtual.data
+        ],
+
+        [
+            "Hora",
+            emergenciaAtual.hora
+        ],
+
+        [
+            "Latitude",
+            emergenciaAtual.latitude ??
+            "---"
+        ],
+
+        [
+            "Longitude",
+            emergenciaAtual.longitude ??
+            "---"
+        ],
+
+        [
+            "Precisão GPS",
+            emergenciaAtual.precisao
+                ? emergenciaAtual.precisao +
+                  " metros"
+                : "---"
+
+        ]
+
+    ];
+
+
+    campos.forEach(
+        function(campo){
+
+            doc.setFont(
+                "helvetica",
+                "bold"
+            );
+
+
+            doc.text(
+                campo[0] + ":",
+                margem,
+                y
+            );
+
+
+            doc.setFont(
+                "helvetica",
+                "normal"
+            );
+
+
+            doc.text(
+                String(
+                    campo[1]
+                ),
+                margem + 45,
+                y
+            );
+
+
+            y += 9;
+
+        }
+    );
+
+
+    y += 8;
+
+
+    doc.setFont(
+        "helvetica",
+        "bold"
+    );
+
+
+    doc.text(
+        "Localização:",
+        margem,
+        y
+    );
+
+
+    y += 8;
+
+
+    const lat =
+        Number(
+            emergenciaAtual.latitude
+        );
+
+
+    const lon =
+        Number(
+            emergenciaAtual.longitude
+        );
+
+
+    if(
+        Number.isFinite(lat) &&
+        Number.isFinite(lon)
+    ){
+
+        doc.setFont(
+            "helvetica",
+            "normal"
+        );
+
+
+        doc.text(
+            "https://www.google.com/maps/search/?api=1&query=" +
+            lat +
+            "," +
+            lon,
+            margem,
+            y,
+            {
+                maxWidth:160
+            }
+        );
+
+    }else{
+
+        doc.setFont(
+            "helvetica",
+            "normal"
+        );
+
+
+        doc.text(
+            "Localização GPS não disponível.",
+            margem,
+            y
+        );
+
+    }
+
+
+    y += 20;
+
+
+    doc.setFontSize(
+        9
+    );
+
+
+    doc.setTextColor(
+        100,
+        100,
+        100
+    );
+
+
+    doc.text(
+        "Documento gerado automaticamente pelo ESIP-Sistemas.",
+        margem,
+        y
+    );
+
+
+    const protocolo =
+        emergenciaAtual.protocolo
+        || "emergencia";
+
+
+    const nomeArquivo =
+        "ESIP-Emergencia-" +
+        protocolo +
+        ".pdf";
+
+
+    doc.save(
+        nomeArquivo
+    );
+
+}
+
+
+/* =========================================
+   BACKUP DO HISTÓRICO
+========================================= */
+
+function backupHistorico(){
+
+    if(!historico.length){
+
+        alert(
+            "Não existe histórico para fazer backup."
+        );
+
+        return;
+
+    }
+
+
+    const backup = {
+
+        sistema:
+            "ESIP-Sistemas",
+
+        versao:
+            "1.0",
+
+        dataBackup:
+            new Date().toISOString(),
+
+        historico:
+            historico
+
+    };
+
+
+    const conteudo =
+        JSON.stringify(
+            backup,
+            null,
+            2
+        );
+
+
+    const blob =
+        new Blob(
+            [
+                conteudo
+            ],
+            {
+                type:
+                    "application/json"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const a =
+        document.createElement(
+            "a"
+        );
+
+
+    const agora =
+        new Date();
+
+
+    const nome =
+        "ESIP-Backup-" +
+        agora.getFullYear() +
+        "-" +
+        String(
+            agora.getMonth()+1
+        ).padStart(
+            2,
+            "0"
+        ) +
+        "-" +
+        String(
+            agora.getDate()
+        ).padStart(
+            2,
+            "0"
+        ) +
+        ".json";
+
+
+    a.href =
+        url;
+
+
+    a.download =
+        nome;
+
+
+    document.body.appendChild(
+        a
+    );
+
+
+    a.click();
+
+
+    a.remove();
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+}
+
+
+/* =========================================
+   ABRIR RESTAURAÇÃO
+========================================= */
+
+function abrirRestauracao(){
+
+    document.getElementById(
+        "inputBackup"
+    ).click();
+
+}
+
+
+/* =========================================
+   RESTAURAR BACKUP
+========================================= */
+
+function restaurarBackup(event){
+
+    const arquivo =
+        event.target.files[0];
+
+
+    if(!arquivo){
+
+        return;
+
+    }
+
+
+    const leitor =
+        new FileReader();
+
+
+    leitor.onload =
+        function(e){
+
+            try{
+
+                const backup =
+                    JSON.parse(
+                        e.target.result
+                    );
+
+
+                let dados =
+                    backup.historico;
+
+
+                if(
+                    !Array.isArray(
+                        dados
+                    )
+                ){
+
+                    if(
+                        Array.isArray(
+                            backup
+                        )
+                    ){
+
+                        dados =
+                            backup;
+
+                    }else{
+
+                        throw new Error(
+                            "Formato inválido."
+                        );
+
+                    }
+
+                }
+
+
+                const confirmar =
+                    confirm(
+                        "Foram encontrados " +
+                        dados.length +
+                        " registros.\n\n" +
+                        "Deseja substituir o histórico atual pelo backup?"
+                    );
+
+
+                if(!confirmar){
+
+                    return;
+
+                }
+
+
+                historico =
+                    dados;
+
+
+                salvarHistorico();
+
+                mostrarHistorico();
+
+
+                alert(
+                    "Backup restaurado com sucesso!"
+                );
+
+
+            }catch(e){
+
+                console.error(
+                    e
+                );
+
+
+                alert(
+                    "Não foi possível restaurar o backup. O arquivo pode estar inválido."
+                );
+
+            }
+
+
+            event.target.value =
+                "";
+
+        };
+
+
+    leitor.readAsText(
+        arquivo
+    );
+
+}
+
+
+/* =========================================
+   LIMPAR HISTÓRICO COM SENHA
+========================================= */
+
+function limparHistorico(){
+
+    if(!historico.length){
+
+        alert(
+            "O histórico já está vazio."
+        );
+
+        return;
+
+    }
+
+
+    const senha =
+        prompt(
+            "🔐 DIGITE A SENHA PARA APAGAR O HISTÓRICO:"
+        );
+
+
+    if(senha === null){
+
+        return;
+
+    }
+
+
+    /*
+       SENHA: 1234
+    */
+
+    if(senha !== "1234"){
+
+        alert(
+            "❌ SENHA INCORRETA!\n\n" +
+            "O histórico NÃO foi apagado."
+        );
+
+        return;
+
+    }
+
+
+    const confirmar =
+        confirm(
+            "⚠️ ATENÇÃO!\n\n" +
+            "TODO o histórico de emergências " +
+            "será apagado deste dispositivo.\n\n" +
+            "Essa ação não pode ser desfeita.\n\n" +
+            "Deseja realmente apagar?"
+        );
+
+
+    if(!confirmar){
+
+        return;
+
+    }
+
+
+    historico = [];
+
+
+    /*
+       Remove definitivamente o histórico
+       salvo no navegador.
+    */
+
+    localStorage.removeItem(
+        CHAVE_HISTORICO
+    );
+
+
+    mostrarHistorico();
+
+
+    emergenciaAtual =
+        null;
+
+
+    alert(
+        "✅ HISTÓRICO APAGADO COM SUCESSO!"
+    );
+
+}
+
+
+/* =========================================
+   SILENCIAR
+========================================= */
+
+function silenciarAlerta(){
+
+    pararSom();
+
+
+    document.getElementById(
+        "silenciar"
+    ).style.display =
+        "none";
+
+}
+
+
+/* =========================================
+   INICIALIZAÇÃO
+========================================= */
+
+mostrarHistorico();
+
+
+if(
+    navigator.onLine === false
+){
+
+    atualizarStatus(
+        "🟡 Sem internet — aguardando conexão",
+        "offline"
+    );
+
+}
+
+</script>
+
+</body>
+</html>
