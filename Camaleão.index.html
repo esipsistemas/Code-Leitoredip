@@ -1,1 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESIP-Sistemas | Painel de Credenciais</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #0b132b; margin: 0; padding: 20px; color: #f8fafc; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
+        .admin-panel { width: 100%; max-width: 400px; background: #1c2541; padding: 20px; border-radius: 12px; border: 1px solid #3a506b; margin-bottom: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .panel-title { font-size: 16px; font-weight: bold; color: #ffffff; text-align: center; margin-bottom: 15px; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #cbd5e1; font-size: 14px; }
+        .range-slider { width: 55%; accent-color: #5bc0be; }
+        .checkbox-custom { width: 16px; height: 16px; accent-color: #5bc0be; cursor: pointer; }
+        .btn-generate { background-color: #5bc0be; color: #0b132b; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; width: 100%; transition: all 0.2s; }
+        .card-container { width: 100%; max-width: 400px; }
+        .password-card { background: linear-gradient(135deg, #1c2541 0%, #0b132b 100%); padding: 30px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 2px solid #5bc0be; text-align: center; box-sizing: border-box; }
+        .logo-text { font-size: 24px; font-weight: bold; color: #5bc0be; letter-spacing: 1.5px; margin: 0; }
+        .card-tag { display: inline-block; font-size: 11px; background: rgba(91, 192, 190, 0.15); color: #5bc0be; padding: 4px 10px; border-radius: 20px; margin-top: 8px; font-weight: 600; text-transform: uppercase; }
+        .label-senha { font-size: 12px; color: #cbd5e1; text-transform: uppercase; margin-top: 35px; margin-bottom: 5px; }
+        .password-display { font-family: 'Courier New', monospace; font-size: 22px; font-weight: bold; color: #ffffff; word-break: break-all; background: rgba(11, 195, 187, 0.05); border: 1px dashed #3a506b; padding: 15px; border-radius: 8px; margin-bottom: 25px; }
+        .card-footer { font-size: 11px; color: #64748b; margin-top: 15px; border-top: 1px solid rgba(58, 80, 107, 0.4); padding-top: 12px; }
+        .action-row { display: flex; gap: 10px; margin-top: 15px; width: 100%; }
+        .btn-action { flex: 1; padding: 12px; font-size: 14px; font-weight: bold; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-copy { background: #3a506b; border: 1px solid #5bc0be; color: #ffffff; }
+        .btn-download { background: transparent; border: 1px solid #64748b; color: #cbd5e1; }
+        .toast-notification { position: fixed; bottom: 20px; background: #5bc0be; color: #0b132b; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 14px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="admin-panel" id="admPanel">
+        <div class="panel-title">📡 ESIP-Sistemas | Painel Administrativo</div>
+        <div class="setting-row">
+            <span>Tamanho: <strong id="lengthVal">16</strong> caracteres</span>
+            <input type="range" id="passLength" min="8" max="24" value="16" class="range-slider" oninput="atualizarLabelTamanho()">
+        </div>
+        <div class="setting-row">
+            <label for="chkLetras">Letras (A-Z, a-z)</label>
+            <input type="checkbox" id="chkLetras" checked class="checkbox-custom">
+        </div>
+        <div class="setting-row">
+            <label for="chkNumeros">Números (0-9)</label>
+            <input type="checkbox" id="chkNumeros" checked class="checkbox-custom">
+        </div>
+        <div class="setting-row">
+            <label for="chkSimbolos">Símbolos (!@#$)</label>
+            <input type="checkbox" id="chkSimbolos" checked class="checkbox-custom">
+        </div>
+        <button class="btn-generate" onclick="criarSenhaDiferente()">⚡ Gerar Nova Credencial</button>
+        <button class="btn-generate" style="background-color:#3a506b; color:#fff; margin-top:5px;" onclick="gerarLinkCliente()">🔗 Gerar Link do Cliente</button>
+    </div>
 
+    <div class="card-container">
+        <div class="password-card" id="clientCard">
+            <div class="logo-text">📡 ESIP-Sistemas</div>
+            <div class="card-tag">Acesso de Segurança Privado</div>
+            <div class="label-senha">Chave de Segurança Primária</div>
+            <div class="password-display" id="passOut">Gere uma chave</div>
+            <div class="card-footer">Documento de credencial digital criptografada temporária.</div>
+        </div>
+        <div class="action-row">
+            <button class="btn-action btn-copy" onclick="copiarSenha()">📋 Copiar Chave e Entrar</button>
+            <button class="btn-action btn-download" onclick="baixarComoImagem()">💾 Salvar Imagem</button>
+        </div>
+    </div>
+    <div class="toast-notification" id="toast">Copiado com sucesso!</div>
+        <script>
+        var historicoSenhas = [];
+        // AJUSTE: Troque o link abaixo pela URL do seu sistema ofuscado principal
+        var LINK_DO_SEU_SISTEMA = "https://esipsistemas.github.io/Code-Leitoredip/Ofuscador.index.html";
+
+        window.onload = function() {
+            var urlParams = new URLSearchParams(window.location.search);
+            var chaveUrl = urlParams.get('key');
+            if (chaveUrl) {
+                document.getElementById('admPanel').style.display = 'none';
+                document.getElementById('passOut').innerText = decodeURIComponent(chaveUrl);
+            }
+        };
+
+        function atualizarLabelTamanho() { 
+            document.getElementById('lengthVal').innerText = document.getElementById('passLength').value; 
+        }
+
+        function criarSenhaDiferente() {
+            var length = parseInt(document.getElementById('passLength').value);
+            var banco = "";
+            if (document.getElementById('chkLetras').checked) banco += "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+            if (document.getElementById('chkNumeros').checked) banco += "0123456789";
+            if (document.getElementById('chkSimbolos').checked) banco += "!@#$%&*()_+-=[]{}?";
+            if (banco === "") { alert("Selecione uma opção."); return; }
+            var novaSenha = "";
+            do {
+                novaSenha = "";
+                for (var i = 0; i < length; i++) { banco.charAt(Math.floor(Math.random() * banco.length)) ? novaSenha += banco.charAt(Math.floor(Math.random() * banco.length)) : i--; }
+            } while (historicoSenhas.includes(novaSenha) && historicoSenhas.length < 50);
+            historicoSenhas.push(novaSenha);
+            document.getElementById('passOut').innerText = novaSenha;
+        }
+
+        function copiarSenha() {
+            var txt = document.getElementById('passOut').innerText;
+            if (txt === "Gere uma chave") return;
+            var inp = document.createElement("input"); inp.value = txt; document.body.appendChild(inp); inp.select(); document.execCommand("copy"); document.body.removeChild(inp);
+            mostrarToast("Copiado! Redirecionando...");
+            setTimeout(function() { window.location.href = LINK_DO_SEU_SISTEMA; }, 1000);
+        }
+
+        function gerarLinkCliente() {
+            var txt = document.getElementById('passOut').innerText;
+            if (txt === "Gere uma chave") return;
+            var linkCompleto = window.location.href.split('?')[0] + "?key=" + encodeURIComponent(txt);
+            var inp = document.createElement("input"); inp.value = linkCompleto; document.body.appendChild(inp); inp.select(); document.execCommand("copy"); document.body.removeChild(inp);
+            alert("Link do cliente copiado! Cole no WhatsApp dele:\n\n" + linkCompleto);
+        }
+
+        // NOVA FUNÇÃO CORRIGIDA EM BASE64 SEGURO CONTRA BLOQUEIOS
+        function baixarComoImagem() {
+            var senhaText = document.getElementById("passOut").innerText;
+            if (senhaText === "Gere uma chave") return;
+
+            var svgString = '<svg xmlns="http://w3.org" width="400" height="300">' +
+                '<foreignObject width="100%" height="100%">' +
+                '<div xmlns="http://w3.org" style="font-family:sans-serif; text-align:center; box-sizing:border-box; padding:30px; height:100%; background:linear-gradient(135deg, #1c2541 0%, #0b132b 100%); border:2px solid #5bc0be; border-radius:16px; color:#ffffff; position:relative;">' +
+                '<div style="position:absolute; top:0; left:0; width:100%; height:4px; background:linear-gradient(90deg, #5bc0be, #3a506b);"></div>' +
+                '<div style="font-size:24px; font-weight:bold; color:#5bc0be; letter-spacing:1.5px; margin:0;">📡 ESIP-Sistemas</div>' +
+                '<div style="display:inline-block; font-size:11px; background:rgba(91, 192, 190, 0.15); color:#5bc0be; padding:4px 10px; border-radius:20px; margin-top:8px; font-weight:600; text-transform:uppercase;">Acesso de Segurança Privado</div>' +
+                '<div style="font-size:12px; color:#cbd5e1; text-transform:uppercase; margin-top:35px; margin-bottom:5px;">Chave de Segurança Primária</div>' +
+                '<div style="font-family:monospace; font-size:22px; font-weight:bold; color:#ffffff; word-break:break-all; background:rgba(11, 195, 187, 0.05); border:1px dashed #3a506b; padding:15px; border-radius:8px; margin-bottom:25px;">' + senhaText + '</div>' +
+                '<div style="font-size:11px; color:#64748b; margin-top:15px; border-top:1px solid rgba(58, 80, 107, 0.4); padding-top:12px;">Documento de credencial digital criptografada temporária.</div>' +
+                '</div>' +
+                '</foreignObject>' +
+                '</svg>';
+
+            // Converte a string de texto para Base64 correto com suporte a emojis/caracteres especiais
+            var base64Svg = btoa(unescape(encodeURIComponent(svgString)));
+            
+            var dl = document.createElement('a'); 
+            dl.href = 'data:image/svg+xml;base64,' + base64Svg; 
+            dl.download = 'Credencial_ESIP_' + senhaText.substring(0,4) + '.svg'; 
+            document.body.appendChild(dl); 
+            dl.click(); 
+            document.body.removeChild(dl);
+            mostrarToast("Cartão exportado!");
+        }
+
+        function mostrarToast(msg) { 
+            var t = document.getElementById('toast'); t.innerText = msg; t.style.display = 'block'; setTimeout(function() { t.style.display = 'none'; }, 2000); 
+        }
+    </script>
+</body>
+</html>
