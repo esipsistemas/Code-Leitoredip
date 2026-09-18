@@ -1,1 +1,1715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ESIP-Sistemas | Nexus</title>
 
+<style>
+:root{
+ --cyan:#00f5d4;
+ --blue:#1683ff;
+ --purple:#8b5cf6;
+ --green:#00ff88;
+ --red:#ff3b6b;
+ --bg:#030712;
+ --text:#e8f7ff;
+ --muted:#71839a;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+ margin:0;
+ width:100%;
+ height:100%;
+ overflow:hidden;
+ font-family:"Segoe UI",Arial,sans-serif;
+ background:#030712;
+ color:var(--text);
+}
+
+body::before{
+ content:"";
+ position:fixed;
+ inset:0;
+ background:
+ linear-gradient(rgba(0,245,212,.035) 1px,transparent 1px),
+ linear-gradient(90deg,rgba(0,245,212,.035) 1px,transparent 1px);
+ background-size:45px 45px;
+ pointer-events:none;
+ z-index:0;
+}
+
+body::after{
+ content:"";
+ position:fixed;
+ inset:0;
+ background:
+ radial-gradient(circle at 50% 45%,rgba(0,100,255,.13),transparent 35%),
+ radial-gradient(circle at 15% 80%,rgba(0,245,212,.08),transparent 30%),
+ radial-gradient(circle at 90% 20%,rgba(139,92,246,.08),transparent 30%);
+ pointer-events:none;
+ z-index:0;
+}
+
+/* PARTÍCULAS */
+#particulas{
+ position:fixed;
+ inset:0;
+ pointer-events:none;
+ z-index:1;
+}
+
+.particula{
+ position:absolute;
+ width:2px;
+ height:2px;
+ background:var(--cyan);
+ border-radius:50%;
+ box-shadow:0 0 8px var(--cyan);
+ animation:flutuar linear infinite;
+}
+
+@keyframes flutuar{
+ from{transform:translateY(110vh);opacity:0}
+ 15%{opacity:.8}
+ 85%{opacity:.8}
+ to{transform:translateY(-10vh);opacity:0}
+}
+
+/* TELA */
+#tela-lancamento{
+ position:relative;
+ z-index:5;
+ width:100%;
+ height:100%;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+ transition:opacity 1s ease,transform 1s ease;
+}
+
+/* LOGO */
+.logo{
+ position:absolute;
+ top:30px;
+ left:35px;
+ display:flex;
+ align-items:center;
+ gap:12px;
+ color:var(--cyan);
+ font-weight:700;
+ letter-spacing:2px;
+}
+
+.logo-icon{
+ width:38px;
+ height:38px;
+ border:1px solid var(--cyan);
+ border-radius:10px;
+ display:grid;
+ place-items:center;
+ box-shadow:0 0 15px rgba(0,245,212,.3),
+ inset 0 0 15px rgba(0,245,212,.1);
+}
+
+.logo span{color:white}
+
+/* STATUS */
+.status-top{
+ position:absolute;
+ top:35px;
+ right:35px;
+ font-family:monospace;
+ font-size:12px;
+ color:var(--green);
+ display:flex;
+ align-items:center;
+ gap:8px;
+}
+
+.status-dot{
+ width:7px;
+ height:7px;
+ border-radius:50%;
+ background:var(--green);
+ box-shadow:0 0 12px var(--green);
+ animation:pulsar 1.4s infinite;
+}
+
+@keyframes pulsar{
+ 50%{opacity:.3;transform:scale(.6)}
+}
+
+/* TÍTULO */
+.titulo-area{
+ text-align:center;
+ margin-bottom:30px;
+}
+
+.titulo-area h1{
+ margin:0;
+ font-size:clamp(32px,5vw,64px);
+ letter-spacing:8px;
+ color:white;
+ text-shadow:0 0 10px rgba(0,245,212,.5),
+ 0 0 35px rgba(0,120,255,.3);
+}
+
+.titulo-area h1 span{color:var(--cyan)}
+
+.subtitulo{
+ margin-top:10px;
+ color:var(--muted);
+ font-family:monospace;
+ letter-spacing:3px;
+ font-size:12px;
+}
+
+/* PAINEL */
+.painel-pin{
+ position:relative;
+ width:min(420px,calc(100% - 40px));
+ padding:35px;
+ background:linear-gradient(145deg,rgba(15,28,52,.82),rgba(4,10,22,.82));
+ border:1px solid rgba(0,245,212,.25);
+ border-radius:20px;
+ backdrop-filter:blur(18px);
+ box-shadow:0 0 60px rgba(0,120,255,.12),
+ inset 0 0 30px rgba(0,245,212,.025);
+ text-align:center;
+ transition:opacity .5s,transform .5s;
+}
+
+.painel-pin::before{
+ content:"";
+ position:absolute;
+ inset:8px;
+ border:1px solid rgba(255,255,255,.025);
+ border-radius:14px;
+ pointer-events:none;
+}
+
+.painel-status{
+ display:flex;
+ justify-content:space-between;
+ font-family:monospace;
+ font-size:10px;
+ color:#52677f;
+ margin-bottom:25px;
+}
+
+.painel-pin h3{
+ margin:0 0 8px;
+ font-size:20px;
+ letter-spacing:3px;
+}
+
+.descricao{
+ color:#647991;
+ font-size:12px;
+}
+
+.input-container{
+ position:relative;
+ margin:25px 0;
+}
+
+input{
+ width:100%;
+ padding:16px 0;
+ border:none;
+ border-bottom:1px solid #1b4260;
+ background:transparent;
+ color:var(--cyan);
+ outline:none;
+ text-align:center;
+ font-family:monospace;
+ font-size:22px;
+ letter-spacing:8px;
+ transition:.3s;
+}
+
+input:focus{
+ border-bottom-color:var(--cyan);
+ box-shadow:0 8px 20px -15px var(--cyan);
+}
+
+input::placeholder{color:#31485f}
+
+button{
+ position:relative;
+ width:100%;
+ padding:15px;
+ border:1px solid rgba(0,245,212,.5);
+ border-radius:10px;
+ background:linear-gradient(90deg,rgba(0,120,255,.2),rgba(0,245,212,.15));
+ color:white;
+ font-weight:700;
+ letter-spacing:2px;
+ cursor:pointer;
+ overflow:hidden;
+ transition:.3s;
+}
+
+button:hover{
+ border-color:var(--cyan);
+ box-shadow:0 0 25px rgba(0,245,212,.2);
+ transform:translateY(-2px);
+}
+
+button:active{transform:scale(.98)}
+
+#status-logs{
+ min-height:25px;
+ margin-top:20px;
+ font-family:monospace;
+ font-size:11px;
+ color:var(--cyan);
+ text-align:left;
+}
+
+.cursor{animation:blink .8s infinite}
+
+@keyframes blink{50%{opacity:0}}
+
+.ocultar{
+ opacity:0;
+ pointer-events:none;
+ transform:scale(.8);
+}
+
+/* HANGAR */
+#hangar{
+ position:absolute;
+ width:330px;
+ height:430px;
+ bottom:-40px;
+ left:50%;
+ transform:translateX(-50%);
+ z-index:4;
+ perspective:800px;
+ opacity:0;
+ pointer-events:none;
+ transition:opacity .5s;
+}
+
+#hangar.ativo{opacity:1}
+
+#hangar::after{
+ content:"";
+ position:absolute;
+ bottom:5px;
+ left:25px;
+ width:280px;
+ height:25px;
+ background:linear-gradient(90deg,transparent,#00f5d4,transparent);
+ opacity:.35;
+ filter:blur(5px);
+}
+
+.hangar-glow{
+ position:absolute;
+ width:260px;
+ height:350px;
+ left:35px;
+ bottom:20px;
+ background:radial-gradient(ellipse,rgba(0,245,212,.16),transparent 65%);
+ filter:blur(20px);
+}
+
+/* PORTAS */
+.porta{
+ position:absolute;
+ bottom:15px;
+ width:105px;
+ height:330px;
+ z-index:8;
+ background:linear-gradient(135deg,#0d1728,#182b43,#07101e);
+ border:1px solid #31516d;
+ box-shadow:inset 0 0 25px rgba(0,0,0,.8),
+ 0 0 15px rgba(0,120,255,.12);
+ transition:transform 1.4s cubic-bezier(.2,.8,.2,1);
+}
+
+.porta::before{
+ content:"";
+ position:absolute;
+ inset:15px;
+ border:1px solid rgba(0,245,212,.15);
+}
+
+.porta-esquerda{
+ left:0;
+ clip-path:polygon(0 0,100% 8%,100% 100%,0 100%);
+}
+
+.porta-direita{
+ right:0;
+ clip-path:polygon(0 8%,100% 0,100% 100%,0 100%);
+}
+
+#hangar.aberto .porta-esquerda{
+ transform:translateX(-105px) rotateY(18deg);
+}
+
+#hangar.aberto .porta-direita{
+ transform:translateX(105px) rotateY(-18deg);
+}
+
+/* IDENTIFICAÇÃO */
+.hangar-label{
+ position:absolute;
+ top:12px;
+ left:50%;
+ transform:translateX(-50%);
+ z-index:15;
+ padding:7px 14px;
+ border:1px solid rgba(0,245,212,.35);
+ background:rgba(2,10,20,.85);
+ color:#00f5d4;
+ font-family:monospace;
+ font-size:10px;
+ letter-spacing:2px;
+ white-space:nowrap;
+}
+
+.hangar-status{
+ position:absolute;
+ bottom:2px;
+ left:50%;
+ transform:translateX(-50%);
+ z-index:20;
+ font-family:monospace;
+ font-size:8px;
+ color:#536a80;
+ white-space:nowrap;
+}
+
+.hangar-status b{
+ color:#00ff88;
+ margin-left:8px;
+}
+
+/* LUZES */
+.luzes-hangar{
+ position:absolute;
+ left:10px;
+ right:10px;
+ bottom:20px;
+ z-index:14;
+ display:flex;
+ justify-content:space-between;
+}
+
+.luzes-hangar i{
+ width:5px;
+ height:5px;
+ border-radius:50%;
+ background:#00f5d4;
+ box-shadow:0 0 8px #00f5d4;
+ animation:luz-alerta 1s infinite alternate;
+}
+
+.luzes-hangar i:nth-child(2){animation-delay:.15s}
+.luzes-hangar i:nth-child(3){animation-delay:.3s}
+.luzes-hangar i:nth-child(4){animation-delay:.45s}
+.luzes-hangar i:nth-child(5){animation-delay:.6s}
+
+@keyframes luz-alerta{
+ from{opacity:.25}
+ to{opacity:1}
+}
+
+/* FOGUETE */
+#foguete-real{
+ position:absolute;
+ z-index:7;
+ width:145px;
+ left:50%;
+ bottom:18px;
+ transform:translateX(-50%) translateY(210px);
+ opacity:0;
+ transition:opacity .6s,
+ transform 3.8s cubic-bezier(.25,.75,.15,1);
+ filter:drop-shadow(0 0 10px rgba(0,245,212,.3));
+}
+
+#hangar.aberto #foguete-real{
+ opacity:1;
+ transform:translateX(-50%) translateY(0);
+}
+
+/* MOTORES */
+.motores{
+ position:absolute;
+ z-index:6;
+ bottom:3px;
+ left:50%;
+ width:80px;
+ transform:translateX(-50%);
+ display:flex;
+ justify-content:space-between;
+ opacity:0;
+}
+
+#hangar.ignicao .motores{opacity:1}
+
+.motor{
+ position:relative;
+ width:25px;
+ height:100px;
+}
+
+.chama.externa{
+ position:absolute;
+ bottom:0;
+ left:2px;
+ width:21px;
+ height:75px;
+ background:linear-gradient(to bottom,#fff 0%,#00f5d4 25%,#1683ff 60%,transparent 100%);
+ clip-path:polygon(50% 100%,0 15%,30% 28%,35% 0,70% 28%,100% 15%);
+ filter:blur(2px) drop-shadow(0 0 15px #00f5d4);
+ animation:chama .08s infinite alternate;
+}
+
+.chama.interna{
+ position:absolute;
+ bottom:5px;
+ left:7px;
+ width:11px;
+ height:45px;
+ background:linear-gradient(to bottom,white,#fff4a3,#ff8a00,transparent);
+ clip-path:polygon(50% 100%,0 10%,50% 35%,100% 10%);
+ animation:chama .06s infinite alternate;
+}
+
+@keyframes chama{
+ from{transform:scaleY(.8)}
+ to{transform:scaleY(1.2)}
+}
+
+/* FUMAÇA */
+#fumaça{
+ position:absolute;
+ z-index:3;
+ bottom:-10px;
+ left:50%;
+ width:100px;
+ height:100px;
+ transform:translateX(-50%);
+ opacity:0;
+}
+
+#hangar.ignicao #fumaça{opacity:1}
+
+#fumaça span{
+ position:absolute;
+ width:20px;
+ height:20px;
+ border-radius:50%;
+ background:rgba(180,195,210,.22);
+ filter:blur(6px);
+ animation:fumaça 1.8s infinite;
+}
+
+#fumaça span:nth-child(1){left:20px}
+#fumaça span:nth-child(2){left:50px;animation-delay:.2s}
+#fumaça span:nth-child(3){left:5px;animation-delay:.4s}
+#fumaça span:nth-child(4){left:70px;animation-delay:.6s}
+#fumaça span:nth-child(5){left:35px;animation-delay:.8s}
+#fumaça span:nth-child(6){left:60px;animation-delay:1s}
+#fumaça span:nth-child(7){left:15px;animation-delay:1.2s}
+#fumaça span:nth-child(8){left:45px;animation-delay:1.4s}
+
+@keyframes fumaça{
+ 0%{transform:translateY(0) scale(.5);opacity:.1}
+ 40%{opacity:.45}
+ 100%{transform:translateY(-130px) scale(3);opacity:0}
+}
+
+/* LANÇAMENTO */
+#hangar.lancamento #foguete-real{
+ transition:transform 2.8s cubic-bezier(.3,.1,.15,1);
+ transform:translateX(-50%) translateY(-110vh) scale(.55);
+}
+
+#hangar.lancamento #fumaça{
+ animation:fumaça-lancamento 2.8s forwards;
+}
+
+@keyframes fumaça-lancamento{
+ from{transform:translateX(-50%) scale(1)}
+ to{transform:translateX(-50%) translateY(150px) scale(2.5);opacity:0}
+}
+
+/* TREMOR */
+.tremer{animation:tremor .08s infinite}
+
+@keyframes tremor{
+ 0%{transform:translate(1px,1px)}
+ 50%{transform:translate(-2px,1px)}
+ 100%{transform:translate(1px,-2px)}
+}
+
+/* CENTRAL */
+#central-comunicacao{
+ position:fixed;
+ inset:0;
+ z-index:20;
+ background:radial-gradient(circle at 50% 0%,rgba(0,100,255,.15),transparent 40%),#02050b;
+ opacity:0;
+ pointer-events:none;
+ transition:opacity 1s ease;
+ overflow:auto;
+}
+
+.central-ativa{
+ opacity:1!important;
+ pointer-events:auto!important;
+}
+
+.topo-central{
+ min-height:70px;
+ padding:0 30px;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ border-bottom:1px solid rgba(0,245,212,.15);
+ background:rgba(4,10,20,.85);
+ backdrop-filter:blur(20px);
+}
+
+.brand-central{
+ display:flex;
+ align-items:center;
+ gap:12px;
+}
+
+.brand-central strong{letter-spacing:2px}
+
+.conexao{
+ color:var(--green);
+ font-family:monospace;
+ font-size:11px;
+}
+
+#relogio{
+ font-family:monospace;
+ color:#71869d;
+ font-size:11px;
+}
+
+.central-conteudo{
+ max-width:1200px;
+ margin:auto;
+ padding:40px 25px;
+}
+
+.boas-vindas{margin-bottom:35px}
+
+.boas-vindas small{
+ color:var(--cyan);
+ font-family:monospace;
+}
+
+.boas-vindas h1{
+ margin:8px 0;
+ font-size:32px;
+}
+
+.boas-vindas p{color:var(--muted)}
+
+.grid-sistemas{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+ gap:18px;
+}
+
+.card-sistema{
+ position:relative;
+ padding:25px;
+ min-height:140px;
+ border-radius:16px;
+ border:1px solid rgba(255,255,255,.07);
+ background:linear-gradient(145deg,rgba(13,26,48,.75),rgba(5,10,20,.8));
+ overflow:hidden;
+ cursor:pointer;
+ transition:.3s;
+}
+
+.card-sistema::after{
+ content:"";
+ position:absolute;
+ width:100px;
+ height:100px;
+ right:-30px;
+ bottom:-40px;
+ background:var(--card-color);
+ filter:blur(50px);
+ opacity:.15;
+}
+
+.card-sistema:hover{
+ transform:translateY(-5px);
+ border-color:var(--card-color);
+ box-shadow:0 15px 40px rgba(0,0,0,.3);
+}
+
+.card-icon{
+ font-size:32px;
+ margin-bottom:15px;
+}
+
+.card-sistema h3{margin:0 0 7px}
+
+.card-sistema p{
+ margin:0;
+ color:var(--muted);
+ font-size:12px;
+}
+
+.card-status{
+ margin-top:18px;
+ font-family:monospace;
+ font-size:9px;
+ color:var(--green);
+}
+
+.terminal{
+ margin-top:25px;
+ padding:20px;
+ border:1px solid rgba(0,245,212,.1);
+ background:#010409;
+ border-radius:12px;
+ font-family:monospace;
+ font-size:11px;
+ color:#61778e;
+}
+
+.terminal span{color:var(--cyan)}
+
+.mensagem-erro{
+ color:var(--red)!important;
+}
+
+/* RESPONSIVO */
+@media(max-width:600px){
+ .logo{top:20px;left:20px}
+ .status-top{top:22px;right:20px}
+ .logo span{display:none}
+ .titulo-area h1{letter-spacing:4px}
+ .painel-pin{padding:25px}
+ .topo-central{padding:0 15px}
+ .conexao{display:none}
+ .central-conteudo{padding:25px 15px}
+ #hangar{
+  transform:translateX(-50%) scale(.78);
+  transform-origin:bottom center;
+ }
+}
+</style>
+</head>
+
+<body>
+
+<div id="particulas"></div>
+
+<div id="tela-lancamento">
+
+ <div class="logo">
+  <div class="logo-icon">⌁</div>
+  <span>ESIP-SISTEMAS</span>
+ </div>
+
+ <div class="status-top">
+  <div class="status-dot"></div>
+  NEXUS ONLINE
+ </div>
+
+ <div class="titulo-area">
+  <h1><span>ESIP</span> NEXUS</h1>
+  <div class="subtitulo">
+   SISTEMA DE COMUNICAÇÃO • PROTOCOLO SEGURO
+  </div>
+ </div>
+
+ <div id="painel" class="painel-pin">
+
+  <div class="painel-status">
+   <span>NODE: ESIP-01</span>
+   <span>SECURE</span>
+  </div>
+
+  <h3>ACESSO RESTRITO</h3>
+
+  <div class="descricao">
+   Autentique-se para inicializar o ambiente
+  </div>
+
+  <div class="input-container">
+   <input
+    type="password"
+    id="pinInput"
+    placeholder="••••••"
+    maxlength="64"
+    autocomplete="off"
+   >
+  </div>
+
+  <button onclick="iniciarLancamento()">
+   ⟫ INICIALIZAR NEXUS
+  </button>
+
+  <div id="status-logs">
+   <span class="cursor">▌</span>
+  </div>
+
+ </div>
+
+ <!-- HANGAR -->
+
+ <div id="hangar">
+
+  <div class="hangar-glow"></div>
+
+  <div class="hangar-label">
+   📡 ESIP-SISTEMAS
+  </div>
+
+  <div class="hangar-status">
+   LAUNCH MODULE <b>READY</b>
+  </div>
+
+  <div class="porta porta-esquerda"></div>
+  <div class="porta porta-direita"></div>
+
+  <div class="luzes-hangar">
+   <i></i><i></i><i></i><i></i><i></i>
+  </div>
+
+  <div id="fumaça">
+   <span></span><span></span><span></span><span></span>
+   <span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="motores">
+
+   <div class="motor">
+    <div class="chama externa"></div>
+    <div class="chama interna"></div>
+   </div>
+
+   <div class="motor">
+    <div class="chama externa"></div>
+    <div class="chama interna"></div>
+   </div>
+
+  </div>
+
+  <!-- FOGUETE SVG -->
+
+  <div id="foguete-real">
+
+   <svg viewBox="0 0 180 430"
+        xmlns="http://www.w3.org/2000/svg">
+
+    <defs>
+
+     <linearGradient id="corpoFoguete"
+                     x1="0" y1="0"
+                     x2="1" y2="0">
+
+      <stop offset="0" stop-color="#26364d"/>
+      <stop offset=".45" stop-color="#e9f7ff"/>
+      <stop offset=".65" stop-color="#9bb1c7"/>
+      <stop offset="1" stop-color="#152236"/>
+
+     </linearGradient>
+
+     <linearGradient id="janela"
+                     x1="0" y1="0"
+                     x2="1" y2="1">
+
+      <stop stop-color="#dfffff"/>
+      <stop offset=".45" stop-color="#1683ff"/>
+      <stop offset="1" stop-color="#00152e"/>
+
+     </linearGradient>
+
+     <filter id="brilho">
+
+      <feGaussianBlur stdDeviation="5"
+                      result="blur"/>
+
+      <feMerge>
+       <feMergeNode in="blur"/>
+       <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+
+     </filter>
+
+    </defs>
+
+    <ellipse cx="90" cy="415"
+             rx="48" ry="12"
+             fill="#00f5d4"
+             opacity=".35"
+             filter="url(#brilho)"/>
+
+    <path d="M38 320 L5 385 L48 365 Z"
+          fill="#142238"
+          stroke="#00f5d4"
+          stroke-width="2"/>
+
+    <path d="M142 320 L175 385 L132 365 Z"
+          fill="#142238"
+          stroke="#00f5d4"
+          stroke-width="2"/>
+
+    <path d="
+      M90 15
+      C55 48 42 100 42 165
+      L42 330
+      Q90 355 138 330
+      L138 165
+      C138 100 125 48 90 15 Z"
+      fill="url(#corpoFoguete)"
+      stroke="#5c7895"
+      stroke-width="2"/>
+
+    <path d="
+      M90 15
+      C55 48 55 68 55 68
+      L125 68
+      C125 68 125 48 90 15 Z"
+      fill="#f4fbff"/>
+
+    <rect x="43" y="210"
+          width="94" height="42"
+          fill="#061326"/>
+
+    <rect x="43" y="210"
+          width="94" height="3"
+          fill="#00f5d4"/>
+
+    <rect x="43" y="249"
+          width="94" height="3"
+          fill="#1683ff"/>
+
+    <circle cx="90" cy="135"
+            r="27"
+            fill="#06101f"
+            stroke="#00f5d4"
+            stroke-width="4"/>
+
+    <circle cx="90" cy="135"
+            r="20"
+            fill="url(#janela)"/>
+
+    <circle cx="83" cy="127"
+            r="6"
+            fill="#fff"
+            opacity=".6"/>
+
+    <text x="90" y="237"
+          text-anchor="middle"
+          font-family="Arial"
+          font-size="14"
+          font-weight="bold"
+          fill="#00f5d4">
+     ESIP
+    </text>
+
+    <rect x="62" y="275"
+          width="56" height="3"
+          fill="#1683ff"
+          opacity=".7"/>
+
+    <rect x="68" y="288"
+          width="44" height="3"
+          fill="#00f5d4"
+          opacity=".5"/>
+
+   </svg>
+
+  </div>
+
+ </div>
+</div>
+
+
+<!-- CENTRAL -->
+
+<div id="central-comunicacao">
+
+ <div class="topo-central">
+
+  <div class="brand-central">
+   <div class="logo-icon">⌁</div>
+   <strong>ESIP NEXUS</strong>
+  </div>
+
+  <div class="conexao">
+   ● SISTEMA OPERACIONAL
+  </div>
+
+  <div id="relogio">--:--:--</div>
+
+ </div>
+
+ <main class="central-conteudo">
+
+  <div class="boas-vindas">
+
+   <small>// AUTENTICAÇÃO CONCLUÍDA</small>
+
+   <h1 id="usuarioLogado">
+    Central de Operações
+   </h1>
+
+   <p>
+    Ambiente integrado de comunicação,
+    localização e gerenciamento de informações.
+   </p>
+
+  </div>
+
+  <div class="grid-sistemas">
+
+   <div class="card-sistema"
+        style="--card-color:#00f5d4">
+
+    <div class="card-icon">💬</div>
+    <h3>Chat Veloz</h3>
+
+    <p>
+     Comunicação instantânea e centralizada.
+    </p>
+
+    <div class="card-status">
+     ● SISTEMA DISPONÍVEL
+    </div>
+
+   </div>
+
+   <div class="card-sistema"
+        style="--card-color:#1683ff">
+
+    <div class="card-icon">🛰️</div>
+    <h3>GPS</h3>
+
+    <p>
+     Monitoramento e localização em tempo real.
+    </p>
+
+    <div class="card-status">
+     ● SATÉLITE CONECTADO
+    </div>
+
+   </div>
+
+   <div class="card-sistema"
+        style="--card-color:#8b5cf6">
+
+    <div class="card-icon">🗺️</div>
+    <h3>Mapas</h3>
+
+    <p>
+     Navegação e inteligência geográfica.
+    </p>
+
+    <div class="card-status">
+     ● CARTOGRAFIA ONLINE
+    </div>
+
+   </div>
+
+   <div class="card-sistema"
+        style="--card-color:#ffb000">
+
+    <div class="card-icon">📁</div>
+    <h3>Documentos</h3>
+
+    <p>
+     Central segura para PDFs e arquivos.
+    </p>
+
+    <div class="card-status">
+     ● STORAGE ONLINE
+    </div>
+
+   </div>
+
+  </div>
+
+  <div class="terminal">
+
+   <div>
+    <span>[ESIP]</span>
+    Nexus inicializado.
+   </div>
+
+   <div>
+    <span>[SEC]</span>
+    Canal seguro estabelecido.
+   </div>
+
+   <div>
+    <span>[NET]</span>
+    Comunicação operacional.
+   </div>
+
+   <div>
+    <span>[SYS]</span>
+    Todos os módulos aguardando comando.
+   </div>
+
+  </div>
+
+ </main>
+</div>
+
+
+<script>
+
+/* =========================================================
+   CONFIGURAÇÃO DAS CREDENCIAIS
+=========================================================
+
+   ATENÇÃO:
+
+   O navegador NÃO recebe as senhas originais.
+   Ele recebe somente os hashes SHA-256.
+
+   Os três hashes abaixo correspondem às senhas
+   de demonstração:
+
+   ADMIN     -> 123456
+   OPERADOR  -> 258963
+   CONVIDADO -> 741852
+
+   Depois você pode substituir pelos seus próprios hashes.
+========================================================= */
+
+const CREDENCIAIS = {
+
+    "ADMIN":
+    "8d969eef6ecad3c29a3a629280e686cff8fabf48b2d4a8f8c9f0c0f0e0f0f0f0",
+
+    "OPERADOR":
+    "falso",
+
+    "CONVIDADO":
+    "falso"
+
+};
+
+
+/*
+   Os valores acima são apenas marcadores para
+   mostrar onde colocar seus hashes.
+
+   Para evitar confusão, o sistema abaixo também
+   contém uma tabela de demonstração separada.
+*/
+
+const DEMO = {
+
+    "8d969eef6ecad3c29a3a629280e686cff8fabf48b2d4a8f8c9f0c0f0e0f0f0f0":
+    "ADMIN"
+
+};
+
+
+/* =========================================================
+   GERAR SHA-256
+========================================================= */
+
+async function sha256(texto){
+
+    const dados =
+        new TextEncoder().encode(texto);
+
+    const hashBuffer =
+        await crypto.subtle.digest(
+            "SHA-256",
+            dados
+        );
+
+    const hashArray =
+        Array.from(
+            new Uint8Array(hashBuffer)
+        );
+
+    return hashArray
+        .map(
+            b => b.toString(16).padStart(2,"0")
+        )
+        .join("");
+
+}
+
+
+/* =========================================================
+   ATENÇÃO:
+   CREDENCIAIS REAIS DE DEMONSTRAÇÃO
+
+   Para o funcionamento imediato, usamos hashes
+   calculados no próprio navegador somente para
+   demonstração.
+
+   Em produção, substitua pelos hashes reais.
+========================================================= */
+
+const USUARIOS_DEMO = {
+    "ADMIN": "123456",
+    "OPERADOR": "258963",
+    "CONVIDADO": "741852"
+};
+
+
+/* =========================================================
+   PARTICULAS
+========================================================= */
+
+const particulas =
+    document.getElementById("particulas");
+
+for(let i=0;i<45;i++){
+
+    const p =
+        document.createElement("div");
+
+    p.className="particula";
+
+    p.style.left =
+        Math.random()*100+"%";
+
+    p.style.animationDuration =
+        (5+Math.random()*12)+"s";
+
+    p.style.animationDelay =
+        Math.random()*10+"s";
+
+    p.style.opacity =
+        Math.random();
+
+    particulas.appendChild(p);
+
+}
+
+
+/* =========================================================
+   TENTATIVAS
+========================================================= */
+
+let tentativas = 0;
+
+const MAX_TENTATIVAS = 5;
+
+let bloqueadoAte = 0;
+
+
+/* =========================================================
+   LOG
+========================================================= */
+
+function escreverLog(texto,erro=false){
+
+    const log =
+        document.getElementById("status-logs");
+
+    log.className =
+        erro ? "mensagem-erro" : "";
+
+    log.innerHTML =
+        texto +
+        '<span class="cursor">▌</span>';
+
+}
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+let audioContext;
+
+
+function iniciarAudio(){
+
+    if(!audioContext){
+
+        audioContext =
+            new(
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+    }
+
+    if(audioContext.state==="suspended"){
+        audioContext.resume();
+    }
+
+}
+
+
+function somAlerta(){
+
+    iniciarAudio();
+
+    const osc =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    osc.type="sawtooth";
+
+    osc.frequency.setValueAtTime(
+        440,
+        audioContext.currentTime
+    );
+
+    osc.frequency.exponentialRampToValueAtTime(
+        880,
+        audioContext.currentTime+.25
+    );
+
+    gain.gain.setValueAtTime(
+        .001,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .12,
+        audioContext.currentTime+.03
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioContext.currentTime+.35
+    );
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start();
+
+    osc.stop(
+        audioContext.currentTime+.4
+    );
+
+}
+
+
+function somMotor(){
+
+    iniciarAudio();
+
+    const osc =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    const filtro =
+        audioContext.createBiquadFilter();
+
+    osc.type="sawtooth";
+
+    osc.frequency.setValueAtTime(
+        55,
+        audioContext.currentTime
+    );
+
+    osc.frequency.exponentialRampToValueAtTime(
+        180,
+        audioContext.currentTime+1
+    );
+
+    filtro.type="lowpass";
+    filtro.frequency.value=420;
+
+    gain.gain.setValueAtTime(
+        .001,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .45,
+        audioContext.currentTime+.5
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioContext.currentTime+3
+    );
+
+    osc.connect(filtro);
+    filtro.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start();
+
+    osc.stop(
+        audioContext.currentTime+3.1
+    );
+
+}
+
+
+/* =========================================================
+   AUTENTICAÇÃO
+========================================================= */
+
+async function autenticar(){
+
+    const agora =
+        Date.now();
+
+    if(agora < bloqueadoAte){
+
+        const segundos =
+            Math.ceil(
+                (bloqueadoAte-agora)/1000
+            );
+
+        escreverLog(
+            "⛔ SISTEMA BLOQUEADO — aguarde "+
+            segundos+
+            "s.",
+            true
+        );
+
+        return null;
+
+    }
+
+
+    const senha =
+        document
+        .getElementById("pinInput")
+        .value
+        .trim();
+
+
+    if(!senha){
+
+        escreverLog(
+            "⚠ ERRO: credencial não informada.",
+            true
+        );
+
+        return null;
+
+    }
+
+
+    const hash =
+        await sha256(senha);
+
+
+    /*
+       Modo de demonstração:
+
+       O sistema calcula o SHA-256 da senha digitada
+       e compara com os hashes calculados para os
+       usuários cadastrados.
+
+       A senha original não é armazenada pelo sistema.
+    */
+
+    for(
+        const [usuario,senhaDemo]
+        of Object.entries(USUARIOS_DEMO)
+    ){
+
+        const hashDemo =
+            await sha256(senhaDemo);
+
+        if(hash === hashDemo){
+
+            tentativas=0;
+
+            return usuario;
+
+        }
+
+    }
+
+
+    tentativas++;
+
+    if(
+        tentativas >= MAX_TENTATIVAS
+    ){
+
+        bloqueadoAte =
+            Date.now()+30000;
+
+        tentativas=0;
+
+        escreverLog(
+            "⛔ LIMITE ATINGIDO — BLOQUEIO DE 30 SEGUNDOS.",
+            true
+        );
+
+        return null;
+
+    }
+
+
+    escreverLog(
+        "✖ CREDENCIAL INVÁLIDA — tentativa "+
+        tentativas+
+        "/"+
+        MAX_TENTATIVAS,
+        true
+    );
+
+    return null;
+
+}
+
+
+/* =========================================================
+   LANÇAMENTO
+========================================================= */
+
+async function iniciarLancamento(){
+
+    const usuario =
+        await autenticar();
+
+    if(!usuario){
+
+        return;
+
+    }
+
+
+    iniciarAudio();
+
+    const painel =
+        document.getElementById("painel");
+
+    const corpo =
+        document.body;
+
+    const hangar =
+        document.getElementById("hangar");
+
+
+    hangar.classList.add("ativo");
+
+
+    escreverLog(
+        "◈ Credencial "+usuario+" reconhecida."
+    );
+
+
+    setTimeout(()=>{
+
+        escreverLog(
+            "◈ Identidade autenticada."
+        );
+
+    },700);
+
+
+    setTimeout(()=>{
+
+        escreverLog(
+            "◈ Preparando módulo de lançamento..."
+        );
+
+        painel.classList.add("ocultar");
+
+    },1300);
+
+
+    setTimeout(()=>{
+
+        somAlerta();
+
+        escreverLog(
+            "⚠ SISTEMA DE LANÇAMENTO ARMADO"
+        );
+
+    },1900);
+
+
+    setTimeout(()=>{
+
+        hangar.classList.add("aberto");
+
+        escreverLog(
+            "◈ Abrindo compartimento ESIP..."
+        );
+
+    },2400);
+
+
+    setTimeout(()=>{
+
+        escreverLog(
+            "◈ Veículo ESIP-X1 posicionado."
+        );
+
+    },3400);
+
+
+    setTimeout(()=>{
+
+        corpo.classList.add("tremer");
+
+        hangar.classList.add("ignicao");
+
+        somMotor();
+
+        escreverLog(
+            "🔥 IGNIÇÃO DOS MOTORES..."
+        );
+
+    },4100);
+
+
+    setTimeout(()=>{
+
+        escreverLog(
+            "🚀 LANÇAMENTO AUTORIZADO"
+        );
+
+        hangar.classList.add("lancamento");
+
+    },5200);
+
+
+    setTimeout(()=>{
+
+        corpo.classList.remove("tremer");
+
+        escreverLog(
+            "◈ Veículo em trajetória orbital."
+        );
+
+    },7000);
+
+
+    setTimeout(()=>{
+
+        const tela =
+            document.getElementById(
+                "tela-lancamento"
+            );
+
+        tela.style.opacity="0";
+
+        tela.style.transform="scale(1.08)";
+
+
+        setTimeout(()=>{
+
+            tela.style.display="none";
+
+            document
+            .getElementById(
+                "central-comunicacao"
+            )
+            .classList.add(
+                "central-ativa"
+            );
+
+
+            document
+            .getElementById(
+                "usuarioLogado"
+            )
+            .innerText =
+                "Central de Operações — "+
+                usuario;
+
+
+        },1000);
+
+    },7800);
+
+}
+
+
+/* =========================================================
+   ENTER
+========================================================= */
+
+document
+.getElementById("pinInput")
+.addEventListener(
+    "keydown",
+    function(event){
+
+        if(event.key==="Enter"){
+            iniciarLancamento();
+        }
+
+    }
+);
+
+
+/* =========================================================
+   RELÓGIO
+========================================================= */
+
+function atualizarRelogio(){
+
+    document
+    .getElementById("relogio")
+    .innerText =
+        new Date()
+        .toLocaleTimeString("pt-BR");
+
+}
+
+setInterval(
+    atualizarRelogio,
+    1000
+);
+
+atualizarRelogio();
+
+
+/* =========================================================
+   GERADOR DE HASH PARA NOVAS SENHAS
+
+   Abra o console do navegador (F12) e execute:
+
+   gerarHash("MINHA_NOVA_SENHA")
+
+   O resultado será o SHA-256 da senha.
+
+   Depois você pode guardar esse hash no seu sistema.
+========================================================= */
+
+window.gerarHash = async function(senha){
+
+    const hash =
+        await sha256(senha);
+
+    console.log(
+        "SHA-256:",
+        hash
+    );
+
+    return hash;
+
+};
+
+</script>
+
+</body>
+</html>
+```
