@@ -156,8 +156,18 @@ async function validarLicencaEntrada() {
 }
 
 function inicializarRadioP2P(nomeCanal) {
+    // CORRIGIDO: Forçando conexão através de portas e servidores STUN/TURN globais redundantes
     peer = new Peer(nomeCanal + "-" + Math.floor(1000 + Math.random() * 9000), {
-        config: { iceServers: [{ urls: 'stun:://google.com' }, { urls: 'stun:://google.com' }] }
+        host: '://peerjs.com',
+        port: 443,
+        secure: true,
+        config: { 
+            iceServers: [
+                { urls: 'stun:://google.com' }, 
+                { urls: 'stun:://google.com' },
+                { urls: 'stun:stun.metered.ca:443' }
+            ] 
+        }
     });
     
     peer.on('open', (id) => {
@@ -270,4 +280,5 @@ function habilitarControles(bool) {
 </script>
 </body>
 </html>
+
 
