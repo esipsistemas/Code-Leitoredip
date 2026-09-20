@@ -1,1 +1,271 @@
 
+<!-- PARTE 1 DO TERMINAL: TELA DE LICENÇA E ESTRUTURA VISUAL -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>ESIP-Sistemas | Terminal Licenciado</title>
+    <script src="https://unpkg.com"></script>
+    <style>
+        body { background: #0f172a; color: #cbd5e1; font-family: sans-serif; padding: 20px; }
+        .card-recurso { background: #1e293b; border: 1px solid #334155; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .btn-azul { background: #2563eb; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        .btn-vermelho { background: #dc2626; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        .btn-cinza { background: #475569; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        button:disabled, input:disabled { opacity: 0.5; cursor: not-allowed; }
+        .historico-mensagens { background: #0f172a; border: 1px solid #334155; height: 150px; overflow-y: auto; padding: 10px; margin-bottom: 10px; border-radius: 4px; }
+        .msg { margin-bottom: 8px; padding: 5px 10px; border-radius: 4px; }
+        .msg-enviada { background: #1e3a8a; text-align: right; }
+        .msg-recebida { background: #334155; }
+        .indicador { width: 12px; height: 12px; border-radius: 50%; display: inline-block; background: #ef4444; }
+        .online { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+        #tela-bloqueio { position: fixed; top:0; left:0; width:100%; height:100%; background:#0f172a; z-index:9999; display:flex; justify-content:center; align-items:center; }
+        .painel-licenca { background:#1e293b; padding:30px; border-radius:8px; border:1px solid #00f5ff; text-align:center; max-width:400px; }
+    </style>
+</head>
+<body>
+
+<div id="tela-bloqueio">
+    <div class="painel-licenca">
+        <h2 style="color:#00f5ff; margin-top:0;">ESIP-Sistemas</h2>
+        <p>Insira seu Token de Ativação Profissional para liberar o sistema:</p>
+        <input type="text" id="campo-licenca" placeholder="Cole seu token de licença aqui..." style="width:90%; padding:10px; background:#0f172a; color:#fff; border:1px solid #334155; border-radius:4px; margin-bottom:10px;">
+        <br>
+        <button class="btn-azul" onclick="validarLicencaEntrada()">🔓 Verificar e Ativar Licença</button>
+        <div id="msg-erro" style="color:#ef4444; font-size:13px; margin-top:10px; font-weight:bold;"></div>
+    </div>
+</div>
+
+<div id="conteudo-principal" style="display:none; max-width: 800px; margin: auto;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155; padding-bottom:10px; margin-bottom:20px;">
+        <h2 style="color:#00f5ff; margin:0;">🎛️ Terminal Operacional ESIP</h2>
+        <div>
+            <span id="indicador" class="indicador"></span> 
+            <span id="meu-status" style="font-size:13px; margin-left:5px;">Conectando à rede...</span>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+        <div class="card-recurso">
+            <h3 style="color:#00f5ff; margin-top:0;">🎙️ Comunicação de Voz</h3>
+            <p style="font-size:12px; color:#94a3b8;">Conectar ao ID Central ou do nó parceiro:</p>
+            <input type="text" id="id-destino-input" value="ESIP_CENTRAL_CORE_MAIN" style="width:90%; padding:6px; background:#0f172a; color:#fff; border:1px solid #334155; margin-bottom:10px; border-radius:4px;">
+            <input type="hidden" id="meu-id-input">
+            
+            <div style="display:flex; gap:10px;">
+                <button class="btn-azul" style="flex:1;" id="btn-chamar" onclick="iniciarChamadaVoz()" disabled>📞 Chamar</button>
+<!-- PARTE 2 DO TERMINAL: BOTÕES DE TRÁFEGO, ARQUIVOS E CHAT -->
+                <button class="btn-vermelho" style="flex:1;" id="btn-desligar" onclick="encerrarChamada()" disabled>🚫 Desligar</button>
+            </div>
+            <audio id="audio-remoto" autoplay style="display:none;"></audio>
+        </div>
+
+        <div class="card-recurso">
+            <h3 style="color:#00f5ff; margin-top:0;">📁 Upload de Dados</h3>
+            <p style="font-size:12px; color:#94a3b8;">Envio direto de arquivos digitais.</p>
+            <input type="file" id="arquivo-input" style="color:#94a3b8;" disabled>
+            <button class="btn-cinza" id="btn-enviar-arquivo" onclick="enviarArquivoP2P()" style="margin-top:10px;" disabled>📤 Enviar</button>
+            <div id="status-arquivo" style="font-size:11px; margin-top:5px; color:#22c55e;"></div>
+        </div>
+    </div>
+
+    <div class="card-recurso" style="margin-top:20px; width:100%;">
+        <h3 style="color:#00f5ff; margin-top:0;">💬 Mensagens de Texto</h3>
+        <div class="historico-mensagens" id="chat-box"></div>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="mensagem-input" placeholder="Escreva sua mensagem tática..." style="flex:1; background:#0f172a; color:#fff; border:1px solid #334155; padding:8px; border-radius:4px;" disabled onkeypress="if(event.key==='Enter') enviarMensagemTexto()">
+            <button class="btn-azul" id="btn-enviar-msg" onclick="enviarMensagemTexto()" disabled>Enviar</button>
+        </div>
+    </div>
+</div>
+<!-- PARTE 3 DO TERMINAL: CHAVE DE SEGURANÇA E AUXILIARES -->
+<script>
+let peer = null; 
+let conexaoDados = null; 
+let chamadaVoz = null; 
+let minhaStreamAudio = null;
+
+const SEMENTE_SECRETA_SISTEMA = "ESIP_SISTEMAS_TACTICAL_RADIO_KEY_2026";
+
+function base64ToBuffer(b64) {
+    let norm = b64.replace(/-/g, "+").replace(/_/g, "/");
+    while (norm.length % 4) norm += "=";
+    return new Uint8Array([...atob(norm)].map(c => c.charCodeAt(0))).buffer;
+}
+
+function bufferToBase64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+\$/g, "");
+}
+<!-- PARTE 4 DO TERMINAL: VALIDAÇÃO DO TOKEN E ASSINATURA -->
+async function validarLicencaEntrada() {
+    const token = document.getElementById("campo-licenca").value.trim();
+    const msgErro = document.getElementById("msg-erro");
+    if(!token.includes(".")) { msgErro.innerText = "❌ Token com formato inválido."; return; }
+    
+    try {
+        const parts = token.split(".");
+        const payloadBytes = base64ToBuffer(parts[0]);
+        const signatureBytes = base64ToBuffer(parts[1]);
+        
+        const encoder = new TextEncoder();
+        const baseKeyMaterial = await crypto.subtle.importKey(
+            "raw", 
+            encoder.encode(SEMENTE_SECRETA_SISTEMA), 
+            "PBKDF2", 
+            false, 
+            ["deriveKey"]
+        );
+
+        const salt = encoder.encode("ESIP_STATIC_SALT_SALT");
+        const verifyKey = await crypto.subtle.deriveKey(
+            { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+            baseKeyMaterial,
+            { name: "HMAC", hash: "SHA-256", length: 256 },
+            false,
+            ["verify"]
+        );
+
+        const valida = await crypto.subtle.verify("HMAC", verifyKey, signatureBytes, payloadBytes);
+
+        if(!valida) { msgErro.innerText = "❌ Falha: Assinatura digital inválida!"; return; }
+        
+        const data = JSON.parse(new TextDecoder().decode(payloadBytes));
+        if(Date.now() > data.exp) { msgErro.innerText = "❌ Esta licença já expirou!"; return; }
+        
+        document.getElementById("tela-bloqueio").style.display = "none";
+        document.getElementById("conteudo-principal").style.display = "block";
+        inicializarRadioP2P(data.ch);
+    } catch(e) { 
+        msgErro.innerText = "❌ Erro ao decodificar token."; 
+        console.error(e);
+    }
+}
+<!-- PARTE 5 DO TERMINAL: INICIALIZAÇÃO E ENLACE DE REDE -->
+function inicializarRadioP2P(nomeCanal) {
+    peer = new Peer(nomeCanal + "-" + Math.floor(1000 + Math.random() * 9000), {
+        host: 'peerjs.com',
+        port: 443,
+        secure: true,
+        config: { 
+            iceServers: [
+                { urls: 'stun:://google.com' }, 
+                { urls: 'stun:stun.metered.ca:443' }
+            ] 
+        }
+    });
+    
+    peer.on('open', (id) => {
+        document.getElementById("meu-id-input").value = id;
+        document.getElementById("indicador").className = "indicador online";
+        document.getElementById("meu-status").innerText = "📡 Canal Seguro Ativo. Terminal [" + nomeCanal + "] online.";
+        
+        conectarAoPeer();
+    });
+
+    peer.on('connection', (conn) => {
+        conexaoDados = conn;
+        configurarEventosConexao();
+    });
+
+    peer.on('call', async (call) => {
+        if(confirm("🎙️ Recebendo chamada de voz P2P. Aceitar áudio?")) {
+            minhaStreamAudio = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            chamadaVoz = call;
+            call.answer(minhaStreamAudio);
+            call.on('stream', (streamRemota) => {
+                document.getElementById("audio-remoto").srcObject = streamRemota;
+                document.getElementById("btn-desligar").disabled = false;
+            });
+        }
+    });
+}
+
+function conectarAoPeer() {
+    const destId = document.getElementById("id-destino-input").value.trim();
+    if(!destId) return;
+    conexaoDados = peer.connect(destId);
+    configurarEventosConexao();
+}
+<!-- PARTE 6 DO TERMINAL: TRÁFEGO DE DADOS, MENSAGENS E CONCLUSÃO -->
+function configurarEventosConexao() {
+    conexaoDados.on('open', () => {
+        document.getElementById("meu-status").innerText = "🔒 Enlace P2P Estabelecido com Sucesso!";
+        habilitarControles(true);
+    });
+
+    conexaoDados.on('data', (dados) => {
+        if(dados.tipo === 'texto') {
+            printMensagem(dados.conteudo, 'msg-recebida');
+        } else if (dados.tipo === 'arquivo') {
+            const blob = new Blob([dados.conteudo], { type: dados.mime });
+            const url = URL.createObjectURL(blob);
+            printMensagem(`📁 Arquivo: <a href="${url}" download="${dados.nome}" style="color:#00f5ff; font-weight:bold;">Baixar ${dados.nome}</a>`, 'msg-recebida');
+        }
+    });
+}
+
+async function iniciarChamadaVoz() {
+    const destId = document.getElementById("id-destino-input").value.trim() || conexaoDados.peer;
+    minhaStreamAudio = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    chamadaVoz = peer.call(destId, minhaStreamAudio);
+    
+    chamadaVoz.on('stream', (streamRemota) => {
+        document.getElementById("audio-remoto").srcObject = streamRemota;
+        document.getElementById("btn-desligar").disabled = false;
+        document.getElementById("btn-chamar").disabled = true;
+    });
+}
+
+function encerrarChamada() {
+    if(chamadaVoz) chamadaVoz.close();
+    if(minhaStreamAudio) minhaStreamAudio.getTracks().forEach(t => t.stop());
+    document.getElementById("btn-desligar").disabled = true;
+    document.getElementById("btn-chamar").disabled = false;
+}
+
+function enviarMensagemTexto() {
+    const input = document.getElementById("mensagem-input");
+    const txt = input.value.trim();
+    if(!txt || !conexaoDados) return;
+    
+    conexaoDados.send({ tipo: 'texto', conteudo: txt });
+    printMensagem(txt, 'msg-enviada');
+    input.value = "";
+}
+
+function enviarArquivoP2P() {
+    const fileInput = document.getElementById("arquivo-input");
+    if(!fileInput.files.length || !conexaoDados) return;
+    const file = fileInput.files[0];
+
+    document.getElementById("status-arquivo").innerText = "Transmitindo arquivo...";
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        conexaoDados.send({ tipo: 'arquivo', conteudo: e.target.result, nome: file.name, mime: file.type });
+        printMensagem(`📤 Você enviou o arquivo: ${file.name}`, 'msg-enviada');
+        document.getElementById("status-arquivo").innerText = "Envio Concluído.";
+        fileInput.value = "";
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function printMensagem(htmlContent, classe) {
+    const box = document.getElementById("chat-box");
+    box.innerHTML += `<div class="msg ${classe}">${htmlContent}</div>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+function habilitarControles(bool) {
+    const status = !bool;
+    document.getElementById("mensagem-input").disabled = status;
+    document.getElementById("btn-enviar-msg").disabled = status;
+    document.getElementById("btn-chamar").disabled = status;
+    document.getElementById("arquivo-input").disabled = status;
+    document.getElementById("btn-enviar-arquivo").disabled = status;
+}
+</script>
+</body>
+</html>
