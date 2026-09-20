@@ -1,1 +1,2544 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP-Sistemas - Central de Comunicação Segura</title>
+
+<!-- PeerJS -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:'Segoe UI',Arial,sans-serif;
+    background:#0a1128;
+    color:#f0f4f8;
+    min-height:100vh;
+}
+
+header{
+    background:#020617;
+    padding:20px;
+    text-align:center;
+    border-bottom:2px solid #00f5ff;
+    box-shadow:0 0 15px rgba(0,245,255,.3);
+}
+
+.logo{
+    font-size:26px;
+    font-weight:bold;
+    color:#00f5ff;
+    text-shadow:0 0 10px rgba(0,245,255,.6);
+    letter-spacing:1.5px;
+}
+
+.status{
+    margin-top:10px;
+    font-size:14px;
+    color:#94a3b8;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:25px;
+    display:none;
+}
+
+/* =========================================================
+   TELA DE LICENÇA
+   ========================================================= */
+
+.tela-bloqueio{
+    position:fixed;
+    inset:0;
+    background:#020617;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+}
+
+.box-licenca{
+    background:#111e38;
+    padding:35px;
+    border-radius:12px;
+    border:2px solid #00f5ff;
+    box-shadow:0 0 25px rgba(0,245,255,.4);
+    width:90%;
+    max-width:500px;
+    text-align:center;
+}
+
+.box-licenca h2{
+    color:#00f5ff;
+    margin-top:0;
+    text-shadow:0 0 8px rgba(0,245,255,.5);
+}
+
+.box-licenca p{
+    color:#94a3b8;
+    font-size:13px;
+    line-height:1.5;
+}
+
+.painel-conexao{
+    background:#111e38;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid #1e40af;
+    margin-bottom:25px;
+    box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+
+.titulo-bloco{
+    font-size:17px;
+    font-weight:bold;
+    margin-bottom:15px;
+    color:#00f5ff;
+    text-shadow:0 0 5px rgba(0,245,255,.3);
+}
+
+.input-grupo{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+}
+
+input[type="text"],
+textarea{
+    flex:1;
+    padding:14px;
+    background:#070d1e;
+    border:1px solid #1e40af;
+    color:#fff;
+    border-radius:8px;
+    font-size:14px;
+    transition:all .3s;
+    font-family:monospace;
+}
+
+input:focus,
+textarea:focus{
+    outline:none;
+    border-color:#00f5ff;
+    box-shadow:0 0 10px rgba(0,245,255,.4);
+}
+
+textarea{
+    resize:none;
+    height:100px;
+    width:100%;
+    word-break:break-all;
+}
+
+button{
+    padding:14px 22px;
+    border:0;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:15px;
+    transition:all .2s;
+}
+
+button:disabled{
+    opacity:.55;
+    cursor:not-allowed;
+}
+
+.btn-azul{
+    background:#1e40af;
+    color:#fff;
+    border:1px solid #00f5ff;
+    box-shadow:0 0 10px rgba(0,245,255,.2);
+}
+
+.btn-azul:hover:not(:disabled){
+    background:#00f5ff;
+    color:#0a1128;
+    box-shadow:0 0 15px rgba(0,245,255,.6);
+}
+
+.btn-vermelho{
+    background:#7f1d1d;
+    color:#fff;
+    border:1px solid #ef4444;
+}
+
+.btn-vermelho:hover{
+    background:#ef4444;
+    box-shadow:0 0 15px rgba(239,68,68,.6);
+}
+
+.btn-cinza{
+    background:#1e293b;
+    color:#94a3b8;
+    border:1px solid #334155;
+}
+
+.btn-cinza:hover{
+    background:#334155;
+    color:#fff;
+}
+
+.grid-recursos{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+@media(max-width:600px){
+    .grid-recursos{
+        grid-template-columns:1fr;
+    }
+
+    .input-grupo{
+        flex-direction:column;
+    }
+
+    .input-grupo button{
+        width:100%;
+    }
+
+    .box-licenca{
+        padding:25px;
+    }
+}
+
+.card-recurso,
+.box-chat{
+    background:#111e38;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid #1e40af;
+    opacity:.4;
+    pointer-events:none;
+    transition:all .3s;
+}
+
+.card-recurso.ativo,
+.box-chat.ativo{
+    opacity:1;
+    pointer-events:auto;
+    border-color:#00f5ff;
+    box-shadow:0 0 15px rgba(0,245,255,.2);
+}
+
+.lista-arquivos{
+    margin-top:15px;
+    max-height:150px;
+    overflow-y:auto;
+    background:#070d1e;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #1e40af;
+    font-size:14px;
+}
+
+.audio-preview{
+    margin-top:10px;
+    width:100%;
+    accent-color:#00f5ff;
+}
+
+.historico-mensagens{
+    height:180px;
+    overflow-y:auto;
+    background:#070d1e;
+    border:1px solid #1e40af;
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:12px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.msg{
+    padding:8px 12px;
+    border-radius:8px;
+    max-width:80%;
+    font-size:14px;
+    word-break:break-word;
+}
+
+.msg-enviada{
+    background:#1e40af;
+    color:#fff;
+    align-self:flex-end;
+    border-bottom-right-radius:2px;
+}
+
+.msg-recebida{
+    background:#0f172a;
+    color:#00f5ff;
+    border:1px solid #1e40af;
+    align-self:flex-start;
+    border-bottom-left-radius:2px;
+}
+
+.erro-licenca{
+    color:#ef4444;
+    font-size:13px;
+    margin-top:10px;
+    font-weight:bold;
+    min-height:18px;
+}
+
+.sucesso-licenca{
+    color:#22c55e;
+    font-size:13px;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+/* Indicador de conexão */
+.indicador{
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:#64748b;
+    margin-right:6px;
+}
+
+.indicador.online{
+    background:#22c55e;
+    box-shadow:0 0 8px #22c55e;
+}
+</style>
+</head>
+
+<body>
+
+<!-- =========================================================
+     TELA DE BLOQUEIO / LICENÇA
+     ========================================================= -->
+
+<div class="tela-bloqueio" id="tela-bloqueio-sistema">
+
+    <div class="box-licenca">
+
+        <h2>ASSINATURA RSA REQUERIDA</h2>
+
+        <p>
+            Insira a licença digital fornecida pelo administrador
+            para liberar os terminais P2P.
+        </p>
+
+        <textarea
+            id="campo-chave-licenca"
+            placeholder="Cole aqui a sua licença digital..."
+            autocomplete="off"
+            spellcheck="false"></textarea>
+
+        <button
+            class="btn-azul"
+            style="width:100%;margin-top:15px;"
+            id="btn-validar-licenca"
+            onclick="validarLicencaEntrada()">
+            🔐 Verificar Autenticidade Digital
+        </button>
+
+        <p id="msg-erro-licenca" class="erro-licenca"></p>
+
+    </div>
+</div>
+
+<!-- =========================================================
+     CABEÇALHO
+     ========================================================= -->
+
+<header>
+
+    <div class="logo">
+        📡 ESIP-SISTEMAS
+    </div>
+
+    <div class="status" id="meu-status">
+        <span class="indicador" id="indicador-status"></span>
+        Aguardando validação de assinatura criptográfica...
+    </div>
+
+</header>
+
+<!-- =========================================================
+     CONTEÚDO PRINCIPAL
+     ========================================================= -->
+
+<div class="container" id="conteudo-principal">
+
+    <!-- CONEXÃO -->
+
+    <div class="painel-conexao">
+
+        <div class="titulo-bloco">
+            Seu ID de Comunicação Segura
+        </div>
+
+        <div class="input-grupo">
+
+            <input
+                type="text"
+                id="meu-id-input"
+                readonly
+                value="Gerando código...">
+
+            <button
+                class="btn-cinza"
+                onclick="copiarMeuID()">
+                📋 Copiar
+            </button>
+
+        </div>
+
+        <div class="titulo-bloco" style="margin-top:20px;">
+            Conectar a Outro Operador
+        </div>
+
+        <div class="input-grupo">
+
+            <input
+                type="text"
+                id="id-destino-input"
+                placeholder="Cole o ID do outro operador aqui"
+                autocomplete="off">
+
+            <button
+                class="btn-azul"
+                id="btn-conectar"
+                onclick="conectarAoPeer()">
+                🔗 Conectar Canal
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- RECURSOS -->
+
+    <div class="grid-recursos">
+
+        <!-- ÁUDIO -->
+
+        <div class="card-recurso" id="modulo-audio">
+
+            <div class="titulo-bloco">
+                🎤 Voz e Mensagens de Áudio
+            </div>
+
+            <p style="font-size:14px;color:#94a3b8;">
+                Chamada de Voz Direta:
+            </p>
+
+            <button
+                class="btn-azul"
+                id="btn-chamada"
+                onclick="iniciarChamadaVoz()">
+                📞 Iniciar Ligação
+            </button>
+
+            <button
+                class="btn-vermelho"
+                id="btn-desligar"
+                onclick="encerrarChamadaVoz()"
+                style="display:none;">
+                🔇 Desligar
+            </button>
+
+            <hr style="border-color:#1e40af;margin:20px 0;">
+
+            <p style="font-size:14px;color:#94a3b8;">
+                Gravar Mensagem de Áudio:
+            </p>
+
+            <button
+                class="btn-cinza"
+                id="btn-gravacao"
+                onclick="alternarGravacao()">
+                🎙️ Gravar Áudio
+            </button>
+
+            <div id="historico-audio"></div>
+
+        </div>
+
+        <!-- ARQUIVOS -->
+
+        <div class="card-recurso" id="modulo-arquivos">
+
+            <div class="titulo-bloco">
+                📁 Compartilhamento de Arquivos e Vídeos
+            </div>
+
+            <p style="font-size:14px;color:#94a3b8;">
+                Envie documentos, fotos, vídeos ou relatórios via P2P:
+            </p>
+
+            <input
+                type="file"
+                id="arquivo-input"
+                style="display:none;"
+                onchange="enviarArquivoFisico(this)">
+
+            <button
+                class="btn-azul"
+                onclick="document.getElementById('arquivo-input').click()">
+                📤 Selecionar e Enviar
+            </button>
+
+            <div class="lista-arquivos" id="box-arquivos">
+                <span style="color:#64748b;">
+                    Nenhum arquivo transferido nesta sessão.
+                </span>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- CHAT -->
+
+    <div
+        class="box-chat"
+        id="modulo-chat"
+        style="margin-top:20px;">
+
+        <div class="titulo-bloco">
+            💬 Chat de Texto Seguro
+        </div>
+
+        <div
+            class="historico-mensagens"
+            id="chat-historico">
+        </div>
+
+        <div class="input-grupo">
+
+            <input
+                type="text"
+                id="chat-input"
+                placeholder="Digite uma mensagem segura..."
+                autocomplete="off"
+                onkeypress="if(event.key === 'Enter') enviarMensagemTexto()">
+
+            <button
+                class="btn-azul"
+                onclick="enviarMensagemTexto()">
+                Enviar
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ÁUDIO REMOTO -->
+
+<audio id="audio-remoto" autoplay></audio>
+
+<!-- =========================================================
+     ATENÇÃO:
+     A PARTE 2/3 CONTINUARÁ AQUI.
+     =========================================================
+ -->
+<script>
+/* =========================================================
+   ESIP-SISTEMAS
+   PARTE 2/3 — LICENÇA + P2P + VOZ
+   ========================================================= */
+
+/*
+ * IMPORTANTE:
+ *
+ * O ESIP deve conter SOMENTE A CHAVE PÚBLICA.
+ * A chave privada utilizada pelo gerador não deve ser
+ * colocada neste arquivo.
+ *
+ * Substitua o conteúdo abaixo pela CHAVE PÚBLICA
+ * correspondente ao par RSA utilizado pelo gerador.
+ */
+const CHAVE_PUBLICA_RSA = `-----BEGIN PUBLIC KEY-----
+COLE_AQUI_A_CHAVE_PUBLICA_RSA
+-----END PUBLIC KEY-----`;
+
+
+/* =========================================================
+   VARIÁVEIS PRINCIPAIS
+   ========================================================= */
+
+let peer = null;
+let conexaoDados = null;
+
+let chamadaVoz = null;
+let meuStreamLocal = null;
+
+let mediaRecorder = null;
+let pedacosAudio = [];
+let meuStreamGravacao = null;
+
+let senhaDoCanalDescriptografada = "";
+
+let licencaValidada = false;
+
+
+/* =========================================================
+   FUNÇÕES DE INTERFACE
+   ========================================================= */
+
+function atualizarStatus(texto, online = false) {
+
+    const status = document.getElementById("meu-status");
+    const indicador = document.getElementById("indicador-status");
+
+    if (status) {
+        status.innerHTML =
+            `<span class="indicador ${online ? "online" : ""}" id="indicador-status"></span>` +
+            texto;
+    }
+}
+
+
+function mostrarErroLicenca(texto) {
+
+    const box = document.getElementById("msg-erro-licenca");
+
+    if (box) {
+        box.className = "erro-licenca";
+        box.innerText = texto;
+    }
+}
+
+
+function mostrarSucessoLicenca(texto) {
+
+    const box = document.getElementById("msg-erro-licenca");
+
+    if (box) {
+        box.className = "sucesso-licenca";
+        box.innerText = texto;
+    }
+}
+
+
+/* =========================================================
+   DATA / VALIDADE
+   ========================================================= */
+
+async function obterDataAtual() {
+
+    /*
+     * Mantemos uma fonte externa de horário como referência.
+     *
+     * Caso ela esteja indisponível, utilizamos o relógio local
+     * como fallback para não impedir a inicialização.
+     */
+
+    try {
+
+        const resposta = await fetch(
+            "https://worldtimeapi.org/api/timezone/Etc/UTC",
+            {
+                cache: "no-store"
+            }
+        );
+
+        if (!resposta.ok) {
+            throw new Error("Falha ao consultar horário.");
+        }
+
+        const dados = await resposta.json();
+
+        if (!dados.datetime) {
+            throw new Error("Horário inválido recebido.");
+        }
+
+        return new Date(dados.datetime);
+
+    } catch (erro) {
+
+        return new Date();
+    }
+}
+
+
+/* =========================================================
+   BASE64URL
+   ========================================================= */
+
+function base64UrlParaUint8Array(base64url) {
+
+    let base64 = base64url
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+    while (base64.length % 4 !== 0) {
+        base64 += "=";
+    }
+
+    const binario = atob(base64);
+    const bytes = new Uint8Array(binario.length);
+
+    for (let i = 0; i < binario.length; i++) {
+        bytes[i] = binario.charCodeAt(i);
+    }
+
+    return bytes;
+}
+
+
+function textoParaUint8Array(texto) {
+
+    return new TextEncoder().encode(texto);
+}
+
+
+/* =========================================================
+   IMPORTAÇÃO DA CHAVE PÚBLICA
+   ========================================================= */
+
+function converterPemParaArrayBuffer(pem) {
+
+    const base64 = pem
+        .replace(/-----BEGIN PUBLIC KEY-----/g, "")
+        .replace(/-----END PUBLIC KEY-----/g, "")
+        .replace(/\s/g, "");
+
+    const binario = atob(base64);
+
+    const bytes = new Uint8Array(binario.length);
+
+    for (let i = 0; i < binario.length; i++) {
+        bytes[i] = binario.charCodeAt(i);
+    }
+
+    return bytes.buffer;
+}
+
+
+async function importarChavePublica() {
+
+    if (
+        !CHAVE_PUBLICA_RSA ||
+        CHAVE_PUBLICA_RSA.includes("-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtzG6zy+uTRExseWo4lLh
+kpR1lBnDoInNPjB0koP9EjsDxLrkhvV84UU+auOv/R4CQi+VC+wapTNArkzRbiaj
+5K7unL2b/6AY+fKETelGn/vMVZS1pDDaeWE0bvOF/8tpKBLJYS95yokSrCwfJMSJ
+ZoRdmDpvVEsaqDM3PRSyI1mjrpGuRZbLaPUsX0/g54t2ZkONJ4iIl1qGjYraNeSo
+A4zEk9ivcHQaD4cDWxSCO4lx0gl/7zKaxMMoRO3QcYzjiRQaxpyvju9OVrsLoC2S
+uEfXcM046wekIJGDdoK70J0rYdJThHOpY2SPBEyTM8b4IZnGajWLfIpw0cHqENzW
+7wIDAQAB
+-----END PUBLIC KEY-----")
+    ) {
+        throw new Error(
+            "A chave pública RSA ainda não foi configurada no ESIP."
+        );
+    }
+
+    const chaveDer =
+        converterPemParaArrayBuffer(CHAVE_PUBLICA_RSA);
+
+    return await crypto.subtle.importKey(
+        "spki",
+        chaveDer,
+        {
+            name: "RSA-PSS",
+            hash: "SHA-256"
+        },
+        false,
+        ["verify"]
+    );
+}
+
+
+/* =========================================================
+   VERIFICAÇÃO DA ASSINATURA
+   ========================================================= */
+
+async function verificarAssinaturaRSA(payloadTexto, assinaturaBase64) {
+
+    const chavePublica =
+        await importarChavePublica();
+
+    const assinatura =
+        base64UrlParaUint8Array(assinaturaBase64);
+
+    const dados =
+        textoParaUint8Array(payloadTexto);
+
+    return await crypto.subtle.verify(
+        {
+            name: "RSA-PSS",
+            saltLength: 32
+        },
+        chavePublica,
+        assinatura,
+        dados
+    );
+}
+
+
+/* =========================================================
+   LEITURA DO TOKEN
+   ========================================================= */
+
+function decodificarToken(token) {
+
+    try {
+
+        let base64 = token
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+        while (base64.length % 4 !== 0) {
+            base64 += "=";
+        }
+
+        const texto = decodeURIComponent(
+            Array.prototype.map.call(
+                atob(base64),
+                c => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")
+            ).join("")
+        );
+
+        return JSON.parse(texto);
+
+    } catch (erro) {
+
+        throw new Error("Formato do token inválido.");
+    }
+}
+
+
+/* =========================================================
+   VALIDAÇÃO DA LICENÇA
+   ========================================================= */
+
+async function validarLicencaEntrada() {
+
+    const campo =
+        document.getElementById("campo-chave-licenca");
+
+    const botao =
+        document.getElementById("btn-validar-licenca");
+
+    const token =
+        campo.value.trim();
+
+    if (!token) {
+
+        mostrarErroLicenca(
+            "Por favor, cole a sua licença digital."
+        );
+
+        return;
+    }
+
+    botao.disabled = true;
+    botao.innerText = "⏳ Verificando assinatura...";
+
+    mostrarErroLicenca("");
+
+    try {
+
+        /*
+         * Formato esperado:
+         *
+         * Base64URL({
+         *     payload: JSON-string,
+         *     assinatura: Base64URL
+         * })
+         */
+
+        const estrutura =
+            decodificarToken(token);
+
+        if (
+            !estrutura ||
+            typeof estrutura.payload !== "string" ||
+            typeof estrutura.assinatura !== "string"
+        ) {
+            throw new Error(
+                "Estrutura de licença inválida."
+            );
+        }
+
+
+        /* ---------------------------------------------
+           VERIFICA ASSINATURA RSA
+           --------------------------------------------- */
+
+        const assinaturaValida =
+            await verificarAssinaturaRSA(
+                estrutura.payload,
+                estrutura.assinatura
+            );
+
+        if (!assinaturaValida) {
+
+            throw new Error(
+                "A assinatura digital não é válida."
+            );
+        }
+
+
+        /* ---------------------------------------------
+           CONVERTE PAYLOAD
+           --------------------------------------------- */
+
+        let objetoLicenca;
+
+        try {
+
+            objetoLicenca =
+                JSON.parse(estrutura.payload);
+
+        } catch (erro) {
+
+            throw new Error(
+                "O conteúdo da licença é inválido."
+            );
+        }
+
+
+        /* ---------------------------------------------
+           CAMPOS OBRIGATÓRIOS
+           --------------------------------------------- */
+
+        if (
+            !objetoLicenca.expira ||
+            !objetoLicenca.senhaCanal
+        ) {
+
+            throw new Error(
+                "A licença não contém os dados obrigatórios."
+            );
+        }
+
+
+        /* ---------------------------------------------
+           DATA DE EXPIRAÇÃO
+           --------------------------------------------- */
+
+        const dataVencimento =
+            new Date(
+                objetoLicenca.expira + "T23:59:59"
+            );
+
+        if (Number.isNaN(dataVencimento.getTime())) {
+
+            throw new Error(
+                "A data de vencimento da licença é inválida."
+            );
+        }
+
+
+        const dataAtual =
+            await obterDataAtual();
+
+
+        if (dataAtual > dataVencimento) {
+
+            throw new Error(
+                "A licença expirou em: " +
+                dataVencimento.toLocaleDateString("pt-BR")
+            );
+        }
+
+
+        /* ---------------------------------------------
+           LICENÇA APROVADA
+           --------------------------------------------- */
+
+        senhaDoCanalDescriptografada =
+            String(objetoLicenca.senhaCanal);
+
+        licencaValidada = true;
+
+
+        mostrarSucessoLicenca(
+            "✓ Licença autenticada com sucesso."
+        );
+
+
+        /*
+         * Pequeno intervalo para o operador visualizar
+         * a confirmação antes de abrir o terminal.
+         */
+
+        setTimeout(() => {
+
+            document
+                .getElementById("tela-bloqueio-sistema")
+                .style.display = "none";
+
+            document
+                .getElementById("conteudo-principal")
+                .style.display = "block";
+
+            inicializarRedePeerJS();
+
+        }, 500);
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro de validação:",
+            erro
+        );
+
+        mostrarErroLicenca(
+            "Acesso negado: " +
+            (erro.message || "licença inválida.")
+        );
+
+    } finally {
+
+        botao.disabled = false;
+
+        botao.innerText =
+            "🔐 Verificar Autenticidade Digital";
+    }
+}
+
+
+/* =========================================================
+   INICIALIZAÇÃO DO PEERJS
+   ========================================================= */
+
+function inicializarRedePeerJS() {
+
+    if (!licencaValidada) {
+
+        atualizarStatus(
+            "Licença não validada."
+        );
+
+        return;
+    }
+
+
+    atualizarStatus(
+        "Abrindo canal de comunicação seguro..."
+    );
+
+
+    try {
+
+        peer = new Peer();
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        atualizarStatus(
+            "Falha ao iniciar o serviço P2P."
+        );
+
+        return;
+    }
+
+
+    /* ---------------------------------------------
+       PEER ABERTO
+       --------------------------------------------- */
+
+    peer.on("open", id => {
+
+        document
+            .getElementById("meu-id-input")
+            .value = id;
+
+        atualizarStatus(
+            "Canal pronto e autenticado.",
+            true
+        );
+
+    });
+
+
+    /* ---------------------------------------------
+       NOVA CONEXÃO DE DADOS
+       --------------------------------------------- */
+
+    peer.on("connection", conn => {
+
+        if (conexaoDados) {
+
+            try {
+                conexaoDados.close();
+            } catch (erro) {}
+        }
+
+        conexaoDados = conn;
+
+        configurarEventosDados();
+
+        ativarModulosInterface();
+    });
+
+
+    /* ---------------------------------------------
+       CHAMADA DE VOZ RECEBIDA
+       --------------------------------------------- */
+
+    peer.on("call", call => {
+
+        if (!licencaValidada) {
+
+            try {
+                call.close();
+            } catch (erro) {}
+
+            return;
+        }
+
+
+        const aceitar =
+            confirm(
+                "Recebendo chamada de voz segura.\n\n" +
+                "Deseja aceitar?"
+            );
+
+
+        if (!aceitar) {
+
+            try {
+                call.close();
+            } catch (erro) {}
+
+            return;
+        }
+
+
+        navigator.mediaDevices
+            .getUserMedia({
+                audio:true
+            })
+            .then(stream => {
+
+                meuStreamLocal = stream;
+
+                call.answer(stream);
+
+                chamadaVoz = call;
+
+                configurarEventosVoz();
+
+            })
+            .catch(erro => {
+
+                console.error(erro);
+
+                alert(
+                    "Erro ao acessar o microfone: " +
+                    erro.message
+                );
+
+            });
+
+    });
+
+
+    /* ---------------------------------------------
+       ERROS DO PEER
+       --------------------------------------------- */
+
+    peer.on("error", erro => {
+
+        console.error(
+            "PeerJS:",
+            erro
+        );
+
+        atualizarStatus(
+            "Erro no canal P2P: " +
+            (erro.type || "desconhecido")
+        );
+
+    });
+
+
+    /* ---------------------------------------------
+       DESCONEXÃO
+       --------------------------------------------- */
+
+    peer.on("disconnected", () => {
+
+        atualizarStatus(
+            "Canal P2P desconectado."
+        );
+
+    });
+
+
+    /* ---------------------------------------------
+       ENCERRAMENTO
+       --------------------------------------------- */
+
+    peer.on("close", () => {
+
+        atualizarStatus(
+            "Serviço P2P encerrado."
+        );
+
+        desativarModulosInterface();
+    });
+}
+
+
+/* =========================================================
+   COPIAR ID
+   ========================================================= */
+
+async function copiarMeuID() {
+
+    const input =
+        document.getElementById("meu-id-input");
+
+    const id = input.value.trim();
+
+    if (!id || id === "Gerando código...") {
+
+        alert(
+            "Seu ID ainda não foi gerado."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        await navigator.clipboard.writeText(id);
+
+        alert(
+            "Seu ID seguro foi copiado!"
+        );
+
+    } catch (erro) {
+
+        /*
+         * Fallback para navegadores que não liberam
+         * navigator.clipboard.
+         */
+
+        input.select();
+
+        document.execCommand("copy");
+
+        alert(
+            "Seu ID seguro foi copiado!"
+        );
+    }
+}
+
+
+/* =========================================================
+   CONEXÃO COM OUTRO PEER
+   ========================================================= */
+
+function conectarAoPeer() {
+
+    if (!peer) {
+
+        alert(
+            "O serviço P2P ainda não está pronto."
+        );
+
+        return;
+    }
+
+
+    const campo =
+        document.getElementById("id-destino-input");
+
+    const idDestino =
+        campo.value.trim();
+
+
+    if (!idDestino) {
+
+        alert(
+            "Por favor, insira um ID de destino válido."
+        );
+
+        return;
+    }
+
+
+    if (
+        conexaoDados &&
+        conexaoDados.open
+    ) {
+
+        alert(
+            "Já existe um canal ativo."
+        );
+
+        return;
+    }
+
+
+    atualizarStatus(
+        "Estabelecendo canal P2P..."
+    );
+
+
+    try {
+
+        conexaoDados =
+            peer.connect(
+                idDestino,
+                {
+                    reliable:true
+                }
+            );
+
+
+        conexaoDados.on("open", () => {
+
+            configurarEventosDados();
+
+            ativarModulosInterface();
+
+        });
+
+
+        conexaoDados.on("error", erro => {
+
+            console.error(
+                "Erro de conexão:",
+                erro
+            );
+
+            atualizarStatus(
+                "Falha ao conectar ao terminal remoto."
+            );
+
+        });
+
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        atualizarStatus(
+            "Não foi possível iniciar a conexão."
+        );
+    }
+}
+
+
+/* =========================================================
+   ATIVAÇÃO DOS MÓDULOS
+   ========================================================= */
+
+function ativarModulosInterface() {
+
+    atualizarStatus(
+        "Conexão de ponta a ponta estabelecida.",
+        true
+    );
+
+
+    document
+        .getElementById("modulo-audio")
+        .classList.add("ativo");
+
+    document
+        .getElementById("modulo-arquivos")
+        .classList.add("ativo");
+
+    document
+        .getElementById("modulo-chat")
+        .classList.add("ativo");
+
+
+    const botao =
+        document.getElementById("btn-conectar");
+
+    botao.innerText =
+        "⚡ Canal Ativo";
+
+    botao.disabled = true;
+}
+
+
+/* =========================================================
+   DESATIVAÇÃO DOS MÓDULOS
+   ========================================================= */
+
+function desativarModulosInterface() {
+
+    document
+        .getElementById("modulo-audio")
+        .classList.remove("ativo");
+
+    document
+        .getElementById("modulo-arquivos")
+        .classList.remove("ativo");
+
+    document
+        .getElementById("modulo-chat")
+        .classList.remove("ativo");
+
+
+    const botao =
+        document.getElementById("btn-conectar");
+
+    botao.innerText =
+        "🔗 Conectar Canal";
+
+    botao.disabled = false;
+}
+
+
+/* =========================================================
+   EVENTOS DE DADOS
+   ========================================================= */
+
+function configurarEventosDados() {
+
+    if (!conexaoDados) {
+        return;
+    }
+
+
+    /*
+     * Evita registrar os mesmos eventos várias vezes.
+     */
+
+    if (conexaoDados.__esipConfigurado) {
+        return;
+    }
+
+    conexaoDados.__esipConfigurado = true;
+
+
+    conexaoDados.on("data", dados => {
+
+        if (!dados || typeof dados !== "object") {
+            return;
+        }
+
+
+        switch (dados.tipo) {
+
+            case "arquivo":
+
+                if (
+                    dados.nome &&
+                    dados.conteudo
+                ) {
+
+                    adicionarLinkArquivoLista(
+                        dados.nome,
+                        dados.conteudo,
+                        "recebido"
+                    );
+                }
+
+                break;
+
+
+            case "audio-gravado":
+
+                if (dados.conteudo) {
+
+                    reproduzirAudioGravadoRecebido(
+                        dados.conteudo
+                    );
+                }
+
+                break;
+
+
+            case "texto":
+
+                if (
+                    typeof dados.conteudo === "string"
+                ) {
+
+                    receberMensagemTexto(
+                        dados.conteudo
+                    );
+                }
+
+                break;
+
+
+            default:
+
+                console.warn(
+                    "Tipo de mensagem desconhecido:",
+                    dados.tipo
+                );
+        }
+
+    });
+
+
+    conexaoDados.on("close", () => {
+
+        atualizarStatus(
+            "Conexão encerrada pelo terminal remoto."
+        );
+
+        conexaoDados = null;
+
+        desativarModulosInterface();
+
+    });
+
+
+    conexaoDados.on("error", erro => {
+
+        console.error(
+            "Erro no canal de dados:",
+            erro
+        );
+
+    });
+}
+
+
+/* =========================================================
+   CHAMADA DE VOZ
+   ========================================================= */
+
+function iniciarChamadaVoz() {
+
+    if (!peer) {
+
+        alert(
+            "O serviço P2P ainda não está disponível."
+        );
+
+        return;
+    }
+
+
+    let idDestino =
+        document
+            .getElementById("id-destino-input")
+            .value
+            .trim();
+
+
+    if (!idDestino && conexaoDados) {
+
+        idDestino =
+            conexaoDados.peer;
+    }
+
+
+    if (!idDestino) {
+
+        alert(
+            "Informe o ID do operador remoto."
+        );
+
+        return;
+    }
+
+
+    navigator.mediaDevices
+        .getUserMedia({
+            audio:true
+        })
+        .then(stream => {
+
+            meuStreamLocal = stream;
+
+            chamadaVoz =
+                peer.call(
+                    idDestino,
+                    stream
+                );
+
+            configurarEventosVoz();
+
+        })
+        .catch(erro => {
+
+            console.error(erro);
+
+            alert(
+                "Erro ao acessar microfone para ligação: " +
+                erro.message
+            );
+
+        });
+}
+
+
+/* =========================================================
+   EVENTOS DA CHAMADA
+   ========================================================= */
+
+function configurarEventosVoz() {
+
+    if (!chamadaVoz) {
+        return;
+    }
+
+
+    document
+        .getElementById("btn-chamada")
+        .style.display = "none";
+
+    document
+        .getElementById("btn-desligar")
+        .style.display = "inline-block";
+
+
+    atualizarStatus(
+        "📞 Em streaming de voz ativo...",
+        true
+    );
+
+
+    chamadaVoz.on("stream", streamRemoto => {
+
+        const audioRemoto =
+            document.getElementById("audio-remoto");
+
+        audioRemoto.srcObject =
+            streamRemoto;
+
+
+        audioRemoto.play()
+            .catch(() => {
+                /*
+                 * Alguns navegadores exigem interação
+                 * do usuário antes de reproduzir áudio.
+                 */
+            });
+
+    });
+
+
+    chamadaVoz.on("close", () => {
+
+        if (chamadaVoz) {
+            chamadaVoz = null;
+        }
+
+        encerrarChamadaVoz(false);
+    });
+
+
+    chamadaVoz.on("error", erro => {
+
+        console.error(
+            "Erro na chamada:",
+            erro
+        );
+
+        encerrarChamadaVoz(false);
+
+    });
+}
+
+
+/* =========================================================
+   ENCERRAR CHAMADA
+   ========================================================= */
+
+function encerrarChamadaVoz(fecharChamada = true) {
+
+    if (
+        fecharChamada &&
+        chamadaVoz
+    ) {
+
+        try {
+            chamadaVoz.close();
+        } catch (erro) {}
+    }
+
+
+    chamadaVoz = null;
+
+
+    if (meuStreamLocal) {
+
+        meuStreamLocal
+            .getTracks()
+            .forEach(track => track.stop());
+
+        meuStreamLocal = null;
+    }
+
+
+    const audioRemoto =
+        document.getElementById("audio-remoto");
+
+    if (audioRemoto) {
+
+        audioRemoto.pause();
+
+        audioRemoto.srcObject = null;
+    }
+
+
+    document
+        .getElementById("btn-chamada")
+        .style.display = "inline-block";
+
+    document
+        .getElementById("btn-desligar")
+        .style.display = "none";
+
+
+    if (
+        conexaoDados &&
+        conexaoDados.open
+    ) {
+
+        atualizarStatus(
+            "Conexão de ponta a ponta estabelecida.",
+            true
+        );
+
+    } else {
+
+        atualizarStatus(
+            "Aguardando conexão P2P..."
+        );
+    }
+}
+/* =========================================================
+   ESIP-SISTEMAS
+   PARTE 3/3 — ÁUDIO GRAVADO + ARQUIVOS + CHAT
+   ========================================================= */
+
+
+/* =========================================================
+   GRAVAÇÃO DE ÁUDIO
+   ========================================================= */
+
+async function alternarGravacao() {
+
+    const btn =
+        document.getElementById("btn-gravacao");
+
+
+    /*
+     * Se já existe uma gravação em andamento,
+     * solicita a parada.
+     */
+
+    if (
+        mediaRecorder &&
+        mediaRecorder.state !== "inactive"
+    ) {
+
+        mediaRecorder.stop();
+
+        btn.innerText =
+            "🎙️ Gravar Áudio";
+
+        btn.style.background =
+            "#1e293b";
+
+        btn.style.borderColor =
+            "#334155";
+
+        return;
+    }
+
+
+    try {
+
+        const stream =
+            await navigator.mediaDevices.getUserMedia({
+                audio:true
+            });
+
+
+        meuStreamGravacao = stream;
+
+        pedacosAudio = [];
+
+
+        /*
+         * Alguns navegadores não suportam exatamente
+         * o mesmo MIME type. Escolhemos automaticamente
+         * um formato disponível.
+         */
+
+        let opcoes = {};
+
+        if (
+            MediaRecorder.isTypeSupported(
+                "audio/webm;codecs=opus"
+            )
+        ) {
+
+            opcoes.mimeType =
+                "audio/webm;codecs=opus";
+
+        } else if (
+            MediaRecorder.isTypeSupported(
+                "audio/ogg;codecs=opus"
+            )
+        ) {
+
+            opcoes.mimeType =
+                "audio/ogg;codecs=opus";
+        }
+
+
+        mediaRecorder =
+            new MediaRecorder(
+                stream,
+                opcoes
+            );
+
+
+        mediaRecorder.ondataavailable =
+            evento => {
+
+                if (
+                    evento.data &&
+                    evento.data.size > 0
+                ) {
+
+                    pedacosAudio.push(
+                        evento.data
+                    );
+                }
+            };
+
+
+        mediaRecorder.onstop =
+            async () => {
+
+                try {
+
+                    const tipo =
+                        mediaRecorder.mimeType ||
+                        "audio/webm";
+
+
+                    const blobAudio =
+                        new Blob(
+                            pedacosAudio,
+                            {
+                                type:tipo
+                            }
+                        );
+
+
+                    const reader =
+                        new FileReader();
+
+
+                    reader.onloadend =
+                        () => {
+
+                            const base64Audio =
+                                reader.result;
+
+
+                            /*
+                             * Mostra localmente.
+                             */
+
+                            exibirAudioNaTelaPropria(
+                                base64Audio
+                            );
+
+
+                            /*
+                             * Envia para o operador remoto
+                             * somente se houver conexão.
+                             */
+
+                            if (
+                                conexaoDados &&
+                                conexaoDados.open
+                            ) {
+
+                                conexaoDados.send({
+                                    tipo:"audio-gravado",
+                                    conteudo:base64Audio
+                                });
+
+                            } else {
+
+                                alert(
+                                    "Áudio gravado, mas não foi enviado porque o canal P2P está desconectado."
+                                );
+                            }
+                        };
+
+
+                    reader.readAsDataURL(
+                        blobAudio
+                    );
+
+
+                } catch (erro) {
+
+                    console.error(
+                        "Erro ao processar áudio:",
+                        erro
+                    );
+
+                    alert(
+                        "Não foi possível processar o áudio."
+                    );
+
+                } finally {
+
+                    if (meuStreamGravacao) {
+
+                        meuStreamGravacao
+                            .getTracks()
+                            .forEach(
+                                track => track.stop()
+                            );
+
+                        meuStreamGravacao = null;
+                    }
+
+                    pedacosAudio = [];
+                }
+            };
+
+
+        mediaRecorder.onerror =
+            evento => {
+
+                console.error(
+                    "Erro no MediaRecorder:",
+                    evento
+                );
+
+                if (meuStreamGravacao) {
+
+                    meuStreamGravacao
+                        .getTracks()
+                        .forEach(
+                            track => track.stop()
+                        );
+
+                    meuStreamGravacao = null;
+                }
+
+                btn.innerText =
+                    "🎙️ Gravar Áudio";
+
+                btn.style.background =
+                    "#1e293b";
+
+                btn.style.borderColor =
+                    "#334155";
+            };
+
+
+        mediaRecorder.start();
+
+
+        btn.innerText =
+            "🛑 Parar e Enviar";
+
+        btn.style.background =
+            "#7f1d1d";
+
+        btn.style.borderColor =
+            "#ef4444";
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro no microfone:",
+            erro
+        );
+
+        alert(
+            "Erro ao acessar o microfone: " +
+            erro.message
+        );
+    }
+}
+
+
+/* =========================================================
+   EXIBIR ÁUDIO ENVIADO
+   ========================================================= */
+
+function exibirAudioNaTelaPropria(
+    base64Audio
+) {
+
+    const box =
+        document.getElementById(
+            "historico-audio"
+        );
+
+
+    const bloco =
+        document.createElement("div");
+
+    bloco.style.marginTop =
+        "10px";
+
+
+    const titulo =
+        document.createElement("p");
+
+    titulo.style.cssText =
+        "font-size:12px;margin:10px 0 5px;color:#00f5ff;";
+
+    titulo.textContent =
+        "Sua mensagem enviada:";
+
+
+    const audio =
+        document.createElement("audio");
+
+    audio.controls = true;
+
+    audio.src =
+        base64Audio;
+
+    audio.className =
+        "audio-preview";
+
+
+    bloco.appendChild(titulo);
+    bloco.appendChild(audio);
+
+    box.prepend(bloco);
+}
+
+
+/* =========================================================
+   REPRODUZIR ÁUDIO RECEBIDO
+   ========================================================= */
+
+function reproduzirAudioGravadoRecebido(
+    base64Audio
+) {
+
+    const box =
+        document.getElementById(
+            "historico-audio"
+        );
+
+
+    const bloco =
+        document.createElement("div");
+
+    bloco.style.marginTop =
+        "10px";
+
+
+    const titulo =
+        document.createElement("p");
+
+    titulo.style.cssText =
+        "font-size:12px;margin:10px 0 5px;color:#ef4444;";
+
+    titulo.textContent =
+        "Mensagem de voz recebida:";
+
+
+    const audio =
+        document.createElement("audio");
+
+    audio.controls = true;
+
+    audio.src =
+        base64Audio;
+
+    audio.className =
+        "audio-preview";
+
+
+    bloco.appendChild(titulo);
+    bloco.appendChild(audio);
+
+    box.prepend(bloco);
+}
+
+
+/* =========================================================
+   ENVIO DE ARQUIVOS
+   ========================================================= */
+
+function enviarArquivoFisico(input) {
+
+    if (
+        !input.files ||
+        input.files.length === 0
+    ) {
+
+        return;
+    }
+
+
+    if (
+        !conexaoDados ||
+        !conexaoDados.open
+    ) {
+
+        alert(
+            "Aguarde a conexão com o operador remoto para enviar."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    const arquivo =
+        input.files[0];
+
+
+    /*
+     * Limite de segurança para esta implementação.
+     *
+     * O envio atual utiliza DataURL/Base64 e, portanto,
+     * não é adequado para arquivos enormes.
+     */
+
+    const LIMITE_ARQUIVO =
+        25 * 1024 * 1024;
+
+
+    if (
+        arquivo.size >
+        LIMITE_ARQUIVO
+    ) {
+
+        alert(
+            "Este arquivo excede o limite de 25 MB desta versão."
+        );
+
+        input.value = "";
+
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onerror =
+        () => {
+
+            alert(
+                "Não foi possível ler o arquivo."
+            );
+
+            input.value = "";
+        };
+
+
+    reader.onload =
+        () => {
+
+            try {
+
+                conexaoDados.send({
+                    tipo:"arquivo",
+                    nome:arquivo.name,
+                    conteudo:reader.result
+                });
+
+
+                adicionarLinkArquivoLista(
+                    arquivo.name,
+                    reader.result,
+                    "enviado"
+                );
+
+
+            } catch (erro) {
+
+                console.error(
+                    "Erro ao enviar arquivo:",
+                    erro
+                );
+
+                alert(
+                    "Falha ao enviar o arquivo."
+                );
+            }
+
+
+            input.value = "";
+        };
+
+
+    reader.readAsDataURL(
+        arquivo
+    );
+}
+
+
+/* =========================================================
+   CRIAÇÃO SEGURA DO ITEM DE ARQUIVO
+   ========================================================= */
+
+function adicionarLinkArquivoLista(
+    nome,
+    conteudoBase64,
+    direcao
+) {
+
+    const box =
+        document.getElementById(
+            "box-arquivos"
+        );
+
+
+    /*
+     * Remove a mensagem inicial.
+     */
+
+    const mensagemInicial =
+        box.querySelector(
+            "[data-mensagem-inicial]"
+        );
+
+    if (mensagemInicial) {
+        mensagemInicial.remove();
+    }
+
+
+    /*
+     * Também trata o texto original caso
+     * ainda esteja presente.
+     */
+
+    if (
+        box.innerText.includes(
+            "Nenhum arquivo transferido"
+        )
+    ) {
+
+        box.innerHTML = "";
+    }
+
+
+    const item =
+        document.createElement("div");
+
+    item.style.cssText =
+        "margin-bottom:8px;border-bottom:1px solid #1e40af;padding-bottom:8px;";
+
+
+    const prefixo =
+        document.createElement("span");
+
+    prefixo.style.fontWeight =
+        "bold";
+
+    prefixo.style.color =
+        direcao === "enviado"
+            ? "#00f5ff"
+            : "#ef4444";
+
+    prefixo.textContent =
+        direcao === "enviado"
+            ? "Enviado: "
+            : "Recebido: ";
+
+
+    const link =
+        document.createElement("a");
+
+    link.href =
+        conteudoBase64;
+
+    link.download =
+        nome;
+
+    link.textContent =
+        nome;
+
+    link.style.cssText =
+        "color:#fff;text-decoration:underline;word-break:break-all;";
+
+
+    item.appendChild(prefixo);
+    item.appendChild(link);
+
+
+    box.prepend(item);
+}
+
+
+/* =========================================================
+   CHAT — ENVIO
+   ========================================================= */
+
+function enviarMensagemTexto() {
+
+    const input =
+        document.getElementById(
+            "chat-input"
+        );
+
+
+    const texto =
+        input.value.trim();
+
+
+    if (!texto) {
+        return;
+    }
+
+
+    if (
+        !conexaoDados ||
+        !conexaoDados.open
+    ) {
+
+        alert(
+            "Não existe um canal P2P ativo."
+        );
+
+        return;
+    }
+
+
+    try {
+
+        conexaoDados.send({
+            tipo:"texto",
+            conteudo:texto
+        });
+
+
+        adicionarMensagemChat(
+            texto,
+            "enviada"
+        );
+
+
+        input.value = "";
+
+
+    } catch (erro) {
+
+        console.error(
+            "Erro ao enviar mensagem:",
+            erro
+        );
+
+        alert(
+            "Não foi possível enviar a mensagem."
+        );
+    }
+}
+
+
+/* =========================================================
+   CHAT — RECEBIMENTO
+   ========================================================= */
+
+function receberMensagemTexto(
+    texto
+) {
+
+    if (
+        typeof texto !== "string"
+    ) {
+
+        return;
+    }
+
+
+    adicionarMensagemChat(
+        texto,
+        "recebida"
+    );
+}
+
+
+/* =========================================================
+   CHAT — RENDERIZAÇÃO SEGURA
+   ========================================================= */
+
+function adicionarMensagemChat(
+    texto,
+    tipo
+) {
+
+    const historico =
+        document.getElementById(
+            "chat-historico"
+        );
+
+
+    const mensagem =
+        document.createElement("div");
+
+
+    mensagem.className =
+        tipo === "enviada"
+            ? "msg msg-enviada"
+            : "msg msg-recebida";
+
+
+    /*
+     * textContent é utilizado propositalmente.
+     *
+     * Assim uma mensagem como:
+     *
+     * <img src=x onerror=alert(1)>
+     *
+     * será mostrada como texto, e não executada
+     * como HTML.
+     */
+
+    mensagem.textContent =
+        texto;
+
+
+    historico.appendChild(
+        mensagem
+    );
+
+
+    historico.scrollTop =
+        historico.scrollHeight;
+}
+
+
+/* =========================================================
+   LIMPEZA AO FECHAR / RECARREGAR
+   ========================================================= */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        /*
+         * Para gravação.
+         */
+
+        if (
+            mediaRecorder &&
+            mediaRecorder.state !== "inactive"
+        ) {
+
+            try {
+                mediaRecorder.stop();
+            } catch (erro) {}
+        }
+
+
+        /*
+         * Para microfone.
+         */
+
+        if (meuStreamGravacao) {
+
+            meuStreamGravacao
+                .getTracks()
+                .forEach(
+                    track => track.stop()
+                );
+        }
+
+
+        if (meuStreamLocal) {
+
+            meuStreamLocal
+                .getTracks()
+                .forEach(
+                    track => track.stop()
+                );
+        }
+
+
+        /*
+         * Fecha chamada.
+         */
+
+        if (chamadaVoz) {
+
+            try {
+                chamadaVoz.close();
+            } catch (erro) {}
+        }
+
+
+        /*
+         * Fecha conexão de dados.
+         */
+
+        if (conexaoDados) {
+
+            try {
+                conexaoDados.close();
+            } catch (erro) {}
+        }
+
+
+        /*
+         * Fecha PeerJS.
+         */
+
+        if (peer) {
+
+            try {
+                peer.destroy();
+            } catch (erro) {}
+        }
+    }
+);
+
+
+/* =========================================================
+   ENTER NO CAMPO DE ID
+   ========================================================= */
+
+document
+    .getElementById("id-destino-input")
+    .addEventListener(
+        "keypress",
+        evento => {
+
+            if (
+                evento.key === "Enter"
+            ) {
+
+                conectarAoPeer();
+            }
+        }
+    );
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+   ========================================================= */
+
+atualizarStatus(
+    "Aguardando validação de assinatura criptográfica..."
+);
+
+</script>
+
+</body>
+</html>
