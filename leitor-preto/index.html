@@ -1,1 +1,621 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP-Sistemas - Central de Comunicação Segura</title>
+
+<!-- Bibliotecas Oficiais via CDN Unpkg para P2P e Criptografia -->
+<script src="https://unpkg.com"></script>
+<script src="https://unpkg.com"></script>
+
+<style>
+*{
+    box-sizing: border-box;
+}
+
+body{
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0a1128; /* Azul Marinho Profundo */
+    color: #f0f4f8;
+    min-height: 100vh;
+}
+
+header{
+    background: #020617;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid #00f5ff; /* Linha Neon Ciano */
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+}
+
+.logo{
+    font-size: 26px;
+    font-weight: bold;
+    color: #00f5ff; /* Texto Neon */
+    text-shadow: 0 0 10px rgba(0, 245, 255, 0.6);
+    letter-spacing: 1.5px;
+}
+
+.status{
+    margin-top: 10px;
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.container{
+    max-width: 900px;
+    margin: auto;
+    padding: 25px;
+    display: none; /* Mantém o painel de telecomunicação oculto até a licença ser válida */
+}
+
+/* Tela de Bloqueio por Assinatura Digital RSA */
+.tela-bloqueio {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #020617;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.box-licenca {
+    background: #111e38;
+    padding: 35px;
+    border-radius: 12px;
+    border: 2px solid #00f5ff;
+    box-shadow: 0 0 25px rgba(0, 245, 255, 0.4);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+.painel-conexao {
+    background: #111e38;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #1e40af;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.titulo-bloco {
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #00f5ff;
+    text-shadow: 0 0 5px rgba(0, 245, 255, 0.3);
+}
+
+.input-grupo {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+input[type="text"], textarea {
+    flex: 1;
+    padding: 14px;
+    background: #070d1e;
+    border: 1px solid #1e40af;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+    font-family: monospace;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #00f5ff;
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.4);
+}
+
+textarea {
+    resize: none;
+    height: 100px;
+    word-break: break-all;
+}
+
+button {
+    padding: 14px 22px;
+    border: 0;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+
+.btn-azul { 
+    background: #1e40af; 
+    color: #fff; 
+    border: 1px solid #00f5ff;
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
+}
+.btn-azul:hover { 
+    background: #00f5ff; 
+    color: #0a1128;
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.6);
+}
+.btn-vermelho { 
+    background: #7f1d1d; 
+    color: #fff; 
+    border: 1px solid #ef4444;
+}
+.btn-vermelho:hover { 
+    background: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+}
+.btn-cinza { 
+    background: #1e293b; 
+    color: #94a3b8; 
+    border: 1px solid #334155;
+}
+.btn-cinza:hover { 
+    background: #334155; 
+    color: #fff;
+}
+
+.grid-recursos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .grid-recursos { grid-template-columns: 1fr; }
+}
+
+.card-recurso, .box-chat {
+    background: #111e38;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #1e40af;
+    opacity: 0.4;
+    pointer-events: none;
+    transition: all 0.3s;
+}
+
+.card-recurso.ativo, .box-chat.ativo {
+    opacity: 1;
+    pointer-events: auto;
+    border-color: #00f5ff;
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.2);
+}
+
+.lista-arquivos {
+    margin-top: 15px;
+    max-height: 150px;
+    overflow-y: auto;
+    background: #070d1e;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #1e40af;
+    font-size: 14px;
+}
+
+.audio-preview {
+    margin-top: 10px;
+    width: 100%;
+    accent-color: #00f5ff;
+}
+
+.historico-mensagens {
+    height: 180px;
+    overflow-y: auto;
+    background: #070d1e;
+    border: 1px solid #1e40af;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.msg {
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 80%;
+    font-size: 14px;
+    word-break: break-all;
+}
+.msg-enviada {
+    background: #1e40af;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+.msg-recebida {
+    background: #0f172a;
+    color: #00f5ff;
+    border: 1px solid #1e40af;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- Tela de Bloqueio Antifraude Inicial -->
+<div class="tela-bloqueio" id="tela-bloqueio-sistema">
+    <div class="box-licenca">
+        <h2 style="color:#00f5ff; margin-top:0; text-shadow: 0 0 8px rgba(0,245,255,0.5);">ASSINATURA RSA REQUERIDA</h2>
+        <p style="color:#94a3b8; font-size:13px; margin-bottom:20px;">Insira a licença criptografada fornecida pelo administrador para liberar os terminais P2P estáveis.</p>
+        <textarea id="campo-chave-licenca" placeholder="Cole aqui a sua licença digital criptografada..."></textarea>
+        <button class="btn-azul" style="width:100%; margin-top:15px;" onclick="validarLicencaEntrada()">🔐 Verificar Autenticidade Digital</button>
+        <p id="msg-erro-licenca" style="color:#ef4444; font-size:13px; margin-top:10px; font-weight:bold;"></p>
+    </div>
+</div>
+
+<header>
+    <div class="logo">📡 ESIP-SISTEMAS</div>
+    <div class="status" id="meu-status">Aguardando validação de assinatura criptográfica...</div>
+</header>
+
+<div class="container" id="conteudo-principal">
+    <div class="painel-conexao">
+        <div class="titulo-bloco">Seu ID de Comunicação Segura</div>
+        <div class="input-grupo">
+            <input type="text" id="meu-id-input" readonly value="Gerando código...">
+            <button class="btn-cinza" onclick="copiarMeuID()">📋 Copiar</button>
+        </div>
+        
+        <div class="titulo-bloco" style="margin-top: 20px;">Conectar a Outro Operador</div>
+        <div class="input-grupo">
+            <input type="text" id="id-destino-input" placeholder="Cole o ID do outro operador aqui">
+            <button class="btn-azul" id="btn-conectar" onclick="conectarAoPeer()">🔗 Conectar Canal</button>
+        </div>
+    </div>
+
+    <div class="grid-recursos">
+        <div class="card-recurso" id="modulo-audio">
+            <div class="titulo-bloco">🎤 Voz e Mensagens de Áudio</div>
+            <p style="font-size: 14px; color: #94a3b8;">Chamada de Voz Direta:</p>
+            <button class="btn-azul" id="btn-chamada" onclick="iniciarChamadaVoz()">📞 Iniciar Ligação</button>
+            <button class="btn-vermelho" id="btn-desligar" onclick="encerrarChamadaVoz()" style="display:none;">🔇 Desligar</button>
+            
+            <hr style="border-color: #1e40af; margin: 20px 0;">
+            
+            <p style="font-size: 14px; color: #94a3b8;">Gravar Mensagem de Áudio:</p>
+            <button class="btn-cinza" id="btn-gravacao" onclick="alternarGravacao()">🎙️ Gravar Áudio</button>
+            <div id="historico-audio"></div>
+        </div>
+
+        <div class="card-recurso" id="modulo-arquivos">
+            <div class="titulo-bloco">📁 Compartilhamento de Arquivos e Vídeos</div>
+            <p style="font-size: 14px; color: #94a3b8;">Envie documentos, fotos, vídeos ou relatórios via P2P:</p>
+            <input type="file" id="arquivo-input" style="display: none;" onchange="enviarArquivoFisico(this)">
+            <button class="btn-azul" onclick="document.getElementById('arquivo-input').click()">📤 Selecionar e Enviar</button>
+            
+            <div class="lista-arquivos" id="box-arquivos">
+                <span style="color: #64748b;">Nenhum arquivo transferido nesta sessão.</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="box-chat" id="modulo-chat" style="margin-top: 20px;">
+        <div class="titulo-bloco">💬 Chat de Texto Seguro</div>
+        <div class="historico-mensagens" id="chat-historico"></div>
+        <div class="input-grupo">
+            <input type="text" id="chat-input" placeholder="Digite uma mensagem segura..." onkeypress="if(event.key === 'Enter') enviarMensagemTexto()">
+            <button class="btn-azul" onclick="enviarMensagemTexto()">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<audio id="audio-remoto" autoplay></audio>
+
+<script>
+/* 
+   ========================================================================
+   CHAVE PÚBLICA RSA DO SEU SISTEMA (ESTA CHAVE PROVA QUE VOCÊ É O DONO)
+   Ela serve exclusivamente para LER e VERIFICAR se o seu gerador assinou a licença.
+   Pode ficar exposta publicamente no GitHub do cliente com segurança total.
+   ========================================================================
+*/
+const CHAVE_PUBLICA_RSA = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvTfL2P5vMvD8A/uVwF1+
+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH
+SgV6I7F9dGj9wX8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28
+RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+
+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+
+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uIwIDAQAB
+-----END PUBLIC KEY-----`;
+
+let peer;
+let conexaoDados = null;
+let chamadaVoz = null;
+let mediaRecorder;
+let pedacosAudio = [];
+let meuStreamLocal = null;
+let meuStreamGravacao = null;
+let senhaDoCanalDescriptografada = "";
+
+// 1. CAPTURA DE TEMPO GLOBAL ANTI-FRAUDE
+function obterDataAtual() {
+    return new Promise((resolve) => {
+        fetch('https://worldtimeapi.org')
+            .then(res => res.json())
+            .then(dados => {
+                let dataIso = dados.datetime.split('T');
+                resolve(new Date(dataIso[0] + "T00:00:00"));
+            })
+            .catch(() => {
+                // Fallback de segurança local caso a rede sofra oscilações na inicialização
+                resolve(new Date());
+            });
+    });
+}
+
+// 2. SISTEMA DE DESBLOQUEIO POR LEITURA DE ASSINATURA ASSIMÉTRICA
+async function validarLicencaEntrada() {
+    let tokenCriptografado = document.getElementById('campo-chave-licenca').value.trim();
+    let erroBox = document.getElementById('msg-erro-licenca');
+    
+    if (!tokenCriptografado) {
+        erroBox.innerText = "Por favor, cole a sua licença digital.";
+        return;
+    }
+
+    try {
+        let decodificador = new JSEncrypt();
+        decodificador.setPublicKey(CHAVE_PUBLICA_RSA);
+
+        // Descriptografa a estrutura interna usando os cálculos matemáticos da chave pública
+        let dadosLimpos = decodificador.decrypt(tokenCriptografado);
+        
+        if (!dadosLimpos) {
+            erroBox.innerText = "Assinatura Digital Inválida! Este token não foi assinado pela sua chave mestre de dono.";
+            return;
+        }
+
+        let objetoLicenca = JSON.parse(dadosLimpos);
+        let dataVencimento = new Date(objetoLicenca.expira + "T00:00:00");
+        let dataAtual = await obterDataAtual();
+
+        dataVencimento.setHours(0,0,0,0);
+        dataAtual.setHours(0,0,0,0);
+
+        if (dataAtual > dataVencimento) {
+            erroBox.innerText = `Acesso negado! Esta licença expirou em: ${dataVencimento.toLocaleDateString('pt-BR')}`;
+            return;
+        }
+
+        // Sucesso na verificação de autenticidade. Libera as telas visuais originais
+        senhaDoCanalDescriptografada = objetoLicenca.senhaCanal;
+        document.getElementById('tela-bloqueio-sistema').style.display = 'none';
+        document.getElementById('conteudo-principal').style.display = 'block';
+        
+        inicializarRedePeerJS();
+
+    } catch (e) {
+        erroBox.innerText = "Falha crítica na decodificação do Token RSA!";
+    }
+}
+// 3. ENGENHARIA DE REDE P2P E TERMINAIS DE TELECOMUNICAÇÃO
+function inicializarRedePeerJS() {
+    document.getElementById('meu-status').innerText = "Abrindo canal de comunicação seguro...";
+    peer = new Peer();
+
+    peer.on('open', (id) => {
+        document.getElementById('meu-status').innerText = "Canal pronto e autenticado.";
+        document.getElementById('meu-id-input').value = id;
+    });
+
+    peer.on('connection', (conn) => {
+        conexaoDados = conn;
+        configurarEventosDados();
+        ativarModulosInterface();
+    });
+
+    peer.on('call', (call) => {
+        if (confirm("Recebendo chamada de voz segura. Aceitar?")) {
+            navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                meuStreamLocal = stream;
+                call.answer(stream);
+                chamadaVoz = call;
+                configurarEventosVoz();
+            }).catch(err => alert("Erro ao acessar microfone: " + err));
+        }
+    });
+}
+
+function copiarMeuID() {
+    let input = document.getElementById('meu-id-input');
+    navigator.clipboard.writeText(input.value);
+    alert("Seu ID seguro foi copiado!");
+}
+
+function conectarAoPeer() {
+    let idDestino = document.getElementById('id-destino-input').value.trim();
+    if (!idDestino) return alert("Por favor, insira um ID de destino válido.");
+
+    document.getElementById('meu-status').innerText = "Estabelecendo túnel criptografado...";
+    conexaoDados = peer.connect(idDestino);
+    
+    conexaoDados.on('open', () => {
+        configurarEventosDados();
+        ativarModulosInterface();
+    });
+}
+
+function activarModulosInterface() {
+    document.getElementById('meu-status').innerText = "Conexão de ponta a ponta estabelecida.";
+    document.getElementById('modulo-audio').classList.add('ativo');
+    document.getElementById('modulo-arquivos').classList.add('ativo');
+    document.getElementById('modulo-chat').classList.add('ativo');
+    document.getElementById('btn-conectar').innerText = "⚡ Canal Ativo";
+    document.getElementById('btn-conectar').disabled = true;
+}
+
+function configurarEventosDados() {
+    conexaoDados.on('data', (dados) => {
+        if (dados.tipo === 'arquivo') {
+            adicionarLinkArquivoLista(dados.nome, dados.conteudo, 'recebido');
+        } else if (dados.tipo === 'audio-gravado') {
+            reproduzirAudioGravadoRecebido(dados.conteudo);
+        } else if (dados.tipo === 'texto') {
+            receberMensagemTexto(dados.conteudo);
+        }
+    });
+
+    conexaoDados.on('close', () => {
+        document.getElementById('meu-status').innerText = "Conexão encerrada pelo terminal remoto.";
+        desativarModulosInterface();
+    });
+}
+
+function desativarModulosInterface() {
+    document.getElementById('modulo-audio').classList.remove('ativo');
+    document.getElementById('modulo-arquivos').classList.remove('ativo');
+    document.getElementById('modulo-chat').classList.remove('ativo');
+    document.getElementById('btn-conectar').innerText = "🔗 Conectar Canal";
+    document.getElementById('btn-conectar').disabled = false;
+}
+
+function iniciarChamadaVoz() {
+    let idDestino = document.getElementById('id-destino-input').value.trim();
+    if (!idDestino && conexaoDados) idDestino = conexaoDados.peer;
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        meuStreamLocal = stream;
+        chamadaVoz = peer.call(idDestino, stream);
+        configurarEventosVoz();
+    }).catch(err => alert("Erro ao acessar microfone para ligação: " + err));
+}
+
+function configurarEventosVoz() {
+    document.getElementById('btn-chamada').style.display = 'none';
+    document.getElementById('btn-desligar').style.display = 'inline-block';
+    document.getElementById('meu-status').innerText = "📞 Em streaming de voz ativo...";
+
+    chamadaVoz.on('stream', (streamRemoto) => {
+        let audioRemoto = document.getElementById('audio-remoto');
+        audioRemoto.srcObject = streamRemoto;
+    });
+
+    chamadaVoz.on('close', () => {
+        encerrarChamadaVoz();
+    });
+}
+
+function encerrarChamadaVoz() {
+    if (chamadaVoz) chamadaVoz.close();
+    if (meuStreamLocal) {
+        meuStreamLocal.getTracks().forEach(track => track.stop());
+    }
+    document.getElementById('btn-chamada').style.display = 'inline-block';
+    document.getElementById('btn-desligar').style.display = 'none';
+    document.getElementById('meu-status').innerText = "Conexão de ponta a ponta estabelecida.";
+}
+
+function alternarGravacao() {
+    let btn = document.getElementById('btn-gravacao');
+    
+    if (!mediaRecorder || mediaRecorder.state === "inactive") {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+            meuStreamGravacao = stream;
+            mediaRecorder = new MediaRecorder(stream);
+            pedacosAudio = [];
+            
+            mediaRecorder.ondataavailable = e => pedacosAudio.push(e.data);
+            
+            mediaRecorder.onstop = () => {
+                let blobAudio = new Blob(pedacosAudio, { type: 'audio/ogg; codecs=opus' });
+                let reader = new FileReader();
+                reader.readAsDataURL(blobAudio);
+                reader.onloadend = () => {
+                    if (conexaoDados) {
+                        conexaoDados.send({ tipo: 'audio-gravado', conteudo: reader.result });
+                    }
+                    exibirAudioNaTelaPropria(reader.result);
+                };
+                if (meuStreamGravacao) {
+                    meuStreamGravacao.getTracks().forEach(track => track.stop());
+                }
+            };
+            
+            mediaRecorder.start();
+            btn.innerText = "🛑 Parar e Enviar";
+            btn.style.background = "#7f1d1d";
+            btn.style.borderColor = "#ef4444";
+        }).catch(err => alert("Erro no microfone: " + err));
+    } else {
+        mediaRecorder.stop();
+        btn.innerText = "🎙️ Gravar Áudio";
+        btn.style.background = "#1e293b";
+        btn.style.borderColor = "#334155";
+    }
+}
+
+function exibirAudioNaTelaPropria(base64Audio) {
+    let box = document.getElementById('historico-audio');
+    box.innerHTML = `<p style='font-size:12px; margin-top:10px; color:#00f5ff;'>Sua mensagem enviada:</p><audio controls src="${base64Audio}" class="audio-preview"></audio>` + box.innerHTML;
+}
+
+function reproduzirAudioGravadoRecebido(base64Audio) {
+    let box = document.getElementById('historico-audio');
+    box.innerHTML = `<p style='font-size:12px; margin-top:10px; color:#ef4444;'>Mensagem de voz recebida:</p><audio controls src="${base64Audio}" class="audio-preview"></audio>` + box.innerHTML;
+}
+
+function enviarArquivoFisico(input) {
+    if (!input.files || input.files.length === 0) return;
+    let arquivo = input.files[0];
+
+    let reader = new FileReader();
+    reader.readAsDataURL(arquivo);
+    reader.onload = function() {
+        if (conexaoDados) {
+            conexaoDados.send({
+                tipo: 'arquivo',
+                nome: arquivo.name,
+                conteudo: reader.result
+            });
+            adicionarLinkArquivoLista(arquivo.name, reader.result, 'enviado');
+        } else {
+            alert("Aguarde a conexão com o operador remoto para enviar.");
+        }
+    };
+}
+
+function adicionarLinkArquivoLista(nome, conteudoBase64, direcao) {
+    let box = document.getElementById('box-arquivos');
+    if (box.innerText.includes("Nenhum arquivo transferido")) box.innerHTML = "";
+    
+    let corTag = direcao === 'enviado' ? '#00f5ff' : '#ef4444';
+    let prefixo = direcao === 'enviado' ? 'Enviado: ' : 'Recebido: ';
+
+    let itemHtml = `<div style="margin-bottom: 8px; border-bottom: 1px solid #1e40af; padding-bottom: 4px;">
+        <span style="color: ${corTag}; font-weight:bold;">${prefixo}</span>
+        <a href="${conteudoBase64}" download="${nome}" style="color: #fff; text-decoration: underline;">${nome}</a>
+    </div>`;
+    
+    box.innerHTML = itemHtml + box.innerHTML;
+}
+
+function enviarMensagemTexto() {
+    let input = document.getElementById('chat-input');
+    let texto = input.value.trim();
+    if (!texto || !conexaoDados) return;
+
+    conexaoDados.send({ tipo: 'texto', conteudo: texto });
+
+    let historico = document.getElementById('chat-historico');
+    historico.innerHTML += `<div class="msg msg-enviada">${texto}</div>`;
+    historico.scrollTop = historico.scrollHeight;
+    input.value = "";
+}
+
+function receberMensagemTexto(texto) {
+    let historico = document.getElementById('chat-historico');
+    historico.innerHTML += `<div class="msg msg-recebida">${texto}</div>`;
+    historico.scrollTop = historico.scrollHeight;
+}
+</script>
+</body>
+</html>
