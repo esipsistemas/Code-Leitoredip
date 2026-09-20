@@ -1,1 +1,208 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESIP-Sistemas - Gerador de Tokens Exclusivo Admin</title>
+
+    <!-- Biblioteca carregada via CDN compatível com o iframe do Google Sites -->
+    <script src="https://cloudflare.com"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #020617; /* Fundo Escuro Admin */
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .painel-admin {
+            background: #0f172a;
+            border: 2px dashed #ef4444; /* Borda Alerta Vermelha */
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.1);
+        }
+
+        .titulo {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ef4444;
+            text-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+            margin-top: 0;
+            margin-bottom: 5px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .subtitulo {
+            font-size: 12px;
+            color: #94a3b8;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .formulario-grupo {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="date"], textarea {
+            width: 100%;
+            padding: 12px;
+            background: #070d1e;
+            border: 1px solid #1e40af;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: monospace;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+        }
+
+        textarea {
+            resize: none;
+            height: 110px;
+            word-break: break-all;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #7f1d1d;
+            color: #fff;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+            margin-top: 5px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
+        }
+
+        button:hover {
+            background: #ef4444;
+            color: #020617;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+<div class="painel-admin">
+    <div class="titulo">📡 GERADOR CRIPTOGRÁFICO DE TOKENS RSA</div>
+    <div class="subtitulo">Laboratório de testes ESIP-Sistemas - Uso do Administrador</div>
+    
+    <div class="formulario-grupo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div>
+            <label>Data de Vencimento:</label>
+            <input type="date" id="admin-data-vencimento">
+        </div>
+        <div>
+            <label>ID do Canal / Senha P2P:</label>
+            <input type="text" id="admin-senha-camuflada" placeholder="Ex: CanalOperacional7">
+        </div>
+    </div>
+
+    <button onclick="gerarNovaLicencaToken()">🧬 Assinar e Gerar Token de Acesso</button>
+
+    <div class="formulario-grupo" style="margin-top: 20px;">
+        <label>Token Criptografado Gerado (Envie ao Cliente):</label>
+        <textarea id="admin-resultado-token" readonly placeholder="O código criptografado aparecerá aqui..." onclick="this.select()"></textarea>
+    </div>
+</div>
+
+<script>
+// Mantém rigorosamente a mesma chave privada original para não quebrar a sincronia com o cliente
+const CHAVE_PRIVADA_RSA = `-----BEGIN RSA PRIVATE KEY-----
+MIIEowIBAAKCAQEAvTfL2P5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+0J
+v4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzHSgV6I7F9dGj9wX8+f4Tf7uI+0Jv4
+Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9
+pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMv
+D8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uIwIDAQABAoIBAGX/xJpP6G3vMvD8A/
+uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KA
+nbshzHSgV6I7F9dGj9wX8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnb
+shzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28Rk
+O61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4
+Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uIeEC
+gYEA8WfL2P5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG
++f5vMvD8A/uVwF1+KAnbshzHSgV6I7F9dGj9wX8+f4Tf7uI+0Jv4Y9LszZq9pG+f
+5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uIwKBgQDHzfL2P5vMvD8A/uVwF
+1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbsh
+zHSgV6I7F9dGj9wX8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH
+28RkO61x8+f4Tf7uIwKBgQCwzfL2P5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4
+Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzHSgV6I7F9dGj9wX8+f4T
+f7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uIwKB
+gQChzfL2P5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG
++f5vMvD8A/uVwF1+KAnbshzHSgV6I7F9dGj9wX8+f4Tf7uI+0Jv4Y9LszZq9pG+f
+5vMvD8A/uVwF1+KAnbshzH28RkO61x8+f4Tf7uIwKBgDDPzfL2P5vMvD8A/uVwF
+1+KAnbshzH28RkO61x8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbsh
+zHSgV6I7F9dGj9wX8+f4Tf7uI+0Jv4Y9LszZq9pG+f5vMvD8A/uVwF1+KAnbshzH
+28RkO61x8+f4Tf7uIw==
+-----END RSA PRIVATE KEY-----`;
+
+window.onload = function() {
+    document.getElementById('admin-data-vencimento').valueAsDate = new Date();
+};
+
+function gerarNovaLicencaToken() {
+    let dataInput = document.getElementById('admin-data-vencimento').value;
+    let senhaInput = document.getElementById('admin-senha-camuflada').value.trim();
+
+    if (!dataInput || !senhaInput) {
+        alert("Erro: Preencha a data de expiração e o ID do canal antes de gerar.");
+        return;
+    }
+
+    // Mantém exatamente o mesmo formato de objeto esperado pelo seu outro sistema
+    let payload = {
+        expira: dataInput,
+        senhaCanal: senhaInput,
+        timestamp: new Date().getTime()
+    };
+
+    try {
+        let codificador = new JSEncrypt();
+        codificador.setPrivateKey(CHAVE_PRIVADA_RSA);
+
+        let tokenGerado = codificador.encrypt(JSON.stringify(payload));
+        
+        if (!tokenGerado) {
+            alert("Erro interno: A biblioteca não conseguiu assinar com esta chave.");
+            return;
+        }
+        
+        document.getElementById('admin-resultado-token').value = tokenGerado;
+        
+    } catch (erro) {
+        alert("Erro crítico no laboratório: " + erro.message);
+    }
+}
+</script>
+</body>
+</html>
