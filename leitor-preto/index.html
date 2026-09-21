@@ -1,1 +1,292 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ESIP - Rádio Tático P2P</title>
+<!-- Biblioteca real para conexões P2P WebRTC -->
+<script src="https://unpkg.com"></script>
+<style>
+    /* Reset Geral e Paleta de Cores Táticas - Azul Marinho Profundo */
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: #020617; color: #f8fafc; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    
+    /* Animação de Brilho Neon Pulsante da Linha Mestra */
+    @keyframes pulsoNeonMestre {
+        0%, 100% { box-shadow: 0 0 5px #00f5ff, inset 0 0 5px #00f5ff; border-color: #00f5ff; }
+        50% { box-shadow: 0 0 15px #1e40af, inset 0 0 10px #1e40af; border-color: #2563eb; }
+    }
+    
+    /* Topo do App (Header Fixo) */
+    .app-header { background: #0b1329; border-bottom: 2px solid #00f5ff; padding: 15px; display: flex; justify-content: space-between; align-items: center; animation: pulsoNeonMestre 4s infinite; }
+    .logo-esip { font-size: 18px; font-weight: 900; color: #00f5ff; text-shadow: 0 0 8px #00f5ff; letter-spacing: 1px; }
+    .status-badge { font-size: 11px; background: rgba(0, 245, 255, 0.1); border: 1px solid #00f5ff; padding: 4px 8px; border-radius: 20px; color: #00f5ff; font-weight: bold; }
+    
+    /* Área Central com Gradiente Azul Marinho Neon */
+    .app-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; background: radial-gradient(circle at top, #0f172a 0%, #020617 100%); }
+    .tela-aba { display: none; height: 100%; flex-direction: column; }
+    .tela-aba.ativa { display: flex; }
+    
+    /* Balões de Mensagem do CHAT */
+    .chat-box { flex: 1; overflow-y: auto; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; padding-right: 5px; }
+    .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.4; word-break: break-word; }
+    .msg.enviada { background: #1e3a8a; border: 1px solid #3b82f6; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg.recebida { background: #1e293b; border: 1px solid #475569; align-self: flex-start; border-bottom-left-radius: 2px; }
+    
+    /* Entrada de Texto do Chat */
+    .chat-input-area { display: flex; gap: 8px; background: #0b1329; padding: 8px; border-radius: 8px; border: 1px solid #1e40af; }
+    .chat-input-area input { flex: 1; background: transparent; border: none; color: #fff; padding: 8px; font-size: 14px; outline: none; }
+    .btn-send { background: #1e40af; border: 1px solid #00f5ff; color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    
+    /* Painel de Chamada de Voz Contínua */
+    .painel-chamada { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
+    .avatar-chamada { width: 110px; height: 110px; border-radius: 50%; border: 3px solid #00f5ff; display: flex; justify-content: center; align-items: center; font-size: 40px; box-shadow: 0 0 20px rgba(0, 245, 255, 0.3); }
+    .cronometro { font-size: 26px; font-family: monospace; color: #94a3b8; font-weight: bold; }
+    .btn-call { background: #10b981; border: none; color: white; width: 65px; height: 65px; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .btn-call.desligar { background: #ef4444; }
+    
+    /* Painel do Botão PTT (Walkie-Talkie) */
+    .painel-ptt { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; }
+    .btn-ptt { width: 150px; height: 150px; border-radius: 50%; background: radial-gradient(#1e40af, #0b1329); border: 2px dashed #00f5ff; color: white; font-weight: bold; font-size: 14px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 12px; user-select: none; -webkit-user-select: none; text-align: center; }
+    .btn-ptt.transmitindo { background: radial-gradient(#ef4444, #7f1d1d); border: 2px solid #ef4444; box-shadow: 0 0 35px #ef4444; color: #fff; }
+    
+    /* Painel de Arquivos */
+    .area-upload { border: 2px dashed #1e40af; padding: 40px 20px; text-align: center; border-radius: 8px; cursor: pointer; color: #94a3b8; background: rgba(11, 19, 41, 0.4); }
+    .lista-arquivos { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; overflow-y: auto; flex: 1; }
+    .card-arquivo { background: #0b1329; border: 1px solid #1e40af; padding: 12px 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+    .card-arquivo a { color: #00f5ff; text-decoration: none; font-weight: bold; border: 1px solid #00f5ff; padding: 4px 8px; border-radius: 4px; }
+    
+    /* Menu Inferior */
+    .app-nav { background: #0b1329; border-top: 2px solid #1e40af; display: grid; grid-template-columns: repeat(4, 1fr); padding-bottom: calc(env(safe-area-inset-bottom) + 6px); }
+    .nav-item { background: transparent; border: none; color: #94a3b8; padding: 12px 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .nav-item.ativo { color: #00f5ff; text-shadow: 0 0 5px #00f5ff; }
+</style>
+</head>
+<body>
 
+    <!-- Bloqueio de Licença / Tela de Ativação -->
+    <div id="tela-bloqueio" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #020617; z-index: 9999; display: flex; justify-content: center; align-items: center; padding: 20px;">
+        <div style="background: #0f172a; border: 2px dashed #00f5ff; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; text-align: center;">
+            <div style="font-size: 20px; font-weight: bold; color: #00f5ff; margin-bottom: 10px; text-shadow: 0 0 8px #00f5ff;">📡 AUTENTICAÇÃO TÁTICA ESIP</div>
+            <div style="font-size: 12px; color: #94a3b8; margin-bottom: 20px;">Insira a licença criptografada para desbloquear a linha</div>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; font-weight: 600;">Token de Licença Assinado:</label>
+                <textarea id="token-input" style="width: 100%; height: 100px; padding: 12px; background: #070d1e; border: 1px solid #1e40af; color: #fff; border-radius: 8px; font-size: 13px; font-family: monospace; resize: none; word-break: break-all;" placeholder="Cole o token gerado pela central aqui..."></textarea>
+            </div>
+            <button onclick="tentarAutenticar()" style="width: 100%; padding: 14px; background: #1e40af; color: #fff; border: 1px solid #00f5ff; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px;">🔓 Verificar e Injetar Chave</button>
+            <div id="erro-licenca" style="margin-top: 12px; color: #ef4444; font-size: 12px; font-weight: bold; display: none;">❌ Licença inválida ou expirada!</div>
+        </div>
+    </div>
+
+    <!-- Cabeçalho Principal -->
+    <header class="app-header">
+        <div class="logo-esip">📡 ESIP - AGUARDANDO CRIPTOGRAFIA</div>
+        <div class="status-badge" id="canal-label">CHAVE OFF-LINE</div>
+    </header>
+
+    <!-- Saída invisível de Áudio P2P -->
+    <audio id="audio-remoto" autoplay></audio>
+
+    <!-- Área de Conteúdo das Abas -->
+    <main class="app-content">
+        <!-- ABA CHAT -->
+        <section id="aba-chat" class="tela-aba ativa">
+            <div class="chat-box" id="mensagens-container"></div>
+            <div class="chat-input-area">
+                <input type="text" id="input-mensagem" placeholder="Digite a mensagem tática..." onkeydown="if(event.key === 'Enter') enviarTextoP2P()">
+                <button class="btn-send" onclick="enviarTextoP2P()">ENVIAR</button>
+            </div>
+        </section>
+
+        <!-- ABA VOZ -->
+        <section id="aba-voz" class="tela-aba">
+            <div class="painel-chamada">
+                <div class="avatar-chamada" id="avatar-status">👤</div>
+                <div class="cronometro" id="tempo-chamada">00:00</div>
+                <button id="controle-chamada" class="btn-call" onclick="alternarChamada()">📞</button>
+            </div>
+        </section>
+
+        <!-- ABA WALKIE-TALKIE PTT -->
+        <section id="aba-ptt" class="tela-aba">
+            <div class="painel-ptt">
+                <div style="font-size: 12px; color: #94a3b8; text-align: center; margin-bottom: -10px;" id="status-ptt-texto">O PTT requer o Canal de Voz Ativo</div>
+                <button class="btn-ptt" id="btn-ptt-trigger" onmousedown="iniciarTransmissaoPTT()" onmouseup="cessarTransmissaoPTT()" onmouseleave="cessarTransmissaoPTT()" ontouchstart="iniciarTransmissaoPTT(event)" ontouchend="cessarTransmissaoPTT(event)">
+                    <span id="ptt-icone">🎙️</span><span id="ptt-label">PRESSIONE<br>PARA FALAR</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ABA ARQUIVOS -->
+        <section id="aba-arquivos" class="tela-aba">
+            <label class="area-upload">
+                <p>📁 Clique para selecionar arquivos</p>
+                <input type="file" id="upload-input" style="display: none;" onchange="enviarArquivoP2P(this)">
+            </label>
+            <div class="lista-arquivos" id="container-arquivos"></div>
+        </section>
+    </main>
+
+    <!-- Menu de Abas -->
+    <nav class="app-nav">
+        <button class="nav-item ativo" onclick="mudarAba('chat', this)">💬 <span>Chat</span></button>
+        <button class="nav-item" onclick="mudarAba('voz', this)">📞 <span>Voz</span></button>
+        <button class="nav-item" onclick="mudarAba('ptt', this)">📻 <span>PTT</span></button>
+        <button class="nav-item" onclick="mudarAba('arquivos', this)">📂 <span>Arquivos</span></button>
+    </nav>
+<script>
+let peer = null, conn = null, chamadaVoz = null, localStream = null;
+const SEMENTE_SECRETA_SISTEMA = "ESIP_SISTEMAS_TACTICAL_RADIO_KEY_2026";
+let hmacKey = null;
+const urlParams = new URLSearchParams(window.location.search);
+const ponta = urlParams.get('p') || "1"; 
+
+function base64ToBuffer(b64) {
+    let str = b64.replace(/-/g, "+").replace(/_/g, "/");
+    while (str.length % 4) str += "=";
+    return new Uint8Array(atob(str).split("").map(c => c.charCodeAt(0))).buffer;
+}
+
+function bufferToBase64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+\$/g, "");
+}
+
+async function initCrypto() {
+    try {
+        const encoder = new TextEncoder();
+        const baseKeyMaterial = await crypto.subtle.importKey("raw", encoder.encode(SEMENTE_SECRETA_SISTEMA), "PBKDF2", false, ["deriveKey"]);
+        const salt = encoder.encode("ESIP_STATIC_SALT_SALT");
+        hmacKey = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" }, baseKeyMaterial, { name: "HMAC", hash: "SHA-256", length: 256 }, false, ["verify", "sign"]);
+        const tokenNaUrl = urlParams.get('t');
+        if (tokenNaUrl) { document.getElementById("token-input").value = tokenNaUrl; tentarAutenticar(); }
+    } catch (err) { console.error(err); }
+}
+
+async function tentarAutenticar() {
+    const tokenStr = document.getElementById("token-input").value.trim();
+    const erroDiv = document.getElementById("erro-licenca");
+    if (!tokenStr.includes(".")) { erroDiv.style.display = "block"; return; }
+    try {
+        const [payloadB64, assinaturaB64] = tokenStr.split(".");
+        const assinaturaValida = await crypto.subtle.verify("HMAC", hmacKey, base64ToBuffer(assinaturaB64), base64ToBuffer(payloadB64));
+        if (!assinaturaValida) { erroDiv.style.display = "block"; return; }
+        const dados = JSON.parse(new TextDecoder().decode(base64ToBuffer(payloadB64)));
+        if (Date.now() > dados.exp) { erroDiv.style.display = "block"; erroDiv.innerText = "❌ Chave Expirada!"; return; }
+        document.getElementById("tela-bloqueio").style.display = "none";
+        inicializarPainelP2P(dados.ch, tokenStr);
+    } catch (err) { erroDiv.style.display = "block"; }
+}
+function inicializarPainelP2P(canal, tokenOriginal) {
+    const meuID = (ponta === "1") ? `ESIP-${canal}-MESTRE` : `ESIP-${canal}-CONVIDADO`;
+    const idDestino = (ponta === "1") ? `ESIP-${canal}-CONVIDADO` : `ESIP-${canal}-MESTRE`;
+    document.querySelector(".logo-esip").innerText = `📡 ESIP - PONTA 0${ponta}`;
+    document.getElementById("canal-label").innerText = `CANAL: ${canal.toUpperCase()}`;
+    peer = new Peer(meuID);
+    peer.on('open', () => {
+        const container = document.getElementById("mensagens-container");
+        if(ponta === "1") {
+            const link = `${window.location.origin}${window.location.pathname}?c=${canal}&p=2&t=${tokenOriginal}`;
+            container.innerHTML = `<div class="msg recebida"><b>[SISTEMA]</b> Canal Autenticado.<br>Link do convidado:<br><input type="text" value="${link}" readonly style="width:100%; margin-top:5px; padding:6px; background:#070d1e; border:1px solid #00f5ff; color:#00f5ff;" onclick="this.select()"></div>`;
+        } else { container.innerHTML = `<div class="msg recebida"><b>[SISTEMA]</b> Rastreando Ponta Mestre...</div>`; conectarAoPeer(idDestino); }
+    });
+    peer.on('connection', c => { conn = c; configurarEventosConexao(); });
+    peer.on('call', async call => {
+        try { if (!localStream) { localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); mudeMicrofonePTT(false); }
+            call.answer(localStream); chamadaVoz = call; configurarEventosChamada();
+        } catch (e) {}
+    });
+    peer.on('error', err => { if(err.type === 'peer-not-found' && ponta === "2") setTimeout(() => conectarAoPeer(idDestino), 3000); });
+}
+
+function conectarAoPeer(id) { conn = peer.connect(id); configurarEventosConexao(); }
+
+function configurarEventosConexao() {
+    conn.on('open', () => {
+        document.getElementById("canal-label").innerText = "TÚNEL ATIVO";
+        document.getElementById('mensagens-container').innerHTML += `<div class="msg recebida"><b>[SISTEMA]</b> Conectado via WebRTC!</div>`;
+    });
+    conn.on('data', d => {
+        const container = document.getElementById('mensagens-container');
+        if (d.tipo === 'texto') container.innerHTML += `<div class="msg recebida">${d.conteudo}</div>`;
+        if (d.tipo === 'arquivo') {
+            const url = URL.createObjectURL(new Blob([d.conteudo], { type: d.mime }));
+            document.getElementById('container-arquivos').innerHTML += `<div class="card-arquivo"><span>📄 ${d.nome}</span><a href="${url}" download="${d.nome}">BAIXAR</a></div>`;
+            container.innerHTML += `<div class="msg recebida">📁 Recebeu arquivo: <b>${d.nome}</b></div>`;
+        }
+        container.scrollTop = container.scrollHeight;
+    });
+}
+
+function mudarAba(aba, btn) {
+    document.querySelectorAll('.tela-aba').forEach(t => t.classList.remove('ativa'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('ativo'));
+    document.getElementById('aba-' + aba).classList.add('ativa'); btn.classList.add('ativo');
+}
+
+function enviarTextoP2P() {
+    const input = document.getElementById('input-mensagem');
+    if(!input.value.trim() || !conn || !conn.open) return;
+    conn.send({ tipo: 'texto', conteudo: input.value });
+    document.getElementById('mensagens-container').innerHTML += `<div class="msg enviada">${input.value}</div>`;
+    input.value = '';
+}
+
+let emChamada = false, intervalo = null, segundos = 0;
+function mudeMicrofonePTT(estado) { if(localStream) localStream.getAudioTracks().forEach(t => t.enabled = estado); }
+
+async function alternarChamada() {
+    const btn = document.getElementById('controle-chamada'), crono = document.getElementById('tempo-chamada'), ava = document.getElementById('avatar-status');
+    const canal = document.getElementById("canal-label").innerText.replace("CANAL: ", "").toLowerCase();
+    const dest = (ponta === "1") ? `ESIP-${canal}-CONVIDADO` : `ESIP-${canal}-MESTRE`;
+    if(!emChamada) {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false }); mudeMicrofonePTT(false);
+            chamadaVoz = peer.call(dest, localStream); configurarEventosChamada();
+            btn.classList.add('desligar'); ava.innerText = "🗣️"; emChamada = true; segundos = 0;
+            intervalo = setInterval(() => { segundos++; crono.innerText = `${String(Math.floor(segundos / 60)).padStart(2, '0')}:${String(segundos % 60).padStart(2, '0')}`; }, 1000);
+            document.getElementById("status-ptt-texto").innerText = "Walkie-Talkie Pronto.";
+        } catch (e) { alert("Microfone bloqueado."); }
+    } else {
+        if(chamadaVoz) chamadaVoz.close(); clearInterval(intervalo);
+        btn.classList.remove('desligar'); crono.innerText = "00:00"; ava.innerText = "👤"; emChamada = false;
+        document.getElementById("status-ptt-texto").innerText = "O PTT requer o Canal de Voz Ativo";
+    }
+}
+
+function configurarEventosChamada() {
+    chamadaVoz.on('stream', s => { document.getElementById('audio-remoto').srcObject = s; });
+    chamadaVoz.on('close', () => { clearInterval(intervalo); document.getElementById('controle-chamada').classList.remove('desligar'); emChamada = false; });
+}
+
+function iniciarTransmissaoPTT(e) {
+    if(e) e.preventDefault(); if (!emChamada || !localStream) return;
+    document.getElementById("btn-ptt-trigger").classList.add("transmitindo");
+    document.getElementById("ptt-icone").innerText = "⚡"; document.getElementById("ptt-label").innerHTML = "TRANSMITINDO";
+    mudeMicrofonePTT(true);
+}
+
+function cessarTransmissaoPTT(e) {
+    if(e) e.preventDefault(); if (!localStream || !emChamada) return;
+    const btn = document.getElementById("btn-ptt-trigger");
+    if (btn.classList.contains("transmitindo")) {
+        btn.classList.remove("transmitindo"); document.getElementById("ptt-icone").innerText = "🎙️";
+        document.getElementById("ptt-label").innerHTML = "PRESSIONE<br>PARA FALAR"; mudeMicrofonePTT(false);
+    }
+}
+
+// ARQUIVOS: Função totalmente reestruturada para capturar o elemento único e evitar o travamento do Token
+function enviarArquivoP2P(el) {
+    if(el.files.length === 0 || !conn || !conn.open) return;
+    const arq = el.files[0]; 
+    const r = new FileReader();
+    r.onload = e => {
+        conn.send({ tipo: 'arquivo', nome: arq.name, mime: arq.type, conteudo: e.target.result });
+        document.getElementById('container-arquivos').innerHTML += `<div class="card-arquivo"><span>📄 ${arq.name}</span><span style="color:#10b981;">Enviado</span></div>`;
+        document.getElementById('mensagens-container').innerHTML += `<div class="msg enviada">📁 Enviou arquivo: <b>${arq.name}</b></div>`;
+    };
+    r.readAsArrayBuffer(arq);
+}
+window.onload = initCrypto;
+</script>
+</body>
+</html>
