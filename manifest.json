@@ -1,0 +1,12 @@
+{
+  "name": "ESIP - Rádio Tático P2P",
+  "short_name": "ESIP Rádio",
+  "description": "Rádio Tático P2P - ESIP Sistemas",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "lang": "pt-BR"
+}
