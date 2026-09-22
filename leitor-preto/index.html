@@ -7,7 +7,15 @@
       maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 
 <title>ESIP - Rádio Tático P2P</title>
+<link rel="manifest" href="./manifest.json">
 
+<meta name="theme-color" content="#020617">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ESIP Rádio">
 <!-- PeerJS -->
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 
@@ -30,39 +38,39 @@ body {
     overflow: hidden;
 }
 
-body {
-    display: flex;
-    flex-direction: column;
-    position: relative;
+corpo  {
+    exibição : flexível ;
+    flex-direction : coluna ;
+    posição : relativa ;
 }
 
 /* =========================
    ANIMAÇÕES
 ========================= */
 
-@keyframes pulsoNeonMestre {
-    0%, 100% {
-        box-shadow:
-            0 0 5px #00f5ff,
-            inset 0 0 5px #00f5ff;
-        border-color: #00f5ff;
+@keyframes  pulsoNeonMestre  {
+    0 % , 100 %  {
+        sombra-caixa :
+            0  0  5 px #00f5ff,
+            inset  0  0  5 px #00f5ff;
+        cor da borda : #00f5ff;
     }
 
-    50% {
-        box-shadow:
-            0 0 15px #1e40af,
-            inset 0 0 10px #1e40af;
-        border-color: #2563eb;
+    50 %  {
+        sombra-caixa :
+            0  0  15 px #1e40af,
+            inserção  0  0  10 px #1e40af;
+        cor da borda : #2563eb;
     }
 }
 
-@keyframes pulsar {
-    0%, 100% {
-        transform: scale(1);
+@keyframes  pulsar  {
+    0 % , 100 %  {
+        transformar : escala ( 1 ) ;
     }
 
-    50% {
-        transform: scale(1.04);
+    50 %  {
+        transformar : escala ( 1.04 ) ;
     }
 }
 
@@ -70,36 +78,36 @@ body {
    CABEÇALHO
 ========================= */
 
-.app-header {
-    background: #0b1329;
-    border-bottom: 2px solid #00f5ff;
-    padding: 14px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
-    animation: pulsoNeonMestre 4s infinite;
-    flex-shrink: 0;
-    min-height: 65px;
+. app-header  {
+    fundo : #0b1329;
+    borda inferior : 2 px  sólida #00f5ff;
+    preenchimento : 14 px ;
+    exibição : flexível ;
+    justify-content : espaço-entre ;
+    alinhar-itens : centro ;
+    espaçamento : 10 px ;
+    animação : pulsoNeonMestre  4 s  infinito ;
+    flex-shrink : 0 ;
+    altura mínima : 65 px ;
 }
 
-.logo-esip {
-    font-size: 17px;
-    font-weight: 900;
-    color: #00f5ff;
-    text-shadow: 0 0 8px #00f5ff;
-    letter-spacing: 1px;
+. logo-esip  {
+    tamanho da fonte : 17 px ;
+    peso da fonte : 900 ;
+    cor : #00f5ff;
+    sombra-do-texto : 0  0  8 px #00f5ff;
+    espaçamento entre letras : 1 px ;
 }
 
-.status-badge {
-    font-size: 10px;
-    background: rgba(0, 245, 255, 0.1);
-    border: 1px solid #00f5ff;
-    padding: 6px 9px;
-    border-radius: 20px;
-    color: #00f5ff;
-    font-weight: bold;
-    white-space: nowrap;
+. status-badge  {
+    tamanho da fonte : 10 px ;
+    fundo : rgba ( 0 , 245 , 255 , 0.1 ) ;
+    borda : 1 px  sólida #00f5ff;
+    preenchimento : 6 px  9 px ;
+    raio-da-borda : 20 px ;
+    cor : #00f5ff;
+    peso da fonte : negrito ;
+    espaço em branco : agorarastro ;
 }
 
 /* =========================
@@ -3018,6 +3026,30 @@ window.addEventListener(
 );
 
 </script>
+   <script>
+if ("serviceWorker" in navigator) {
+
+    window.addEventListener("load", () => {
+
+        navigator.serviceWorker
+            .register("./service-worker.js")
+            .then(reg => {
+                console.log(
+                    "[ESIP] PWA ativo:",
+                    reg.scope
+                );
+            })
+            .catch(err => {
+                console.error(
+                    "[ESIP] Erro no PWA:",
+                    err
+                );
+            });
+
+    });
+
+}
+</script>   
 
 </body>
 </html>
