@@ -346,35 +346,65 @@ function configurarEventosChamada() {
     chamadaVoz.on('stream', s => { document.getElementById('audio-remoto').srcObject = s; });
     chamadaVoz.on('close', () => { clearInterval(intervalo); document.getElementById('controle-chamada').classList.remove('desligar'); emChamada = false; });
 }
+// ==========================================
+// PARTE 3/3 (CORRIGIDA) - PTT, ARQUIVOS E FIM
+// ==========================================
 
 function iniciarTransmissaoPTT(e) {
-    if(e) e.preventDefault(); if (!emChamada || !localStream) return;
-    document.getElementById("btn-ptt-trigger").classList.add("transmitindo");
-    document.getElementById("ptt-icone").innerText = "⚡"; document.getElementById("ptt-label").innerHTML = "TRANSMITINDO";
+    if(e) e.preventDefault(); 
+    if (!emChamada || !localStream) return;
+    
+    const btn = document.getElementById("btn-ptt-trigger");
+    const icone = document.getElementById("ptt-icone");
+    const label = document.getElementById("ptt-label");
+    
+    if(btn) btn.classList.add("transmitindo");
+    if(icone) icone.innerText = "⚡"; 
+    if(label) label.innerHTML = "TRANSMITINDO";
+    
     mudeMicrofonePTT(true);
 }
 
 function cessarTransmissaoPTT(e) {
-    if(e) e.preventDefault(); if (!localStream || !emChamada) return;
+    if(e) e.preventDefault(); 
+    if (!localStream || !emChamada) return;
+    
     const btn = document.getElementById("btn-ptt-trigger");
-    if (btn.classList.contains("transmitindo")) {
-        btn.classList.remove("transmitindo"); document.getElementById("ptt-icone").innerText = "🎙️";
-        document.getElementById("ptt-label").innerHTML = "PRESSIONE<br>PARA FALAR"; mudeMicrofonePTT(false);
+    if (btn && btn.classList.contains("transmitindo")) {
+        btn.classList.remove("transmitindo"); 
+        
+        const icone = document.getElementById("ptt-icone");
+        const label = document.getElementById("ptt-label");
+        if(icone) icone.innerText = "🎙️";
+        if(label) label.innerHTML = "PRESSIONE<br>PARA FALAR"; 
+        
+        mudeMicrofonePTT(false);
     }
 }
 
 function enviarArquivoP2P(el) {
-    if(el.files.length === 0 || !conn || !conn.open) return;
+    // Adicionada checagem para o 'el' e proteção contra falhas de conexão ativa
+    if(!el || el.files.length === 0 || !conn || !conn.open) return;
     const arq = el.files[0]; 
     const r = new FileReader();
     r.onload = e => {
         conn.send({ tipo: 'arquivo', nome: arq.name, mime: arq.type, conteudo: e.target.result });
-        document.getElementById('container-arquivos').innerHTML += `<div class="card-arquivo"><span>📄 ${arq.name}</span><span style="color:#10b981;">Enviado</span></div>`;
-        document.getElementById('mensagens-container').innerHTML += `<div class="msg enviada">📁 Enviou arquivo: <b>${arq.name}</b></div>`;
+        
+        const containerArq = document.getElementById('container-arquivos');
+        if(containerArq) {
+            containerArq.innerHTML += `<div class="card-arquivo"><span>📄 ${arq.name}</span><span style="color:#10b981;">Enviado</span></div>`;
+        }
+        
+        const msgContainer = document.getElementById('mensagens-container');
+        if(msgContainer) {
+            msgContainer.innerHTML += `<div class="msg enviada">📁 Enviou arquivo: <b>${arq.name}</b></div>`;
+        }
     };
     r.readAsArrayBuffer(arq);
 }
-window.onload = initCrypto;
+
+// Vincula o início do sistema usando uma trava segura caso 'initCrypto' não exista no escopo
+window.onload = typeof initCrypto !== 'undefined' ? initCrypto : null;
 </script>
 </body>
 </html>
