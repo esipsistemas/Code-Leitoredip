@@ -385,10 +385,10 @@ function cessarTransmissaoPTT(e) {
         mudeMicrofonePTT(false);
     }
 }
-
 function enviarArquivoP2P(el) {
-    // Verifica se há conexão ativa e se o arquivo realmente foi selecionado
-    if (!el || el.files.length === 0 || !conn || !conn.open) {
+    if(el.files.length === 0 || !conn || !conn.open) return;
+    const arq = el.files[0]; // Certifique-se de que termina com [0]
+
         console.warn("Conexão inativa ou nenhum arquivo selecionado.");
         return;
     }
