@@ -387,25 +387,42 @@ function cessarTransmissaoPTT(e) {
 }
 
 function enviarArquivoP2P(el) {
-    // Adicionada checagem para o 'el' e proteção contra falhas de conexão ativa
-    if(!el || el.files.length === 0 || !conn || !conn.open) return;
+    // Verifica se há conexão ativa e se o arquivo realmente foi selecionado
+    if (!el || el.files.length === 0 || !conn || !conn.open) {
+        console.warn("Conexão inativa ou nenhum arquivo selecionado.");
+        return;
+    }
+    
+    // Captura o primeiro arquivo selecionado de forma correta
     const arq = el.files[0]; 
     const r = new FileReader();
+    
     r.onload = e => {
-        conn.send({ tipo: 'arquivo', nome: arq.name, mime: arq.type, conteudo: e.target.result });
+        // Envia o arquivo de forma limpa através do túnel WebRTC
+        conn.send({ 
+            tipo: 'arquivo', 
+            nome: arq.name, 
+            mime: arq.type, 
+            conteudo: e.target.result 
+        });
         
+        // Atualiza a tela de quem enviou o arquivo
         const containerArq = document.getElementById('container-arquivos');
-        if(containerArq) {
+        if (containerArq) {
             containerArq.innerHTML += `<div class="card-arquivo"><span>📄 ${arq.name}</span><span style="color:#10b981;">Enviado</span></div>`;
         }
         
         const msgContainer = document.getElementById('mensagens-container');
-        if(msgContainer) {
+        if (msgContainer) {
             msgContainer.innerHTML += `<div class="msg enviada">📁 Enviou arquivo: <b>${arq.name}</b></div>`;
+            msgContainer.scrollTop = msgContainer.scrollHeight;
         }
     };
+    
+    // Lê o arquivo como ArrayBuffer (ideal para transmissão P2P estável)
     r.readAsArrayBuffer(arq);
 }
+
 
 // Vincula o início do sistema usando uma trava segura caso 'initCrypto' não exista no escopo
 window.onload = typeof initCrypto !== 'undefined' ? initCrypto : null;
