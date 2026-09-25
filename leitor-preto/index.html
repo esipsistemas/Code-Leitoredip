@@ -1,1 +1,5363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
 
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+      maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<title>ESIP - Rádio Tático</title>
+
+<link rel="manifest" href="./manifest.json">
+
+<meta name="theme-color" content="#020617">
+
+<meta name="mobile-web-app-capable" content="yes">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ESIP Rádio">
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    background: #020617;
+    color: #f8fafc;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* =========================
+   ANIMAÇÕES
+========================= */
+
+@keyframes pulsoNeonMestre {
+
+    0%, 100% {
+        box-shadow:
+            0 0 5px #00f5ff,
+            inset 0 0 5px #00f5ff;
+        border-color: #00f5ff;
+    }
+
+    50% {
+        box-shadow:
+            0 0 15px #1e40af,
+            inset 0 0 10px #1e40af;
+        border-color: #2563eb;
+    }
+}
+
+@keyframes pulsar {
+
+    0%, 100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.04);
+    }
+}
+
+/* =========================
+   CABEÇALHO
+========================= */
+
+.app-header {
+
+    background: #0b1329;
+    border-bottom: 2px solid #00f5ff;
+    padding: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+
+    animation:
+        pulsoNeonMestre 4s infinite;
+
+    flex-shrink: 0;
+    min-height: 65px;
+}
+
+.logo-esip {
+
+    font-size: 17px;
+    font-weight: 900;
+    color: #00f5ff;
+
+    text-shadow:
+        0 0 8px #00f5ff;
+
+    letter-spacing: 1px;
+}
+
+.status-badge {
+
+    font-size: 10px;
+
+    background:
+        rgba(0,245,255,.1);
+
+    border: 1px solid #00f5ff;
+
+    padding: 6px 9px;
+
+    border-radius: 20px;
+
+    color: #00f5ff;
+
+    font-weight: bold;
+
+    white-space: nowrap;
+}
+
+/* =========================
+   VALIDADE
+========================= */
+
+#validade-token {
+
+    position: fixed;
+
+    top: 70px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 99998;
+
+    background:
+        rgba(2,6,23,.94);
+
+    border:
+        1px solid #00f5ff;
+
+    color:
+        #00f5ff;
+
+    padding:
+        6px 11px;
+
+    border-radius:
+        20px;
+
+    font-size:
+        10px;
+
+    font-weight:
+        bold;
+
+    text-align:
+        center;
+
+    box-shadow:
+        0 0 12px rgba(0,245,255,.15);
+
+    display:
+        none;
+
+    white-space:
+        nowrap;
+}
+
+#validade-token.alerta {
+
+    border-color:
+        #fbbf24;
+
+    color:
+        #fbbf24;
+}
+
+#validade-token.expirada {
+
+    border-color:
+        #ef4444;
+
+    color:
+        #ef4444;
+}
+
+/* =========================
+   CONTEÚDO
+========================= */
+
+.app-content {
+
+    flex: 1;
+    min-height: 0;
+
+    padding:
+        12px
+        12px
+        78px
+        12px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    background:
+        radial-gradient(
+            circle at top,
+            #0f172a 0%,
+            #020617 100%
+        );
+
+    overflow:
+        hidden;
+}
+
+.tela-aba {
+
+    display:
+        none;
+
+    height:
+        100%;
+
+    min-height:
+        0;
+
+    flex-direction:
+        column;
+
+    overflow:
+        hidden;
+}
+
+.tela-aba.ativa {
+
+    display:
+        flex;
+}
+
+/* =========================
+   CHAT
+========================= */
+
+.chat-box {
+
+    flex:
+        1;
+
+    min-height:
+        0;
+
+    overflow-y:
+        auto;
+
+    margin-bottom:
+        10px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        10px;
+
+    padding-right:
+        4px;
+
+    -webkit-overflow-scrolling:
+        touch;
+}
+
+.msg {
+
+    max-width:
+        84%;
+
+    padding:
+        11px 14px;
+
+    border-radius:
+        12px;
+
+    font-size:
+        14px;
+
+    line-height:
+        1.4;
+
+    word-break:
+        break-word;
+}
+
+.msg.enviada {
+
+    background:
+        #1e3a8a;
+
+    border:
+        1px solid #3b82f6;
+
+    align-self:
+        flex-end;
+
+    border-bottom-right-radius:
+        2px;
+}
+
+.msg.recebida {
+
+    background:
+        #1e293b;
+
+    border:
+        1px solid #475569;
+
+    align-self:
+        flex-start;
+
+    border-bottom-left-radius:
+        2px;
+}
+
+.chat-input-area {
+
+    display:
+        flex;
+
+    gap:
+        8px;
+
+    background:
+        #0b1329;
+
+    padding:
+        8px;
+
+    border-radius:
+        10px;
+
+    border:
+        1px solid #1e40af;
+
+    flex-shrink:
+        0;
+
+    min-height:
+        58px;
+}
+
+.chat-input-area input {
+
+    flex:
+        1;
+
+    min-width:
+        0;
+
+    background:
+        transparent;
+
+    border:
+        none;
+
+    color:
+        #fff;
+
+    padding:
+        8px;
+
+    font-size:
+        15px;
+
+    outline:
+        none;
+}
+
+.btn-send {
+
+    background:
+        #1e40af;
+
+    border:
+        1px solid #00f5ff;
+
+    color:
+        white;
+
+    padding:
+        10px 15px;
+
+    min-width:
+        82px;
+
+    border-radius:
+        8px;
+
+    cursor:
+        pointer;
+
+    font-weight:
+        bold;
+
+    font-size:
+        13px;
+}
+
+/* =========================
+   LINK / QR
+========================= */
+
+#alerta-link-container {
+
+    flex-shrink:
+        0;
+}
+
+#input-link-gerado {
+
+    min-width:
+        0;
+}
+
+.qr-acesso {
+
+    margin-top:
+        10px;
+
+    padding:
+        10px;
+
+    background:
+        rgba(2,6,23,.85);
+
+    border:
+        1px solid #1e40af;
+
+    border-radius:
+        8px;
+
+    text-align:
+        center;
+}
+
+.qr-titulo {
+
+    color:
+        #00f5ff;
+
+    font-size:
+        11px;
+
+    font-weight:
+        bold;
+
+    margin-bottom:
+        8px;
+
+    letter-spacing:
+        .5px;
+}
+
+#qrcode-ponta2 {
+
+    width:
+        180px;
+
+    height:
+        180px;
+
+    margin:
+        0 auto;
+
+    padding:
+        8px;
+
+    background:
+        #fff;
+
+    border-radius:
+        8px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+}
+
+#qrcode-ponta2 img,
+#qrcode-ponta2 canvas {
+
+    max-width:
+        100%;
+
+    max-height:
+        100%;
+}
+
+.qr-legenda {
+
+    margin-top:
+        8px;
+
+    color:
+        #94a3b8;
+
+    font-size:
+        10px;
+
+    line-height:
+        1.4;
+}
+
+.btn-qr-copiar {
+
+    margin-top:
+        8px;
+
+    width:
+        100%;
+
+    min-height:
+        38px;
+
+    background:
+        #172554;
+
+    border:
+        1px solid #00f5ff;
+
+    color:
+        #fff;
+
+    border-radius:
+        6px;
+
+    font-size:
+        11px;
+
+    font-weight:
+        bold;
+
+    cursor:
+        pointer;
+}
+
+/* =========================
+   VOZ
+========================= */
+
+.painel-chamada {
+
+    flex:
+        1;
+
+    min-height:
+        0;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+}
+
+.avatar-chamada {
+
+    width:
+        125px;
+
+    height:
+        125px;
+
+    border-radius:
+        50%;
+
+    border:
+        3px solid #00f5ff;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    font-size:
+        45px;
+
+    box-shadow:
+        0 0 20px rgba(0,245,255,.3);
+}
+
+.cronometro {
+
+    font-size:
+        28px;
+
+    font-family:
+        monospace;
+
+    color:
+        #94a3b8;
+
+    font-weight:
+        bold;
+}
+
+.btn-call {
+
+    background:
+        #10b981;
+
+    border:
+        none;
+
+    color:
+        white;
+
+    width:
+        82px;
+
+    height:
+        82px;
+
+    border-radius:
+        50%;
+
+    font-size:
+        29px;
+
+    cursor:
+        pointer;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    box-shadow:
+        0 0 15px rgba(16,185,129,.25);
+}
+
+.btn-call.desligar {
+
+    background:
+        #ef4444;
+}
+
+/* =========================
+   PTT
+========================= */
+
+.painel-ptt {
+
+    flex:
+        1;
+
+    min-height:
+        0;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    gap:
+        22px;
+}
+
+.btn-ptt {
+
+    width:
+        190px;
+
+    height:
+        190px;
+
+    border-radius:
+        50%;
+
+    background:
+        radial-gradient(
+            #1e40af,
+            #0b1329
+        );
+
+    border:
+        3px dashed #00f5ff;
+
+    color:
+        white;
+
+    font-weight:
+        bold;
+
+    font-size:
+        15px;
+
+    cursor:
+        pointer;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    user-select:
+        none;
+
+    -webkit-user-select:
+        none;
+
+    touch-action:
+        none;
+
+    text-align:
+        center;
+}
+
+.btn-ptt.transmitindo {
+
+    background:
+        radial-gradient(
+            #ef4444,
+            #7f1d1d
+        );
+
+    border:
+        3px solid #ef4444;
+
+    box-shadow:
+        0 0 35px #ef4444;
+
+    color:
+        #fff;
+
+    animation:
+        pulsar .8s infinite;
+}
+
+/* =========================
+   ARQUIVOS
+========================= */
+
+.area-upload {
+
+    border:
+        2px dashed #1e40af;
+
+    padding:
+        32px 20px;
+
+    text-align:
+        center;
+
+    border-radius:
+        10px;
+
+    cursor:
+        pointer;
+
+    color:
+        #94a3b8;
+
+    background:
+        rgba(11,19,41,.4);
+
+    flex-shrink:
+        0;
+
+    min-height:
+        110px;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    touch-action:
+        manipulation;
+}
+
+.area-upload:active {
+
+    background:
+        rgba(30,64,175,.25);
+
+    border-color:
+        #00f5ff;
+}
+
+.lista-arquivos {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        10px;
+
+    margin-top:
+        15px;
+
+    overflow-y:
+        auto;
+
+    flex:
+        1;
+
+    min-height:
+        0;
+
+    -webkit-overflow-scrolling:
+        touch;
+}
+
+.card-arquivo {
+
+    background:
+        #0b1329;
+
+    border:
+        1px solid #1e40af;
+
+    padding:
+        12px 13px;
+
+    border-radius:
+        8px;
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    font-size:
+        13px;
+}
+
+.card-arquivo span {
+
+    min-width:
+        0;
+
+    overflow-wrap:
+        anywhere;
+}
+
+.card-arquivo a {
+
+    color:
+        #00f5ff;
+
+    text-decoration:
+        none;
+
+    font-weight:
+        bold;
+
+    border:
+        1px solid #00f5ff;
+
+    padding:
+        7px 9px;
+
+    border-radius:
+        5px;
+
+    flex-shrink:
+        0;
+}
+
+/* =========================
+   LOCALIZAÇÃO
+========================= */
+
+.localizacao-box {
+
+    background:
+        #0b1329;
+
+    border:
+        1px solid #1e40af;
+
+    border-radius:
+        10px;
+
+    padding:
+        12px;
+
+    margin-bottom:
+        10px;
+
+    flex-shrink:
+        0;
+}
+
+.btn-localizacao {
+
+    width:
+        100%;
+
+    min-height:
+        48px;
+
+    background:
+        #172554;
+
+    border:
+        1px solid #00f5ff;
+
+    color:
+        #fff;
+
+    border-radius:
+        8px;
+
+    font-weight:
+        bold;
+
+    font-size:
+        13px;
+
+    cursor:
+        pointer;
+}
+
+/* =========================
+   MENU
+========================= */
+
+.app-nav {
+
+    position:
+        fixed;
+
+    bottom:
+        0;
+
+    left:
+        0;
+
+    right:
+        0;
+
+    height:
+        calc(
+            66px +
+            env(safe-area-inset-bottom)
+        );
+
+    background:
+        #0b1329;
+
+    border-top:
+        2px solid #1e40af;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(4,1fr);
+
+    z-index:
+        99999;
+
+    padding-bottom:
+        env(safe-area-inset-bottom);
+
+    padding-top:
+        4px;
+}
+
+.nav-item {
+
+    background:
+        transparent;
+
+    border:
+        none;
+
+    color:
+        #94a3b8;
+
+    padding:
+        5px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    gap:
+        3px;
+
+    font-size:
+        12px;
+
+    font-weight:
+        600;
+
+    cursor:
+        pointer;
+
+    min-height:
+        62px;
+
+    touch-action:
+        manipulation;
+}
+
+.nav-item.ativo {
+
+    color:
+        #00f5ff;
+
+    text-shadow:
+        0 0 5px #00f5ff;
+}
+
+/* =========================
+   BLOQUEIO
+========================= */
+
+#tela-bloqueio {
+
+    position:
+        fixed;
+
+    top:
+        0;
+
+    left:
+        0;
+
+    width:
+        100vw;
+
+    height:
+        100vh;
+
+    height:
+        100dvh;
+
+    background:
+        #020617;
+
+    z-index:
+        999999;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    padding:
+        20px;
+}
+
+.caixa-licenca {
+
+    background:
+        #0f172a;
+
+    border:
+        2px dashed #00f5ff;
+
+    padding:
+        25px;
+
+    border-radius:
+        12px;
+
+    width:
+        100%;
+
+    max-width:
+        450px;
+
+    text-align:
+        center;
+}
+
+/* =========================
+   TOAST
+========================= */
+
+#toast {
+
+    position:
+        fixed;
+
+    left:
+        50%;
+
+    bottom:
+        85px;
+
+    transform:
+        translateX(-50%);
+
+    background:
+        #0f172a;
+
+    border:
+        1px solid #00f5ff;
+
+    color:
+        white;
+
+    padding:
+        11px 15px;
+
+    border-radius:
+        8px;
+
+    font-size:
+        12px;
+
+    font-weight:
+        bold;
+
+    z-index:
+        1000000;
+
+    display:
+        none;
+
+    max-width:
+        90%;
+
+    text-align:
+        center;
+
+    box-shadow:
+        0 0 15px rgba(0,245,255,.2);
+}
+
+/* =========================
+   PEQUENOS
+========================= */
+
+@media (max-width:360px) {
+
+    .logo-esip {
+        font-size:14px;
+    }
+
+    .status-badge {
+        font-size:9px;
+        padding:5px;
+    }
+
+    .btn-ptt {
+        width:165px;
+        height:165px;
+    }
+
+    .avatar-chamada {
+        width:110px;
+        height:110px;
+    }
+
+    #validade-token {
+        top:66px;
+        font-size:9px;
+    }
+
+    #qrcode-ponta2 {
+        width:160px;
+        height:160px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- =====================================================
+     BLOQUEIO
+===================================================== -->
+
+<div id="tela-bloqueio">
+
+    <div class="caixa-licenca">
+
+        <div style="
+            font-size:20px;
+            font-weight:bold;
+            color:#00f5ff;
+            margin-bottom:10px;
+            text-shadow:0 0 8px #00f5ff;">
+            📡 AUTENTICAÇÃO TÁTICA ESIP
+        </div>
+
+        <div style="
+            font-size:12px;
+            color:#94a3b8;
+            margin-bottom:20px;">
+            Insira a licença criptografada para desbloquear a linha
+        </div>
+
+        <div style="
+            text-align:left;
+            margin-bottom:15px;">
+
+            <label style="
+                display:block;
+                font-size:12px;
+                color:#94a3b8;
+                margin-bottom:6px;
+                font-weight:600;">
+                Token de Licença Assinado:
+            </label>
+
+            <textarea
+                id="token-input"
+                style="
+                    width:100%;
+                    height:100px;
+                    padding:12px;
+                    background:#070d1e;
+                    border:1px solid #1e40af;
+                    color:#fff;
+                    border-radius:8px;
+                    font-size:13px;
+                    font-family:monospace;
+                    resize:none;
+                    word-break:break-all;"
+                placeholder="Cole o token gerado pela central aqui..."></textarea>
+
+        </div>
+
+        <button
+            onclick="tentarAutenticar()"
+            style="
+                width:100%;
+                padding:15px;
+                background:#1e40af;
+                color:#fff;
+                border:1px solid #00f5ff;
+                border-radius:8px;
+                font-weight:bold;
+                cursor:pointer;
+                font-size:15px;">
+            🔓 Verificar e Injetar Chave
+        </button>
+
+        <div
+            id="erro-licenca"
+            style="
+                margin-top:12px;
+                color:#ef4444;
+                font-size:12px;
+                font-weight:bold;
+                display:none;">
+            ❌ Licença inválida ou expirada!
+        </div>
+
+    </div>
+
+</div>
+
+<!-- =====================================================
+     CABEÇALHO
+===================================================== -->
+
+<header class="app-header">
+
+    <div class="logo-esip">
+        📡 ESIP — COMUNICAÇÃO PRIVADA
+    </div>
+
+    <div
+        class="status-badge"
+        id="canal-label">
+        CHAVE OFF-LINE
+    </div>
+
+</header>
+
+<div id="validade-token">
+    ⏳ VALIDADE DO ACESSO: --:--
+</div>
+
+<audio
+    id="audio-remoto"
+    autoplay
+    playsinline>
+</audio>
+
+<!-- =====================================================
+     CONTEÚDO
+===================================================== -->
+
+<main class="app-content">
+
+    <!-- CHAT -->
+
+    <section
+        id="aba-chat"
+        class="tela-aba ativa">
+
+        <!-- ACESSO PRIVADO -->
+
+        <div
+            id="alerta-link-container"
+            style="
+                display:none;
+                background:rgba(0,245,255,.05);
+                border:1px dashed #00f5ff;
+                padding:10px;
+                border-radius:8px;
+                margin-bottom:10px;
+                font-size:13px;">
+
+            <b style="color:#00f5ff;">
+                [ACESSO — COMUNICAÇÃO PRIVADA]
+            </b>
+
+            <div style="
+                color:#94a3b8;
+                font-size:10px;
+                margin-top:4px;">
+                Acesso protegido por QR Code e token temporário.
+            </div>
+
+            <div style="
+                display:flex;
+                gap:5px;
+                margin-top:8px;">
+
+                <input
+                    type="text"
+                    id="input-link-gerado"
+                    readonly
+                    style="
+                        flex:1;
+                        min-width:0;
+                        padding:8px;
+                        background:#070d1e;
+                        border:1px solid #1e40af;
+                        color:#fff;
+                        font-family:monospace;
+                        font-size:10px;
+                        border-radius:4px;">
+
+                <button
+                    onclick="copiarLinkPonta2()"
+                    style="
+                        background:#1e40af;
+                        border:1px solid #00f5ff;
+                        color:#fff;
+                        padding:0 12px;
+                        font-size:11px;
+                        font-weight:bold;
+                        border-radius:4px;
+                        cursor:pointer;">
+                    COPIAR
+                </button>
+
+            </div>
+
+            <div class="qr-acesso">
+
+                <div class="qr-titulo">
+                    📱 ACESSO RÁPIDO — COMUNICAÇÃO PRIVADA
+                </div>
+
+                <div id="qrcode-ponta2"></div>
+
+                <div class="qr-legenda">
+                    Aponte a câmera do celular para o QR Code.
+                    O acesso será aberto automaticamente e o
+                    token será retirado da barra do navegador.
+                </div>
+
+                <button
+                    class="btn-qr-copiar"
+                    onclick="copiarLinkPonta2()">
+                    🔗 COPIAR ACESSO PRIVADO
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- LOCALIZAÇÃO -->
+
+        <div class="localizacao-box">
+
+            <button
+                class="btn-localizacao"
+                onclick="enviarLocalizacao()">
+                📍 ENVIAR MINHA LOCALIZAÇÃO
+            </button>
+
+        </div>
+
+        <!-- MENSAGENS -->
+
+        <div
+            class="chat-box"
+            id="mensagens-container">
+        </div>
+
+        <!-- ENTRADA -->
+
+        <div class="chat-input-area">
+
+            <input
+                type="text"
+                id="input-mensagem"
+                placeholder="Digite a mensagem tática..."
+                autocomplete="off"
+                onkeydown="if(event.key==='Enter') enviarTextoP2P()">
+
+            <button
+                class="btn-send"
+                onclick="enviarTextoP2P()">
+                ENVIAR
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- VOZ -->
+
+    <section
+        id="aba-voz"
+        class="tela-aba">
+
+        <div class="painel-chamada">
+
+            <div
+                class="avatar-chamada"
+                id="avatar-status">
+                👤
+            </div>
+
+            <div
+                class="cronometro"
+                id="tempo-chamada">
+                00:00
+            </div>
+
+            <button
+                id="controle-chamada"
+                class="btn-call"
+                onclick="alternarChamada()">
+                📞
+            </button>
+
+            <div style="
+                color:#94a3b8;
+                font-size:12px;
+                text-align:center;">
+                Toque para iniciar ou encerrar a comunicação
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- PTT -->
+
+    <section
+        id="aba-ptt"
+        class="tela-aba">
+
+        <div class="painel-ptt">
+
+            <div
+                style="
+                    font-size:12px;
+                    color:#94a3b8;
+                    text-align:center;"
+                id="status-ptt-texto">
+                O PTT requer o Canal de Voz Ativo
+            </div>
+
+            <button
+                class="btn-ptt"
+                id="btn-ptt-trigger"
+                onmousedown="iniciarTransmissaoPTT(event)"
+                onmouseup="cessarTransmissaoPTT(event)"
+                onmouseleave="cessarTransmissaoPTT(event)"
+                ontouchstart="iniciarTransmissaoPTT(event)"
+                ontouchend="cessarTransmissaoPTT(event)">
+
+                <span id="ptt-icone">
+                    🎙️
+                </span>
+
+                <span id="ptt-label">
+                    PRESSIONE<br>
+                    PARA FALAR
+                </span>
+
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- ARQUIVOS -->
+
+    <section
+        id="aba-arquivos"
+        class="tela-aba">
+
+        <label class="area-upload">
+
+            <div>
+
+                <div style="
+                    font-size:32px;
+                    margin-bottom:8px;">
+                    📁
+                </div>
+
+                <p>
+                    Toque aqui para selecionar um arquivo
+                </p>
+
+                <p style="
+                    font-size:11px;
+                    margin-top:6px;
+                    color:#64748b;">
+                    O envio é feito em pequenos blocos
+                </p>
+
+            </div>
+
+            <input
+                type="file"
+                id="upload-input"
+                style="display:none;"
+                onchange="enviarArquivoP2P(this)">
+
+        </label>
+
+        <div
+            class="lista-arquivos"
+            id="container-arquivos">
+        </div>
+
+    </section>
+
+</main>
+
+<!-- MENU -->
+
+<nav class="app-nav">
+
+    <button
+        class="nav-item ativo"
+        onclick="mudarAba('chat',this)">
+        💬
+        <span>Chat</span>
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="mudarAba('voz',this)">
+        📞
+        <span>Voz</span>
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="mudarAba('ptt',this)">
+        📻
+        <span>PTT</span>
+    </button>
+
+    <button
+        class="nav-item"
+        onclick="mudarAba('arquivos',this)">
+        📂
+        <span>Arquivos</span>
+    </button>
+
+</nav>
+
+<div id="toast"></div>
+
+<script>
+
+/* =========================================================
+   VARIÁVEIS
+========================================================= */
+
+let peer = null;
+let conn = null;
+
+let chamadaVoz = null;
+let localStream = null;
+
+let emChamada = false;
+
+let intervalo = null;
+let segundos = 0;
+
+let hmacKey = null;
+
+let canalAtual = null;
+let tokenAtual = null;
+
+let tokenQR = null;
+let idQR = null;
+
+let tokenExpiracao = null;
+
+let intervaloValidade = null;
+
+let audioContext = null;
+
+let inicializandoCrypto = false;
+
+/* =========================================================
+   WAKE LOCK
+========================================================= */
+
+let wakeLock = null;
+
+const TAMANHO_BLOCO =
+    64 * 1024;
+
+const SEMENTE_SECRETA_SISTEMA =
+    "ESIP_SISTEMAS_TACTICAL_RADIO_KEY_2026";
+
+
+/* =========================================================
+   CAPTURA DO LINK / QR
+========================================================= */
+
+const urlAtual =
+    new URL(
+        window.location.href
+    );
+
+const urlParams =
+    new URLSearchParams(
+        window.location.search
+    );
+
+const hashLimpo =
+    window.location.hash.startsWith("#")
+        ? window.location.hash.substring(1)
+        : "";
+
+const hashParams =
+    new URLSearchParams(
+        hashLimpo
+    );
+
+const ponta =
+    urlParams.get("p") || "1";
+
+const canalURL =
+    urlParams.get("c") || "";
+
+const tokenCapturado =
+    hashParams.get("t") ||
+    urlParams.get("t");
+
+if (tokenCapturado) {
+
+    tokenQR =
+        tokenCapturado.trim();
+
+}
+
+const idCapturado =
+    hashParams.get("id") ||
+    urlParams.get("id");
+
+if (idCapturado) {
+
+    idQR =
+        idCapturado.trim();
+
+}
+
+/*
+ * Remove o token imediatamente da URL.
+ */
+
+if (
+    tokenCapturado ||
+    idCapturado
+) {
+
+    const novaURL =
+        new URL(
+            window.location.href
+        );
+
+    novaURL.searchParams.delete("t");
+    novaURL.searchParams.delete("id");
+
+    novaURL.hash = "";
+
+    window.history.replaceState(
+        {},
+        document.title,
+        novaURL.pathname +
+        (
+            novaURL.searchParams.toString()
+                ? "?" +
+                  novaURL.searchParams.toString()
+                : ""
+        )
+    );
+
+}
+
+
+/* =========================================================
+   UTILIDADES
+========================================================= */
+
+function mostrarToast(
+    texto,
+    tempo = 2500
+) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    if (!toast) return;
+
+    toast.innerText =
+        texto;
+
+    toast.style.display =
+        "block";
+
+    clearTimeout(
+        toast._timer
+    );
+
+    toast._timer =
+        setTimeout(
+            () => {
+
+                toast.style.display =
+                    "none";
+
+            },
+            tempo
+        );
+}
+
+
+function adicionarMensagem(
+    texto,
+    tipo = "recebida"
+) {
+
+    const container =
+        document.getElementById(
+            "mensagens-container"
+        );
+
+    if (!container) return;
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.className =
+        "msg " + tipo;
+
+    div.innerHTML =
+        texto;
+
+    container.appendChild(
+        div
+    );
+
+    container.scrollTop =
+        container.scrollHeight;
+}
+
+
+function escaparHTML(
+    texto
+) {
+
+    const div =
+        document.createElement(
+            "div"
+        );
+
+    div.textContent =
+        texto == null
+            ? ""
+            : String(texto);
+
+    return div.innerHTML;
+}
+
+
+/* =========================================================
+   BASE64
+========================================================= */
+
+function base64ToBuffer(
+    b64
+) {
+
+    let str =
+        String(b64)
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
+
+    while (
+        str.length % 4
+    ) {
+
+        str += "=";
+
+    }
+
+    const binary =
+        atob(str);
+
+    const bytes =
+        new Uint8Array(
+            binary.length
+        );
+
+    for (
+        let i = 0;
+        i < binary.length;
+        i++
+    ) {
+
+        bytes[i] =
+            binary.charCodeAt(i);
+
+    }
+
+    return bytes.buffer;
+}
+
+
+function bufferToBase64(
+    buf
+) {
+
+    const bytes =
+        new Uint8Array(buf);
+
+    let binary =
+        "";
+
+    const tamanho =
+        0x8000;
+
+    for (
+        let i = 0;
+        i < bytes.length;
+        i += tamanho
+    ) {
+
+        binary +=
+            String.fromCharCode(
+                ...bytes.subarray(
+                    i,
+                    Math.min(
+                        i + tamanho,
+                        bytes.length
+                    )
+                )
+            );
+
+    }
+
+    return btoa(binary)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+
+/* =========================================================
+   CRIPTOGRAFIA
+========================================================= */
+
+async function prepararChaveHMAC() {
+
+    if (hmacKey) {
+
+        return hmacKey;
+
+    }
+
+    const encoder =
+        new TextEncoder();
+
+    const baseKeyMaterial =
+        await crypto.subtle.importKey(
+            "raw",
+            encoder.encode(
+                SEMENTE_SECRETA_SISTEMA
+            ),
+            "PBKDF2",
+            false,
+            ["deriveKey"]
+        );
+
+    const salt =
+        encoder.encode(
+            "ESIP_STATIC_SALT_SALT"
+        );
+
+    hmacKey =
+        await crypto.subtle.deriveKey(
+            {
+                name:
+                    "PBKDF2",
+
+                salt:
+                    salt,
+
+                iterations:
+                    100000,
+
+                hash:
+                    "SHA-256"
+            },
+            baseKeyMaterial,
+            {
+                name:
+                    "HMAC",
+
+                hash:
+                    "SHA-256",
+
+                length:
+                    256
+            },
+            false,
+            ["verify","sign"]
+        );
+
+    return hmacKey;
+}
+
+
+/*
+ * Inicialização automática.
+ */
+
+async function initCrypto() {
+
+    if (
+        inicializandoCrypto
+    ) {
+
+        return;
+
+    }
+
+    inicializandoCrypto =
+        true;
+
+    try {
+
+        await prepararChaveHMAC();
+
+        if (tokenQR) {
+
+            const campo =
+                document.getElementById(
+                    "token-input"
+                );
+
+            campo.value =
+                tokenQR;
+
+            const tokenAutomatico =
+                tokenQR;
+
+            tokenQR =
+                null;
+
+            await autenticarToken(
+                tokenAutomatico
+            );
+        }
+
+    } catch (erro) {
+
+        console.error(
+            "[ESIP] Erro ao iniciar criptografia:",
+            erro
+        );
+
+    } finally {
+
+        inicializandoCrypto =
+            false;
+
+    }
+}
+
+
+/* =========================================================
+   VALIDADE
+========================================================= */
+
+function iniciarControleValidade(
+    expiracao
+) {
+
+    clearInterval(
+        intervaloValidade
+    );
+
+    tokenExpiracao =
+        Number(expiracao);
+
+    if (
+        !Number.isFinite(
+            tokenExpiracao
+        )
+    ) {
+
+        return;
+
+    }
+
+    const elemento =
+        document.getElementById(
+            "validade-token"
+        );
+
+    elemento.style.display =
+        "block";
+
+    atualizarValidadeToken();
+
+    intervaloValidade =
+        setInterval(
+            atualizarValidadeToken,
+            1000
+        );
+}
+
+
+function atualizarValidadeToken() {
+
+    const elemento =
+        document.getElementById(
+            "validade-token"
+        );
+
+    if (
+        !tokenExpiracao
+    ) {
+
+        elemento.style.display =
+            "none";
+
+        return;
+
+    }
+
+    const restante =
+        tokenExpiracao -
+        Date.now();
+
+    if (
+        restante <= 0
+    ) {
+
+        elemento.classList.remove(
+            "alerta"
+        );
+
+        elemento.classList.add(
+            "expirada"
+        );
+
+        elemento.innerText =
+            "🔴 ACESSO EXPIRADO";
+
+        clearInterval(
+            intervaloValidade
+        );
+
+        expirarSessao();
+
+        return;
+
+    }
+
+    const totalSegundos =
+        Math.floor(
+            restante / 1000
+        );
+
+    const horas =
+        Math.floor(
+            totalSegundos / 3600
+        );
+
+    const minutos =
+        Math.floor(
+            (totalSegundos % 3600) / 60
+        );
+
+    const segundosRestantes =
+        totalSegundos % 60;
+
+    const textoTempo =
+        horas > 0
+            ? `${String(horas).padStart(2,"0")}:` +
+              `${String(minutos).padStart(2,"0")}:` +
+              `${String(segundosRestantes).padStart(2,"0")}`
+            : `${String(minutos).padStart(2,"0")}:` +
+              `${String(segundosRestantes).padStart(2,"0")}`;
+
+    if (
+        restante <=
+        5 * 60 * 1000
+    ) {
+
+        elemento.classList.add(
+            "alerta"
+        );
+
+        elemento.innerText =
+            `⚠️ ACESSO EXPIRA EM ${textoTempo}`;
+
+    } else {
+
+        elemento.classList.remove(
+            "alerta"
+        );
+
+        elemento.classList.remove(
+            "expirada"
+        );
+
+        elemento.innerText =
+            `⏳ ACESSO ATIVO • EXPIRA EM ${textoTempo}`;
+
+    }
+}
+
+
+/* =========================================================
+   EXPIRAÇÃO
+========================================================= */
+
+function expirarSessao() {
+
+    const bloqueio =
+        document.getElementById(
+            "tela-bloqueio"
+        );
+
+    if (
+        bloqueio.style.display ===
+        "flex"
+    ) {
+
+        return;
+
+    }
+
+    try {
+
+        if (chamadaVoz) {
+            chamadaVoz.close();
+        }
+
+    } catch (e) {}
+
+    try {
+
+        if (conn) {
+            conn.close();
+        }
+
+    } catch (e) {}
+
+    try {
+
+        if (peer) {
+            peer.destroy();
+        }
+
+    } catch (e) {}
+
+    try {
+
+        if (localStream) {
+
+            localStream
+                .getTracks()
+                .forEach(
+                    track =>
+                        track.stop()
+                );
+
+        }
+
+    } catch (e) {}
+
+    conn = null;
+    peer = null;
+    chamadaVoz = null;
+    localStream = null;
+
+    emChamada = false;
+
+    liberarWakeLock();
+
+    tokenAtual = null;
+    tokenExpiracao = null;
+
+    clearInterval(
+        intervaloValidade
+    );
+
+    bloqueio.style.display =
+        "flex";
+
+    document.getElementById(
+        "canal-label"
+    ).innerText =
+        "CHAVE OFF-LINE";
+
+    document.querySelector(
+        ".logo-esip"
+    ).innerText =
+        "📡 ESIP — COMUNICAÇÃO PRIVADA";
+
+    const elemento =
+        document.getElementById(
+            "validade-token"
+        );
+
+    elemento.classList.remove(
+        "alerta"
+    );
+
+    elemento.classList.add(
+        "expirada"
+    );
+
+    elemento.innerText =
+        "🔴 ACESSO EXPIRADO";
+
+    const erro =
+        document.getElementById(
+            "erro-licenca"
+        );
+
+    erro.innerText =
+        "❌ O período de acesso terminou. Informe um novo token.";
+
+    erro.style.display =
+        "block";
+
+    mostrarToast(
+        "🔴 Acesso expirado. Nova autenticação necessária.",
+        5000
+    );
+}
+
+
+/* =========================================================
+   AUTENTICAÇÃO
+========================================================= */
+
+async function tentarAutenticar() {
+
+    const campo =
+        document.getElementById(
+            "token-input"
+        );
+
+    const tokenStr =
+        campo.value.trim();
+
+    const erroDiv =
+        document.getElementById(
+            "erro-licenca"
+        );
+
+    erroDiv.style.display =
+        "none";
+
+    if (!tokenStr) {
+
+        erroDiv.innerText =
+            "❌ Informe um token de licença.";
+
+        erroDiv.style.display =
+            "block";
+
+        return;
+
+    }
+
+    /*
+     * MODO DEBUG
+     *
+     * Mantido para testes locais.
+     */
+
+    if (
+        tokenStr ===
+        "ESIP-DEBUG"
+    ) {
+
+        document.getElementById(
+            "tela-bloqueio"
+        ).style.display =
+            "none";
+
+        document.getElementById(
+            "validade-token"
+        ).style.display =
+            "none";
+
+        inicializarPainelP2P(
+            "tatico1",
+            "ESIP-DEBUG"
+        );
+
+        return;
+
+    }
+
+    try {
+
+        await autenticarToken(
+            tokenStr
+        );
+
+    } catch (erro) {
+
+        console.error(
+            "[ESIP] Falha na autenticação:",
+            erro
+        );
+
+        erroDiv.innerText =
+            "❌ Licença inválida ou expirada!";
+
+        erroDiv.style.display =
+            "block";
+
+    }
+}
+
+
+async function autenticarToken(
+    tokenStr
+) {
+
+    if (
+        !tokenStr ||
+        !tokenStr.includes(".")
+    ) {
+
+        throw new Error(
+            "Token inválido."
+        );
+
+    }
+
+    await prepararChaveHMAC();
+
+    const partes =
+        tokenStr.split(".");
+
+    if (
+        partes.length !== 2
+    ) {
+
+        throw new Error(
+            "Token inválido."
+        );
+
+    }
+
+    const payloadB64 =
+        partes[0];
+
+    const assinaturaB64 =
+        partes[1];
+
+    const assinaturaValida =
+        await crypto.subtle.verify(
+            "HMAC",
+            hmacKey,
+            base64ToBuffer(
+                assinaturaB64
+            ),
+            base64ToBuffer(
+                payloadB64
+            )
+        );
+
+    if (
+        !assinaturaValida
+    ) {
+
+        throw new Error(
+            "Assinatura inválida."
+        );
+
+    }
+
+    const dados =
+        JSON.parse(
+            new TextDecoder().decode(
+                base64ToBuffer(
+                    payloadB64
+                )
+            )
+        );
+
+    if (
+        !dados.exp
+    ) {
+
+        throw new Error(
+            "Token sem validade."
+        );
+
+    }
+
+    const expiracao =
+        Number(
+            dados.exp
+        );
+
+    if (
+        !Number.isFinite(
+            expiracao
+        )
+    ) {
+
+        throw new Error(
+            "Validade inválida."
+        );
+
+    }
+
+    if (
+        Date.now() >=
+        expiracao
+    ) {
+
+        throw new Error(
+            "Token expirado."
+        );
+
+    }
+
+    if (
+        !dados.ch
+    ) {
+
+        if (canalURL) {
+
+            dados.ch =
+                canalURL;
+
+        } else {
+
+            throw new Error(
+                "Canal não informado."
+            );
+
+        }
+
+    }
+
+    tokenAtual =
+        tokenStr;
+
+    tokenExpiracao =
+        expiracao;
+
+    /*
+     * A partir daqui a licença válida
+     * libera o sistema normalmente.
+     */
+
+    iniciarControleValidade(
+        expiracao
+    );
+
+    document.getElementById(
+        "tela-bloqueio"
+    ).style.display =
+        "none";
+
+    document.getElementById(
+        "erro-licenca"
+    ).style.display =
+        "none";
+
+    inicializarPainelP2P(
+        dados.ch,
+        tokenStr
+    );
+}
+
+
+/* =========================================================
+   QR CODE
+========================================================= */
+
+function gerarQRCodePonta2(
+    link
+) {
+
+    const elemento =
+        document.getElementById(
+            "qrcode-ponta2"
+        );
+
+    if (!elemento) {
+
+        return;
+
+    }
+
+    elemento.innerHTML =
+        "";
+
+    if (
+        typeof QRCode ===
+        "undefined"
+    ) {
+
+        elemento.innerHTML =
+            `
+            <div style="
+                color:#ef4444;
+                font-size:10px;
+                padding:20px;">
+                QR Code indisponível.
+            </div>
+            `;
+
+        console.error(
+            "[ESIP] Biblioteca QRCode não carregada."
+        );
+
+        return;
+
+    }
+
+    try {
+
+        new QRCode(
+            elemento,
+            {
+                text:
+                    link,
+
+                width:
+                    164,
+
+                height:
+                    164,
+
+                colorDark:
+                    "#020617",
+
+                colorLight:
+                    "#ffffff",
+
+                correctLevel:
+                    QRCode.CorrectLevel.M
+            }
+        );
+
+    } catch (erro) {
+
+        console.error(
+            "[ESIP] Erro ao gerar QR:",
+            erro
+        );
+
+        elemento.innerHTML =
+            `
+            <div style="
+                color:#ef4444;
+                font-size:10px;
+                padding:20px;">
+                Não foi possível gerar o QR Code.
+            </div>
+            `;
+
+    }
+}
+
+
+/* =========================================================
+   OCULTAR QR CODE
+========================================================= */
+
+function ocultarQRCodePonta2() {
+
+    const container =
+        document.getElementById(
+            "alerta-link-container"
+        );
+
+    if (!container) {
+
+        return;
+
+    }
+
+    container.style.display =
+        "none";
+
+}
+
+
+/* =========================================================
+   PAINEL PRINCIPAL
+========================================================= */
+
+function inicializarPainelP2P(
+    canal,
+    tokenOriginal
+) {
+
+    canalAtual =
+        canal;
+
+    tokenAtual =
+        tokenOriginal;
+
+    document.querySelector(
+        ".logo-esip"
+    ).innerText =
+        "📡 ESIP — COMUNICAÇÃO PRIVADA";
+
+    document.getElementById(
+        "canal-label"
+    ).innerText =
+        "ESIP DISPONÍVEL";
+
+
+    /* =========================
+       ACESSO COMUNICAÇÃO PRIVADA
+    ========================= */
+
+    if (
+        ponta === "1"
+    ) {
+
+        const linkCompleto =
+            `${window.location.origin}${window.location.pathname}` +
+            `?c=${encodeURIComponent(canal)}` +
+            `&p=2` +
+            `#t=${encodeURIComponent(tokenOriginal)}`;
+
+        const campo =
+            document.getElementById(
+                "input-link-gerado"
+            );
+
+        campo.value =
+            linkCompleto;
+
+        document.getElementById(
+            "alerta-link-container"
+        ).style.display =
+            "block";
+
+        gerarQRCodePonta2(
+            linkCompleto
+        );
+
+        adicionarMensagem(
+            "<b>[ESIP]</b> Acesso de comunicação privada protegido e disponível. Sistema inicializando..."
+        );
+
+    } else {
+
+        document.getElementById(
+            "alerta-link-container"
+        ).style.display =
+            "none";
+
+        adicionarMensagem(
+            "<b>[ESIP]</b> Sistema inicializando..."
+        );
+
+    }
+
+
+    try {
+
+        const meuID =
+            ponta === "1"
+                ? `ESIP-${canal}-MESTRE`
+                : `ESIP-${canal}-CONVIDADO`;
+
+        const idDestino =
+            ponta === "1"
+                ? `ESIP-${canal}-CONVIDADO`
+                : `ESIP-${canal}-MESTRE`;
+
+
+        /*
+         * Evita iniciar duas sessões.
+         */
+
+        if (
+            peer &&
+            !peer.destroyed
+        ) {
+
+            try {
+                peer.destroy();
+            } catch (e) {}
+
+        }
+
+        peer =
+            new Peer(
+                meuID
+            );
+
+        /*
+         * IMPORTANTE:
+         * Guarda a referência exata desta sessão.
+         *
+         * Se uma sessão anterior disparar "close"
+         * depois de uma nova sessão já ter sido criada,
+         * o evento antigo não poderá alterar o estado
+         * da sessão atual.
+         */
+
+        const peerSessao =
+            peer;
+
+
+        /* =========================
+           PEER ABERTO
+        ========================= */
+
+        peerSessao.on(
+            "open",
+            () => {
+
+                /*
+                 * Ignora eventos de uma sessão antiga.
+                 */
+
+                if (
+                    peer !== peerSessao
+                ) {
+
+                    return;
+
+                }
+
+                console.log(
+                    "[ESIP] Serviço de comunicação disponível."
+                );
+
+                document.getElementById(
+                    "canal-label"
+                ).innerText =
+                    "ESIP DISPONÍVEL";
+
+                if (
+                    ponta === "2"
+                ) {
+
+                    conectarAoPeer(
+                        idDestino
+                    );
+
+                }
+
+            }
+        );
+
+
+        /* =========================
+           NOVA CONEXÃO
+        ========================= */
+
+        peerSessao.on(
+            "connection",
+            novaConn => {
+
+                if (
+                    peer !== peerSessao
+                ) {
+
+                    return;
+
+                }
+
+                console.log(
+                    "[ESIP] Comunicação recebida."
+                );
+
+                conn =
+                    novaConn;
+
+                configurarEventosConexao();
+
+            }
+        );
+
+
+        /* =========================
+           CHAMADA DE VOZ
+        ========================= */
+
+        peerSessao.on(
+            "call",
+            async call => {
+
+                /*
+                 * Se esta chamada pertence a um Peer antigo,
+                 * ela não deve assumir o controle da sessão atual.
+                 */
+
+                if (
+                    peer !== peerSessao
+                ) {
+
+                    try {
+
+                        call.close();
+
+                    } catch (e) {}
+
+                    return;
+
+                }
+
+                console.log(
+                    "[ESIP] Comunicação de voz recebida."
+                );
+
+                try {
+
+                    await garantirMicrofone();
+
+                    /*
+                     * Verifica novamente depois do await.
+                     * Durante a solicitação do microfone a sessão
+                     * pode ter mudado.
+                     */
+
+                    if (
+                        peer !== peerSessao
+                    ) {
+
+                        try {
+
+                            call.close();
+
+                        } catch (e) {}
+
+                        return;
+
+                    }
+
+                    chamadaVoz =
+                        call;
+
+                    call.answer(
+                        localStream
+                    );
+
+                    configurarEventosChamada();
+
+                    emChamada =
+                        true;
+
+                    atualizarInterfaceChamada(
+                        true
+                    );
+
+                    iniciarCronometro();
+
+                    await solicitarWakeLock();
+
+                    document.getElementById(
+                        "status-ptt-texto"
+                    ).innerText =
+                        "Canal de comunicação ativo.";
+
+                    mostrarToast(
+                        "📞 ESIP conectado"
+                    );
+
+                    tocarSom(
+                        "chamada"
+                    );
+
+                } catch (erro) {
+
+                    console.error(
+                        erro
+                    );
+
+                    try {
+
+                        call.close();
+
+                    } catch (e) {}
+
+                    mostrarToast(
+                        "Não foi possível acessar o microfone."
+                    );
+
+                }
+
+            }
+        );
+
+
+        /* =========================
+           ERRO
+        ========================= */
+
+        peerSessao.on(
+            "error",
+            erro => {
+
+                if (
+                    peer !== peerSessao
+                ) {
+
+                    return;
+
+                }
+
+                console.error(
+                    "[ESIP] Serviço:",
+                    erro
+                );
+
+                if (
+                    erro.type ===
+                    "peer-not-found" &&
+                    ponta === "2"
+                ) {
+
+                    mostrarToast(
+                        "Aguardando a outra comunicação..."
+                    );
+
+                    setTimeout(
+                        () => {
+
+                            /*
+                             * Nunca reconecta usando uma sessão antiga.
+                             */
+
+                            if (
+                                peer !== peerSessao
+                            ) {
+
+                                return;
+
+                            }
+
+                            if (
+                                peer &&
+                                !peer.destroyed
+                            ) {
+
+                                conectarAoPeer(
+                                    idDestino
+                                );
+
+                            }
+
+                        },
+                        3000
+                    );
+
+                }
+
+                else if (
+                    erro.type ===
+                    "unavailable-id"
+                ) {
+
+                    mostrarToast(
+                        "Este canal já está sendo usado."
+                    );
+
+                }
+
+            }
+        );
+
+
+        /* =========================
+           DESCONEXÃO TEMPORÁRIA
+        ========================= */
+
+        peerSessao.on(
+            "disconnected",
+            () => {
+
+                if (
+                    peer !== peerSessao
+                ) {
+
+                    return;
+
+                }
+
+                console.warn(
+                    "[ESIP] Serviço temporariamente indisponível."
+                );
+
+                document.getElementById(
+                    "canal-label"
+                ).innerText =
+                    "ESIP OFF-LINE";
+
+            }
+        );
+
+
+        /* =========================
+           FECHAMENTO DA SESSÃO
+        ========================= */
+
+        peerSessao.on(
+            "close",
+            () => {
+
+                /*
+                 * ESTA É A CORREÇÃO PRINCIPAL.
+                 *
+                 * Se este "close" veio de uma sessão antiga,
+                 * ele simplesmente é ignorado.
+                 *
+                 * Assim uma sessão anterior nunca mais poderá
+                 * colocar "ESIP ENCERRADO" sobre uma sessão nova.
+                 */
+
+                if (
+                    peer !== peerSessao
+                ) {
+
+                    console.log(
+                        "[ESIP] Sessão anterior encerrada. Evento ignorado."
+                    );
+
+                    return;
+
+                }
+
+                /*
+                 * Se o token ainda é válido, o problema é
+                 * operacional/conexão, não de licença.
+                 */
+
+                if (
+                    tokenExpiracao &&
+                    Date.now() <
+                    tokenExpiracao
+                ) {
+
+                    document.getElementById(
+                        "canal-label"
+                    ).innerText =
+                        "ESIP OFF-LINE";
+
+                } else {
+
+                    /*
+                     * Somente a validade da licença controla
+                     * este estado.
+                     */
+
+                    document.getElementById(
+                        "canal-label"
+                    ).innerText =
+                        "CHAVE OFF-LINE";
+
+                }
+
+                console.warn(
+                    "[ESIP] Sessão de comunicação encerrada."
+                );
+
+            }
+        );
+
+
+    } catch (erroPeer) {
+
+        console.error(
+            "[ESIP] Falha ao iniciar serviço:",
+            erroPeer
+        );
+
+        adicionarMensagem(
+            "<b>[ESIP]</b> Não foi possível iniciar o serviço de comunicação."
+        );
+
+    }
+}
+
+
+/* =========================================================
+   CONEXÃO
+========================================================= */
+
+function conectarAoPeer(
+    id
+) {
+
+    if (
+        !peer ||
+        peer.destroyed
+    ) {
+
+        return;
+
+    }
+
+    if (
+        !id
+    ) {
+
+        return;
+
+    }
+
+    try {
+
+        if (
+            conn &&
+            conn.open
+        ) {
+
+            return;
+
+        }
+
+        conn =
+            peer.connect(
+                id,
+                {
+                    reliable:
+                        true
+                }
+            );
+
+        configurarEventosConexao();
+
+    } catch (erro) {
+
+        console.error(
+            "[ESIP] Erro de conexão:",
+            erro
+        );
+
+    }
+}
+
+
+function configurarEventosConexao() {
+
+    if (!conn) {
+
+        return;
+
+    }
+
+    if (
+        conn._esipConfigurada
+    ) {
+
+        return;
+
+    }
+
+    conn._esipConfigurada =
+        true;
+
+    conn.on(
+        "open",
+        () => {
+
+            console.log(
+                "[ESIP] Canal de comunicação aberto."
+            );
+
+            document.getElementById(
+                "canal-label"
+            ).innerText =
+                "ESIP CONECTADO";
+
+            adicionarMensagem(
+                "<b>[ESIP]</b> Canal de comunicação ativo."
+            );
+
+            /*
+             * A comunicação privada avisa à comunicação privada
+             * que o acesso pelo QR foi concluído.
+             */
+
+            if (
+                ponta === "2"
+            ) {
+
+                try {
+
+                    conn.send({
+
+                        tipo:
+                            "qr_acesso_confirmado"
+
+                    });
+
+                } catch (erro) {
+
+                    console.warn(
+                        "[ESIP] Não foi possível confirmar o acesso:",
+                        erro
+                    );
+
+                }
+
+            }
+
+            tocarSom(
+                "conexao"
+            );
+
+        }
+    );
+
+    conn.on(
+        "data",
+        dados => {
+
+            receberDadosP2P(
+                dados
+            );
+
+        }
+    );
+
+    conn.on(
+        "close",
+        () => {
+
+            document.getElementById(
+                "canal-label"
+            ).innerText =
+                "ESIP DISPONÍVEL";
+
+            adicionarMensagem(
+                "<b>[ESIP]</b> A comunicação foi encerrada pela outra comunicação privada."
+            );
+
+            conn =
+                null;
+
+        }
+    );
+
+    conn.on(
+        "error",
+        erro => {
+
+            console.error(
+                "[ESIP] Comunicação:",
+                erro
+            );
+
+        }
+    );
+}
+
+
+/* =========================================================
+   RECEBIMENTO
+========================================================= */
+
+const transferenciasRecebidas =
+    new Map();
+
+
+function receberDadosP2P(
+    d
+) {
+
+    if (
+        !d ||
+        !d.tipo
+    ) {
+
+        return;
+
+    }
+
+
+    /* =====================================================
+       CONFIRMAÇÃO DE ACESSO
+    ===================================================== */
+
+    if (
+        d.tipo ===
+        "qr_acesso_confirmado"
+    ) {
+
+        if (
+            ponta === "1"
+        ) {
+
+            ocultarQRCodePonta2();
+
+            mostrarToast(
+                "📱 Comunicação privada conectada. Acesso encerrado."
+            );
+
+        }
+
+        return;
+
+    }
+
+
+    /* TEXTO */
+
+    if (
+        d.tipo ===
+        "texto"
+    ) {
+
+        adicionarMensagem(
+            escaparHTML(
+                d.conteudo || ""
+            ),
+            "recebida"
+        );
+
+        tocarSom(
+            "mensagem"
+        );
+
+        return;
+
+    }
+
+
+    /* LOCALIZAÇÃO */
+
+    if (
+        d.tipo ===
+        "localizacao"
+    ) {
+
+        const latitude =
+            Number(
+                d.latitude
+            );
+
+        const longitude =
+            Number(
+                d.longitude
+            );
+
+        if (
+            !Number.isFinite(
+                latitude
+            ) ||
+            !Number.isFinite(
+                longitude
+            )
+        ) {
+
+            return;
+
+        }
+
+        const mapa =
+            `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        const precisao =
+            Number.isFinite(
+                Number(d.precisao)
+            )
+                ? `Precisão: ${Math.round(Number(d.precisao))} m`
+                : "";
+
+        adicionarMensagem(
+            `📍 <b>Localização recebida</b><br>` +
+            `${precisao}<br>` +
+            `<a href="${mapa}" target="_blank" rel="noopener" ` +
+            `style="color:#00f5ff;">ABRIR NO MAPA</a>`
+        );
+
+        tocarSom(
+            "mensagem"
+        );
+
+        return;
+
+    }
+
+
+    /* ARQUIVO INÍCIO */
+
+    if (
+        d.tipo ===
+        "arquivo_inicio"
+    ) {
+
+        transferenciasRecebidas.set(
+            d.id,
+            {
+                nome:
+                    d.nome,
+
+                mime:
+                    d.mime ||
+                    "application/octet-stream",
+
+                tamanho:
+                    d.tamanho || 0,
+
+                partes:
+                    [],
+
+                recebidos:
+                    0
+            }
+        );
+
+        adicionarMensagem(
+            `📥 Recebendo arquivo: <b>${escaparHTML(d.nome)}</b>`
+        );
+
+        return;
+
+    }
+
+
+    /* ARQUIVO BLOCO */
+
+    if (
+        d.tipo ===
+        "arquivo_bloco"
+    ) {
+
+        const transferencia =
+            transferenciasRecebidas.get(
+                d.id
+            );
+
+        if (
+            !transferencia
+        ) {
+
+            return;
+
+        }
+
+        transferencia.partes[
+            d.indice
+        ] =
+            d.conteudo;
+
+        transferencia.recebidos +=
+            d.tamanho || 0;
+
+        return;
+
+    }
+
+
+    /* ARQUIVO FIM */
+
+    if (
+        d.tipo ===
+        "arquivo_fim"
+    ) {
+
+        const transferencia =
+            transferenciasRecebidas.get(
+                d.id
+            );
+
+        if (
+            !transferencia
+        ) {
+
+            return;
+
+        }
+
+        finalizarArquivoRecebido(
+            d.id,
+            transferencia
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   ARQUIVO RECEBIDO
+========================================================= */
+
+function finalizarArquivoRecebido(
+    id,
+    transferencia
+) {
+
+    try {
+
+        const blob =
+            new Blob(
+                transferencia.partes,
+                {
+                    type:
+                        transferencia.mime
+                }
+            );
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+        const card =
+            document.createElement(
+                "div"
+            );
+
+        card.className =
+            "card-arquivo";
+
+        const nomeSeguro =
+            escaparHTML(
+                transferencia.nome
+            );
+
+        card.innerHTML =
+            `
+            <span>
+                📄 ${nomeSeguro}
+            </span>
+
+            <a
+                href="${url}"
+                download="${nomeSeguro}">
+                BAIXAR
+            </a>
+            `;
+
+        document.getElementById(
+            "container-arquivos"
+        ).appendChild(
+            card
+        );
+
+        adicionarMensagem(
+            `📁 Arquivo recebido: <b>${nomeSeguro}</b>`
+        );
+
+        tocarSom(
+            "arquivo"
+        );
+
+        transferenciasRecebidas.delete(
+            id
+        );
+
+    } catch (erro) {
+
+        console.error(
+            "[ESIP] Erro ao montar arquivo:",
+            erro
+        );
+
+        adicionarMensagem(
+            "❌ Erro ao reconstruir o arquivo recebido."
+        );
+
+    }
+}
+
+
+/* =========================================================
+   CHAT
+========================================================= */
+
+function enviarTextoP2P() {
+
+    const input =
+        document.getElementById(
+            "input-mensagem"
+        );
+
+    const texto =
+        input.value.trim();
+
+    if (!texto) {
+
+        return;
+
+    }
+
+    if (
+        !conn ||
+        !conn.open
+    ) {
+
+        mostrarToast(
+            "Conecte as duas comunicações primeiro."
+        );
+
+        return;
+
+    }
+
+    try {
+
+        conn.send({
+            tipo:
+                "texto",
+
+            conteudo:
+                texto
+        });
+
+        adicionarMensagem(
+            escaparHTML(texto),
+            "enviada"
+        );
+
+        input.value =
+            "";
+
+        tocarSom(
+            "mensagem"
+        );
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+        mostrarToast(
+            "Não foi possível enviar a mensagem."
+        );
+
+    }
+}
+
+
+/* =========================================================
+   ARQUIVOS
+========================================================= */
+
+async function enviarArquivoP2P(
+    input
+) {
+
+    if (
+        !input ||
+        !input.files ||
+        !input.files.length
+    ) {
+
+        return;
+
+    }
+
+    const arquivo =
+        input.files[0];
+
+    if (
+        !conn ||
+        !conn.open
+    ) {
+
+        mostrarToast(
+            "Conecte as duas comunicações antes de enviar o arquivo."
+        );
+
+        input.value =
+            "";
+
+        return;
+
+    }
+
+    const id =
+        Date.now().toString(36) +
+        Math.random()
+            .toString(36)
+            .substring(2);
+
+    const card =
+        document.createElement(
+            "div"
+        );
+
+    card.className =
+        "card-arquivo";
+
+    card.id =
+        "arquivo-envio-" +
+        id;
+
+    card.innerHTML =
+        `
+        <span>
+            📤 ${escaparHTML(arquivo.name)}
+        </span>
+
+        <span
+            style="color:#fbbf24;"
+            id="progresso-${id}">
+            0%
+        </span>
+        `;
+
+    document.getElementById(
+        "container-arquivos"
+    ).appendChild(
+        card
+    );
+
+    try {
+
+        conn.send({
+
+            tipo:
+                "arquivo_inicio",
+
+            id:
+                id,
+
+            nome:
+                arquivo.name,
+
+            mime:
+                arquivo.type ||
+                "application/octet-stream",
+
+            tamanho:
+                arquivo.size
+
+        });
+
+
+        let indice =
+            0;
+
+
+        for (
+            let inicio = 0;
+            inicio < arquivo.size;
+            inicio += TAMANHO_BLOCO
+        ) {
+
+            const fim =
+                Math.min(
+                    inicio +
+                    TAMANHO_BLOCO,
+                    arquivo.size
+                );
+
+            const bloco =
+                await arquivo
+                    .slice(
+                        inicio,
+                        fim
+                    )
+                    .arrayBuffer();
+
+            if (
+                !conn ||
+                !conn.open
+            ) {
+
+                throw new Error(
+                    "Conexão encerrada durante o envio."
+                );
+
+            }
+
+            conn.send({
+
+                tipo:
+                    "arquivo_bloco",
+
+                id:
+                    id,
+
+                indice:
+                    indice,
+
+                tamanho:
+                    bloco.byteLength,
+
+                conteudo:
+                    bloco
+
+            });
+
+            indice++;
+
+            const percentual =
+                arquivo.size === 0
+                    ? 100
+                    : Math.round(
+                        (
+                            fim /
+                            arquivo.size
+                        ) *
+                        100
+                    );
+
+            const progresso =
+                document.getElementById(
+                    "progresso-" +
+                    id
+                );
+
+            if (
+                progresso
+            ) {
+
+                progresso.innerText =
+                    percentual +
+                    "%";
+
+            }
+
+            await pausa(2);
+
+        }
+
+
+        conn.send({
+
+            tipo:
+                "arquivo_fim",
+
+            id:
+                id
+
+        });
+
+
+        const progressoFinal =
+            document.getElementById(
+                "progresso-" +
+                id
+            );
+
+        if (
+            progressoFinal
+        ) {
+
+            progressoFinal.innerText =
+                "Enviado";
+
+            progressoFinal.style.color =
+                "#10b981";
+
+        }
+
+        adicionarMensagem(
+            `📁 Enviou arquivo: <b>${escaparHTML(arquivo.name)}</b>`,
+            "enviada"
+        );
+
+        tocarSom(
+            "arquivo"
+        );
+
+    } catch (erro) {
+
+        console.error(
+            "[ESIP] Erro no envio:",
+            erro
+        );
+
+        const progresso =
+            document.getElementById(
+                "progresso-" +
+                id
+            );
+
+        if (
+            progresso
+        ) {
+
+            progresso.innerText =
+                "Erro";
+
+            progresso.style.color =
+                "#ef4444";
+
+        }
+
+        mostrarToast(
+            "Erro ao enviar o arquivo."
+        );
+
+    } finally {
+
+        input.value =
+            "";
+
+    }
+}
+
+
+function pausa(
+    ms
+) {
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+}
+
+
+/* =========================================================
+   LOCALIZAÇÃO
+========================================================= */
+
+function enviarLocalizacao() {
+
+    if (
+        !conn ||
+        !conn.open
+    ) {
+
+        mostrarToast(
+            "Conecte as duas comunicações primeiro."
+        );
+
+        return;
+
+    }
+
+    if (
+        !navigator.geolocation
+    ) {
+
+        mostrarToast(
+            "Este navegador não oferece localização."
+        );
+
+        return;
+
+    }
+
+    mostrarToast(
+        "Obtendo sua localização..."
+    );
+
+    navigator.geolocation.getCurrentPosition(
+
+        posicao => {
+
+            const latitude =
+                posicao.coords.latitude;
+
+            const longitude =
+                posicao.coords.longitude;
+
+            const precisao =
+                posicao.coords.accuracy;
+
+            try {
+
+                conn.send({
+
+                    tipo:
+                        "localizacao",
+
+                    latitude:
+                        latitude,
+
+                    longitude:
+                        longitude,
+
+                    precisao:
+                        precisao,
+
+                    hora:
+                        Date.now()
+
+                });
+
+            } catch (erro) {
+
+                console.error(
+                    erro
+                );
+
+                mostrarToast(
+                    "Não foi possível enviar a localização."
+                );
+
+                return;
+
+            }
+
+            const mapa =
+                `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+            adicionarMensagem(
+                `📍 <b>Minha localização enviada</b><br>` +
+                `<a href="${mapa}" target="_blank" rel="noopener" ` +
+                `style="color:#00f5ff;">ABRIR NO MAPA</a>`,
+                "enviada"
+            );
+
+            mostrarToast(
+                "📍 Localização enviada."
+            );
+
+            tocarSom(
+                "mensagem"
+            );
+
+        },
+
+        erro => {
+
+            console.error(
+                "Geolocalização:",
+                erro
+            );
+
+            if (
+                erro.code ===
+                1
+            ) {
+
+                mostrarToast(
+                    "Permissão de localização negada."
+                );
+
+            } else {
+
+                mostrarToast(
+                    "Não foi possível obter a localização."
+                );
+
+            }
+
+        },
+
+        {
+            enableHighAccuracy:
+                false,
+
+            timeout:
+                15000,
+
+            maximumAge:
+                30000
+        }
+    );
+}
+
+
+/* =========================================================
+   COPIAR LINK
+========================================================= */
+
+async function copiarLinkPonta2() {
+
+    const input =
+        document.getElementById(
+            "input-link-gerado"
+        );
+
+    if (
+        !input ||
+        !input.value
+    ) {
+
+        mostrarToast(
+            "Nenhum acesso foi gerado."
+        );
+
+        return;
+
+    }
+
+    try {
+
+        if (
+            navigator.clipboard &&
+            window.isSecureContext
+        ) {
+
+            await navigator.clipboard.writeText(
+                input.value
+            );
+
+        } else {
+
+            input.focus();
+
+            input.select();
+
+            input.setSelectionRange(
+                0,
+                99999
+            );
+
+            document.execCommand(
+                "copy"
+            );
+
+        }
+
+        /*
+         * O acesso foi copiado.
+         * QR e painel deixam a tela.
+         */
+
+        ocultarQRCodePonta2();
+
+        mostrarToast(
+            "🔗 Acesso privado copiado."
+        );
+
+    } catch (erro) {
+
+        console.error(
+            erro
+        );
+
+        mostrarToast(
+            "Selecione e copie o acesso manualmente."
+        );
+
+    }
+}
+
+
+/* =========================================================
+   ABAS
+========================================================= */
+
+function mudarAba(
+    aba,
+    btn
+) {
+
+    document
+        .querySelectorAll(
+            ".tela-aba"
+        )
+        .forEach(
+            tela => {
+
+                tela.classList.remove(
+                    "ativa"
+                );
+
+            }
+        );
+
+    document
+        .querySelectorAll(
+            ".nav-item"
+        )
+        .forEach(
+            botao => {
+
+                botao.classList.remove(
+                    "ativo"
+                );
+
+            }
+        );
+
+    const destino =
+        document.getElementById(
+            "aba-" +
+            aba
+        );
+
+    if (
+        destino
+    ) {
+
+        destino.classList.add(
+            "ativa"
+        );
+
+    }
+
+    if (
+        btn
+    ) {
+
+        btn.classList.add(
+            "ativo"
+        );
+
+    }
+}
+
+
+/* =========================================================
+   MICROFONE
+========================================================= */
+
+async function garantirMicrofone() {
+
+    if (
+        localStream &&
+        localStream.active
+    ) {
+
+        return localStream;
+
+    }
+
+    if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+    ) {
+
+        throw new Error(
+            "Microfone não suportado."
+        );
+
+    }
+
+    localStream =
+        await navigator.mediaDevices.getUserMedia(
+            {
+                audio: {
+
+                    echoCancellation:
+                        true,
+
+                    noiseSuppression:
+                        true,
+
+                    autoGainControl:
+                        true
+
+                },
+
+                video:
+                    false
+            }
+        );
+
+    mudeMicrofonePTT(
+        false
+    );
+
+    return localStream;
+}
+
+
+function mudeMicrofonePTT(
+    estado
+) {
+
+    if (!localStream) {
+
+        return;
+
+    }
+
+    localStream
+        .getAudioTracks()
+        .forEach(
+            track => {
+
+                track.enabled =
+                    estado;
+
+            }
+        );
+}
+
+
+/* =========================================================
+   CHAMADA
+========================================================= */
+
+async function alternarChamada() {
+
+    if (
+        !peer ||
+        peer.destroyed
+    ) {
+
+        mostrarToast(
+            "O ESIP ainda está conectando."
+        );
+
+        return;
+
+    }
+
+    if (
+        !conn ||
+        !conn.open
+    ) {
+
+        mostrarToast(
+            "Conecte a outra comunicação primeiro."
+        );
+
+        return;
+
+    }
+
+    if (
+        !emChamada
+    ) {
+
+        try {
+
+            await garantirMicrofone();
+
+            const dest =
+                ponta === "1"
+                    ? `ESIP-${canalAtual}-CONVIDADO`
+                    : `ESIP-${canalAtual}-MESTRE`;
+
+            chamadaVoz =
+                peer.call(
+                    dest,
+                    localStream
+                );
+
+            configurarEventosChamada();
+
+            emChamada =
+                true;
+
+            mudeMicrofonePTT(
+                false
+            );
+
+            atualizarInterfaceChamada(
+                true
+            );
+
+            iniciarCronometro();
+
+            await solicitarWakeLock();
+
+            document.getElementById(
+                "status-ptt-texto"
+            ).innerText =
+                "Canal de comunicação ativo.";
+
+            tocarSom(
+                "chamada"
+            );
+
+        } catch (erro) {
+
+            console.error(
+                erro
+            );
+
+            emChamada =
+                false;
+
+            mostrarToast(
+                "Permita o acesso ao microfone."
+            );
+
+        }
+
+    } else {
+
+        encerrarChamada();
+
+    }
+}
+
+
+function configurarEventosChamada() {
+
+    if (
+        !chamadaVoz
+    ) {
+
+        return;
+
+    }
+
+    if (
+        chamadaVoz._esipConfigurada
+    ) {
+
+        return;
+
+    }
+
+    chamadaVoz._esipConfigurada =
+        true;
+
+    chamadaVoz.on(
+        "stream",
+        stream => {
+
+            const audio =
+                document.getElementById(
+                    "audio-remoto"
+                );
+
+            audio.srcObject =
+                stream;
+
+            audio.play()
+                .catch(
+                    () => {}
+                );
+
+        }
+    );
+
+    chamadaVoz.on(
+        "close",
+        () => {
+
+            encerrarChamada(
+                false
+            );
+
+        }
+    );
+
+    chamadaVoz.on(
+        "error",
+        erro => {
+
+            console.error(
+                "[ESIP] Comunicação:",
+                erro
+            );
+
+        }
+    );
+}
+
+
+function atualizarInterfaceChamada(
+    ativa
+) {
+
+    const btn =
+        document.getElementById(
+            "controle-chamada"
+        );
+
+    const ava =
+        document.getElementById(
+            "avatar-status"
+        );
+
+    if (
+        ativa
+    ) {
+
+        btn.classList.add(
+            "desligar"
+        );
+
+        btn.innerText =
+            "📵";
+
+        ava.innerText =
+            "🗣️";
+
+    } else {
+
+        btn.classList.remove(
+            "desligar"
+        );
+
+        btn.innerText =
+            "📞";
+
+        ava.innerText =
+            "👤";
+
+    }
+}
+
+
+function iniciarCronometro() {
+
+    clearInterval(
+        intervalo
+    );
+
+    segundos =
+        0;
+
+    document.getElementById(
+        "tempo-chamada"
+    ).innerText =
+        "00:00";
+
+    intervalo =
+        setInterval(
+            () => {
+
+                if (
+                    !emChamada
+                ) {
+
+                    return;
+
+                }
+
+                segundos++;
+
+                const minutos =
+                    Math.floor(
+                        segundos / 60
+                    );
+
+                const seg =
+                    segundos %
+                    60;
+
+                document.getElementById(
+                    "tempo-chamada"
+                ).innerText =
+                    `${String(minutos).padStart(2,"0")}:` +
+                    `${String(seg).padStart(2,"0")}`;
+
+            },
+            1000
+        );
+}
+
+
+function encerrarChamada(
+    fecharPeer = true
+) {
+
+    if (
+        fecharPeer &&
+        chamadaVoz
+    ) {
+
+        try {
+
+            chamadaVoz.close();
+
+        } catch (e) {}
+
+    }
+
+    clearInterval(
+        intervalo
+    );
+
+    chamadaVoz =
+        null;
+
+    emChamada =
+        false;
+
+    mudeMicrofonePTT(
+        false
+    );
+
+    atualizarInterfaceChamada(
+        false
+    );
+
+    document.getElementById(
+        "tempo-chamada"
+    ).innerText =
+        "00:00";
+
+    document.getElementById(
+        "status-ptt-texto"
+    ).innerText =
+        "O PTT requer o Canal de Voz Ativo";
+
+    const audio =
+        document.getElementById(
+            "audio-remoto"
+        );
+
+    audio.srcObject =
+        null;
+
+    liberarWakeLock();
+
+}
+
+
+/* =========================================================
+   PTT
+========================================================= */
+
+function iniciarTransmissaoPTT(
+    e
+) {
+
+    if (e) {
+
+        e.preventDefault();
+
+    }
+
+    if (
+        !emChamada ||
+        !localStream
+    ) {
+
+        mostrarToast(
+            "Inicie o canal de voz primeiro."
+        );
+
+        return;
+
+    }
+
+    const btn =
+        document.getElementById(
+            "btn-ptt-trigger"
+        );
+
+    btn.classList.add(
+        "transmitindo"
+    );
+
+    document.getElementById(
+        "ptt-icone"
+    ).innerText =
+        "⚡";
+
+    document.getElementById(
+        "ptt-label"
+    ).innerHTML =
+        "TRANSMITINDO";
+
+    mudeMicrofonePTT(
+        true
+    );
+
+    tocarSom(
+        "ptt"
+    );
+}
+
+
+function cessarTransmissaoPTT(
+    e
+) {
+
+    if (e) {
+
+        e.preventDefault();
+
+    }
+
+    if (
+        !localStream ||
+        !emChamada
+    ) {
+
+        return;
+
+    }
+
+    const btn =
+        document.getElementById(
+            "btn-ptt-trigger"
+        );
+
+    if (
+        btn.classList.contains(
+            "transmitindo"
+        )
+    ) {
+
+        btn.classList.remove(
+            "transmitindo"
+        );
+
+        document.getElementById(
+            "ptt-icone"
+        ).innerText =
+            "🎙️";
+
+        document.getElementById(
+            "ptt-label"
+        ).innerHTML =
+            "PRESSIONE<br>PARA FALAR";
+
+        mudeMicrofonePTT(
+            false
+        );
+
+    }
+}
+
+
+/* =========================================================
+   ÁUDIO
+========================================================= */
+
+function prepararAudio() {
+
+    try {
+
+        if (
+            !audioContext
+        ) {
+
+            const AudioCtx =
+                window.AudioContext ||
+                window.webkitAudioContext;
+
+            if (!AudioCtx) {
+
+                return;
+
+            }
+
+            audioContext =
+                new AudioCtx();
+
+        }
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+
+        }
+
+    } catch (erro) {
+
+        console.warn(
+            "[ESIP] Áudio:",
+            erro
+        );
+
+    }
+}
+
+
+function tocarSom(
+    tipo
+) {
+
+    try {
+
+        prepararAudio();
+
+        if (
+            !audioContext
+        ) {
+
+            return;
+
+        }
+
+        const agora =
+            audioContext.currentTime;
+
+        const osc =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        osc.connect(
+            gain
+        );
+
+        gain.connect(
+            audioContext.destination
+        );
+
+        let frequencia =
+            600;
+
+        let duracao =
+            0.08;
+
+        if (
+            tipo ===
+            "mensagem"
+        ) {
+
+            frequencia =
+                700;
+
+            duracao =
+                0.08;
+
+        }
+
+        else if (
+            tipo ===
+            "conexao"
+        ) {
+
+            frequencia =
+                900;
+
+            duracao =
+                0.15;
+
+        }
+
+        else if (
+            tipo ===
+            "arquivo"
+        ) {
+
+            frequencia =
+                500;
+
+            duracao =
+                0.12;
+
+        }
+
+        else if (
+            tipo ===
+            "chamada"
+        ) {
+
+            frequencia =
+                1000;
+
+            duracao =
+                0.18;
+
+        }
+
+        else if (
+            tipo ===
+            "ptt"
+        ) {
+
+            frequencia =
+                800;
+
+            duracao =
+                0.05;
+
+        }
+
+        osc.frequency.value =
+            frequencia;
+
+        osc.type =
+            "sine";
+
+        gain.gain.setValueAtTime(
+            0.0001,
+            agora
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.08,
+            agora + 0.01
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            agora + duracao
+        );
+
+        osc.start(
+            agora
+        );
+
+        osc.stop(
+            agora +
+            duracao
+        );
+
+    } catch (erro) {
+
+        console.warn(
+            "[ESIP] Não foi possível tocar som:",
+            erro
+        );
+
+    }
+}
+
+
+/* =========================================================
+   ÁUDIO DO CELULAR
+========================================================= */
+
+document.addEventListener(
+    "touchstart",
+    () => {
+
+        prepararAudio();
+
+    },
+    {
+        once:
+            true,
+
+        passive:
+            true
+    }
+);
+
+
+/* =========================================================
+   WAKE LOCK
+========================================================= */
+
+async function solicitarWakeLock() {
+
+    if (
+        !("wakeLock" in navigator)
+    ) {
+
+        return;
+
+    }
+
+    try {
+
+        if (
+            wakeLock &&
+            !wakeLock.released
+        ) {
+
+            return;
+
+        }
+
+        wakeLock =
+            await navigator.wakeLock.request(
+                "screen"
+            );
+
+        wakeLock.addEventListener(
+            "release",
+            () => {
+
+                wakeLock =
+                    null;
+
+            }
+        );
+
+    } catch (erro) {
+
+        console.warn(
+            "[ESIP] Wake Lock não disponível:",
+            erro
+        );
+
+    }
+
+}
+
+
+async function liberarWakeLock() {
+
+    try {
+
+        if (
+            wakeLock &&
+            !wakeLock.released
+        ) {
+
+            await wakeLock.release();
+
+        }
+
+    } catch (erro) {}
+
+    wakeLock =
+        null;
+
+}
+
+
+async function renovarWakeLockSeNecessario() {
+
+    if (
+        document.visibilityState !==
+        "visible"
+    ) {
+
+        return;
+
+    }
+
+    if (
+        emChamada
+    ) {
+
+        await solicitarWakeLock();
+
+    }
+
+}
+
+
+/* =========================================================
+   RECONEXÃO
+========================================================= */
+
+window.addEventListener(
+    "online",
+    () => {
+
+        renovarWakeLockSeNecessario();
+
+        if (
+            ponta !== "2"
+        ) {
+
+            return;
+
+        }
+
+        if (
+            !peer ||
+            peer.destroyed
+        ) {
+
+            return;
+
+        }
+
+        if (
+            conn &&
+            conn.open
+        ) {
+
+            return;
+
+        }
+
+        const idDestino =
+            `ESIP-${canalAtual}-MESTRE`;
+
+        setTimeout(
+            () => {
+
+                conectarAoPeer(
+                    idDestino
+                );
+
+            },
+            1000
+        );
+
+    }
+);
+
+
+/* =========================================================
+   VISIBILIDADE
+========================================================= */
+
+document.addEventListener(
+    "visibilitychange",
+    () => {
+
+        if (
+            document.visibilityState ===
+            "visible"
+        ) {
+
+            prepararAudio();
+
+            renovarWakeLockSeNecessario();
+
+            if (
+                ponta === "2" &&
+                peer &&
+                !peer.destroyed &&
+                canalAtual &&
+                (
+                    !conn ||
+                    !conn.open
+                )
+            ) {
+
+                conectarAoPeer(
+                    `ESIP-${canalAtual}-MESTRE`
+                );
+
+            }
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   ENCERRAMENTO
+========================================================= */
+
+window.addEventListener(
+    "beforeunload",
+    () => {
+
+        try {
+
+            clearInterval(
+                intervaloValidade
+            );
+
+            clearInterval(
+                intervalo
+            );
+
+            liberarWakeLock();
+
+            if (
+                chamadaVoz
+            ) {
+
+                chamadaVoz.close();
+
+            }
+
+            if (
+                conn
+            ) {
+
+                conn.close();
+
+            }
+
+            if (
+                peer
+            ) {
+
+                peer.destroy();
+
+            }
+
+            if (
+                localStream
+            ) {
+
+                localStream
+                    .getTracks()
+                    .forEach(
+                        track =>
+                            track.stop()
+                    );
+
+            }
+
+        } catch (e) {}
+
+    }
+);
+
+
+/* =========================================================
+   INÍCIO
+========================================================= */
+
+window.addEventListener(
+    "load",
+    () => {
+
+        initCrypto();
+
+    }
+);
+
+</script>
+
+<!-- =====================================================
+     SERVICE WORKER
+===================================================== -->
+
+<script>
+
+if (
+    "serviceWorker" in navigator
+) {
+
+    window.addEventListener(
+        "load",
+        () => {
+
+            navigator.serviceWorker
+                .register(
+                    "./service-worker.js"
+                )
+                .then(
+                    reg => {
+
+                        console.log(
+                            "[ESIP] PWA ativo:",
+                            reg.scope
+                        );
+
+                    }
+                )
+                .catch(
+                    erro => {
+
+                        console.error(
+                            "[ESIP] Erro no PWA:",
+                            erro
+                        );
+
+                    }
+                );
+
+        }
+    );
+
+}
+
+</script>
+
+</body>
+</html>
