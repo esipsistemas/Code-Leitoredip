@@ -1352,7 +1352,7 @@ body {
 <header class="app-header">
 
     <div class="logo-esip">
-        📡 ESIP - AGUARDANDO CRIPTOGRAFIA
+        📡 ESIP — COMUNICAÇÃO PRIVADA
     </div>
 
     <div
@@ -1385,7 +1385,7 @@ body {
         id="aba-chat"
         class="tela-aba ativa">
 
-        <!-- LINK PONTA 02 -->
+        <!-- ACESSO PRIVADO -->
 
         <div
             id="alerta-link-container"
@@ -1399,7 +1399,7 @@ body {
                 font-size:13px;">
 
             <b style="color:#00f5ff;">
-                [ACESSO DA PONTA 02]
+                [ACESSO — COMUNICAÇÃO PRIVADA]
             </b>
 
             <div style="
@@ -1448,7 +1448,7 @@ body {
             <div class="qr-acesso">
 
                 <div class="qr-titulo">
-                    📱 ACESSO RÁPIDO — PONTA 02
+                    📱 ACESSO RÁPIDO — COMUNICAÇÃO PRIVADA
                 </div>
 
                 <div id="qrcode-ponta2"></div>
@@ -1462,7 +1462,7 @@ body {
                 <button
                     class="btn-qr-copiar"
                     onclick="copiarLinkPonta2()">
-                    🔗 COPIAR ACESSO DA PONTA 02
+                    🔗 COPIAR ACESSO PRIVADO
                 </button>
 
             </div>
@@ -2119,6 +2119,7 @@ function iniciarControleValidade(
     ) {
 
         return;
+
     }
 
     const elemento =
@@ -2154,6 +2155,7 @@ function atualizarValidadeToken() {
             "none";
 
         return;
+
     }
 
     const restante =
@@ -2182,6 +2184,7 @@ function atualizarValidadeToken() {
         expirarSessao();
 
         return;
+
     }
 
     const totalSegundos =
@@ -2256,6 +2259,7 @@ function expirarSessao() {
     ) {
 
         return;
+
     }
 
     try {
@@ -2324,7 +2328,7 @@ function expirarSessao() {
     document.querySelector(
         ".logo-esip"
     ).innerText =
-        "📡 ESIP - AGUARDANDO CRIPTOGRAFIA";
+        "📡 ESIP — COMUNICAÇÃO PRIVADA";
 
     const elemento =
         document.getElementById(
@@ -2735,7 +2739,7 @@ function inicializarPainelP2P(
     document.querySelector(
         ".logo-esip"
     ).innerText =
-        `📡 ESIP - PONTA 0${ponta}`;
+        "📡 ESIP — COMUNICAÇÃO PRIVADA";
 
     document.getElementById(
         "canal-label"
@@ -2744,7 +2748,7 @@ function inicializarPainelP2P(
 
 
     /* =========================
-       LINK PONTA 02
+       ACESSO COMUNICAÇÃO PRIVADA
     ========================= */
 
     if (
@@ -2775,7 +2779,7 @@ function inicializarPainelP2P(
         );
 
         adicionarMensagem(
-            "<b>[ESIP]</b> Acesso da Ponta 02 protegido e disponível. Sistema inicializando..."
+            "<b>[ESIP]</b> Acesso de comunicação privada protegido e disponível. Sistema inicializando..."
         );
 
     } else {
@@ -2951,7 +2955,7 @@ function inicializarPainelP2P(
                 ) {
 
                     mostrarToast(
-                        "Aguardando a outra ponta..."
+                        "Aguardando a outra comunicação..."
                     );
 
                     setTimeout(
@@ -3129,7 +3133,7 @@ function configurarEventosConexao() {
             );
 
             /*
-             * A Ponta 02 avisa à Ponta 01
+             * A comunicação privada avisa à comunicação privada
              * que o acesso pelo QR foi concluído.
              */
 
@@ -3185,7 +3189,7 @@ function configurarEventosConexao() {
                 "ESIP DISPONÍVEL";
 
             adicionarMensagem(
-                "<b>[ESIP]</b> A comunicação foi encerrada pela outra ponta."
+                "<b>[ESIP]</b> A comunicação foi encerrada pela outra comunicação privada."
             );
 
             conn =
@@ -3246,7 +3250,7 @@ function receberDadosP2P(
             ocultarQRCodePonta2();
 
             mostrarToast(
-                "📱 Ponta 02 conectada. Acesso encerrado."
+                "📱 Comunicação privada conectada. Acesso encerrado."
             );
 
         }
@@ -3545,7 +3549,7 @@ function enviarTextoP2P() {
     ) {
 
         mostrarToast(
-            "Conecte as duas pontas primeiro."
+            "Conecte as duas comunicações primeiro."
         );
 
         return;
@@ -3615,7 +3619,7 @@ async function enviarArquivoP2P(
     ) {
 
         mostrarToast(
-            "Conecte as duas pontas antes de enviar o arquivo."
+            "Conecte as duas comunicações antes de enviar o arquivo."
         );
 
         input.value =
@@ -3876,7 +3880,7 @@ function enviarLocalizacao() {
     ) {
 
         mostrarToast(
-            "Conecte as duas pontas primeiro."
+            "Conecte as duas comunicações primeiro."
         );
 
         return;
@@ -4067,7 +4071,7 @@ async function copiarLinkPonta2() {
         ocultarQRCodePonta2();
 
         mostrarToast(
-            "🔗 Acesso da Ponta 02 copiado."
+            "🔗 Acesso privado copiado."
         );
 
     } catch (erro) {
@@ -4252,7 +4256,7 @@ async function alternarChamada() {
     ) {
 
         mostrarToast(
-            "Conecte a outra ponta primeiro."
+            "Conecte a outra comunicação primeiro."
         );
 
         return;
