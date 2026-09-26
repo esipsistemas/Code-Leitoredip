@@ -1172,7 +1172,7 @@ id="protocolInput">
         <button
             type="button"
             class="btn btn-back"
-            onclick="prevStep()">
+            data-action="prev">
 
             ← VOLTAR
 
@@ -1413,7 +1413,7 @@ id="protocolInput">
         <button
             type="button"
             class="btn btn-back"
-            onclick="prevStep()">
+            data-action="prev">
 
             ← VOLTAR
 
@@ -1520,7 +1520,7 @@ id="protocolInput">
         <button
             type="button"
             class="btn btn-back"
-            onclick="prevStep()">
+            data-action="prev">
 
             ← VOLTAR
 
@@ -2169,6 +2169,25 @@ form.addEventListener("submit",function(event){
     setTimeout(()=>{
         techSound(1100,.12,"sine",.04);
     },100);
+
+});
+
+
+/* =========================================
+   BOTÕES VOLTAR
+========================================= */
+
+document
+.querySelectorAll('[data-action="prev"]')
+.forEach(button => {
+
+    button.addEventListener("click", function(event){
+
+        event.preventDefault();
+
+        prevStep();
+
+    });
 
 });
 
