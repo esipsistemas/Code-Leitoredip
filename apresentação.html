@@ -1,1 +1,2190 @@
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP-Sistemas | Demonstração</title>
+
+<meta name="description"
+content="Demonstração interativa do sistema de comunicação privada ESIP-Sistemas.">
+
+<meta name="theme-color" content="#020617">
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+html,body{
+    width:100%;
+    min-height:100%;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:
+        radial-gradient(circle at 50% 0%,#083344 0%,#020617 42%,#01030a 100%);
+    color:#e2e8f0;
+    overflow-x:hidden;
+}
+
+.demo{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:22px 14px 35px;
+}
+
+.brand{
+    text-align:center;
+    margin-bottom:12px;
+}
+
+.brand .logo{
+    font-size:30px;
+}
+
+.brand h1{
+    font-size:21px;
+    margin-top:5px;
+    letter-spacing:.5px;
+}
+
+.brand p{
+    color:#67e8f9;
+    font-size:10px;
+    letter-spacing:2px;
+    margin-top:5px;
+}
+
+.demo-label{
+    padding:7px 13px;
+    border:1px solid rgba(34,211,238,.25);
+    border-radius:20px;
+    color:#67e8f9;
+    font-size:9px;
+    letter-spacing:1.5px;
+    margin-bottom:25px;
+    background:rgba(8,47,73,.25);
+}
+
+.stage{
+    width:100%;
+    max-width:1050px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:65px;
+    position:relative;
+}
+
+.phone{
+    width:290px;
+    height:590px;
+    border:8px solid #111827;
+    border-radius:38px;
+    background:#020617;
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.65),
+        0 0 35px rgba(14,165,233,.10);
+    position:relative;
+    overflow:hidden;
+}
+
+.phone::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:50%;
+    transform:translateX(-50%);
+    width:105px;
+    height:24px;
+    background:#111827;
+    border-radius:0 0 16px 16px;
+    z-index:20;
+}
+
+.phone-screen{
+    width:100%;
+    height:100%;
+    padding:37px 14px 14px;
+    background:
+        linear-gradient(
+            180deg,
+            #06111f 0%,
+            #020617 50%,
+            #01040b 100%
+        );
+    position:relative;
+}
+
+.phone-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:7px 5px 12px;
+    border-bottom:1px solid #1e293b;
+}
+
+.phone-title{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.phone-title .mini-logo{
+    width:30px;
+    height:30px;
+    border-radius:9px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(135deg,#0891b2,#2563eb);
+    font-size:15px;
+}
+
+.phone-title strong{
+    display:block;
+    font-size:11px;
+}
+
+.phone-title span{
+    display:block;
+    color:#64748b;
+    font-size:7px;
+    margin-top:2px;
+    letter-spacing:1px;
+}
+
+.signal{
+    color:#22c55e;
+    font-size:8px;
+}
+
+.screen-content{
+    height:calc(100% - 53px);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+}
+
+.connection{
+    text-align:center;
+    padding:15px 5px 8px;
+}
+
+.connection .dot{
+    width:9px;
+    height:9px;
+    display:inline-block;
+    border-radius:50%;
+    background:#64748b;
+    margin-right:5px;
+}
+
+.connection.active .dot{
+    background:#22c55e;
+    box-shadow:0 0 12px #22c55e;
+}
+
+.connection strong{
+    font-size:9px;
+    letter-spacing:1px;
+}
+
+.connection small{
+    display:block;
+    color:#64748b;
+    font-size:7px;
+    margin-top:4px;
+}
+
+.qr-zone{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+}
+
+.qr{
+    width:155px;
+    height:155px;
+    background:white;
+    border-radius:12px;
+    padding:10px;
+    position:relative;
+    box-shadow:0 0 35px rgba(34,211,238,.15);
+}
+
+.qr-pattern{
+    width:100%;
+    height:100%;
+    background:
+        linear-gradient(90deg,#000 10%,transparent 10% 20%,#000 20% 30%,transparent 30% 40%,#000 40% 50%,transparent 50% 60%,#000 60% 70%,transparent 70% 80%,#000 80% 90%,transparent 90%),
+        linear-gradient(#000 10%,transparent 10% 20%,#000 20% 30%,transparent 30% 40%,#000 40% 50%,transparent 50% 60%,#000 60% 70%,transparent 70% 80%,#000 80% 90%,transparent 90%);
+    opacity:.88;
+}
+
+.qr-corner{
+    position:absolute;
+    width:34px;
+    height:34px;
+    border:6px solid #000;
+    background:white;
+}
+
+.qr-corner::after{
+    content:"";
+    position:absolute;
+    width:12px;
+    height:12px;
+    background:#000;
+    top:5px;
+    left:5px;
+}
+
+.qr-corner.a{top:15px;left:15px}
+.qr-corner.b{top:15px;right:15px}
+.qr-corner.c{bottom:15px;left:15px}
+
+.qr-title{
+    font-size:10px;
+    font-weight:bold;
+    margin-top:15px;
+}
+
+.qr-sub{
+    font-size:7px;
+    color:#64748b;
+    margin-top:5px;
+    text-align:center;
+}
+
+.scanner{
+    position:absolute;
+    width:165px;
+    height:3px;
+    background:#22d3ee;
+    box-shadow:0 0 15px #22d3ee;
+    left:50%;
+    transform:translateX(-50%);
+    top:150px;
+    display:none;
+    z-index:5;
+}
+
+.scanner.active{
+    display:block;
+    animation:scan 1.5s linear infinite;
+}
+
+@keyframes scan{
+    0%{top:150px}
+    50%{top:305px}
+    100%{top:150px}
+}
+
+.chat{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+}
+
+.messages{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    gap:8px;
+    padding:8px 2px;
+    overflow:hidden;
+}
+
+.msg{
+    max-width:82%;
+    padding:9px 10px;
+    border-radius:12px;
+    font-size:9px;
+    line-height:1.35;
+    opacity:0;
+    transform:translateY(8px);
+    animation:msgIn .35s forwards;
+}
+
+.msg.left{
+    align-self:flex-start;
+    background:#1e293b;
+    border-bottom-left-radius:3px;
+}
+
+.msg.right{
+    align-self:flex-end;
+    background:linear-gradient(135deg,#075985,#1d4ed8);
+    border-bottom-right-radius:3px;
+}
+
+.msg.system{
+    align-self:center;
+    background:#020617;
+    border:1px solid #1e293b;
+    color:#64748b;
+    font-size:7px;
+    text-align:center;
+}
+
+.msg small{
+    display:block;
+    opacity:.45;
+    font-size:6px;
+    margin-top:3px;
+}
+
+@keyframes msgIn{
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+.feature{
+    display:flex;
+    justify-content:space-around;
+    border-top:1px solid #1e293b;
+    padding:10px 2px 3px;
+}
+
+.feature-item{
+    text-align:center;
+    color:#64748b;
+    font-size:7px;
+}
+
+.feature-item div{
+    font-size:16px;
+    margin-bottom:3px;
+}
+
+.feature-item.active{
+    color:#67e8f9;
+}
+
+.wave{
+    height:45px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:3px;
+    opacity:0;
+}
+
+.wave.active{
+    opacity:1;
+}
+
+.wave i{
+    width:3px;
+    background:#22d3ee;
+    border-radius:5px;
+    animation:wave .7s infinite alternate;
+}
+
+.wave i:nth-child(1){height:8px;animation-delay:.1s}
+.wave i:nth-child(2){height:18px;animation-delay:.2s}
+.wave i:nth-child(3){height:30px;animation-delay:.3s}
+.wave i:nth-child(4){height:42px;animation-delay:.1s}
+.wave i:nth-child(5){height:22px;animation-delay:.4s}
+.wave i:nth-child(6){height:35px;animation-delay:.2s}
+.wave i:nth-child(7){height:14px;animation-delay:.3s}
+
+@keyframes wave{
+    from{transform:scaleY(.45)}
+    to{transform:scaleY(1)}
+}
+
+.transfer{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+    opacity:0;
+    z-index:10;
+}
+
+.transfer.active{
+    opacity:1;
+}
+
+.transfer-line{
+    width:150px;
+    height:2px;
+    background:linear-gradient(
+        90deg,
+        transparent,
+        #22d3ee,
+        transparent
+    );
+    box-shadow:0 0 14px #22d3ee;
+    animation:transfer 1s linear infinite;
+}
+
+@keyframes transfer{
+    from{
+        transform:translateX(-70px);
+        opacity:0;
+    }
+    30%{opacity:1}
+    70%{opacity:1}
+    to{
+        transform:translateX(70px);
+        opacity:0;
+    }
+}
+
+.transfer-label{
+    text-align:center;
+    margin-top:8px;
+    font-size:8px;
+    color:#67e8f9;
+    letter-spacing:1px;
+}
+
+.center-status{
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:190px;
+    text-align:center;
+    pointer-events:none;
+}
+
+.center-status strong{
+    display:block;
+    font-size:10px;
+    color:#67e8f9;
+    letter-spacing:1.3px;
+}
+
+.center-status span{
+    display:block;
+    font-size:8px;
+    color:#64748b;
+    margin-top:6px;
+}
+
+.status-ring{
+    width:58px;
+    height:58px;
+    margin:0 auto 10px;
+    border-radius:50%;
+    border:1px solid rgba(34,211,238,.35);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:23px;
+    box-shadow:0 0 30px rgba(34,211,238,.12);
+}
+
+.center-status.hidden{
+    display:none;
+}
+
+.bottom{
+    width:100%;
+    max-width:900px;
+    margin-top:27px;
+    text-align:center;
+}
+
+.main-status{
+    font-size:12px;
+    color:#67e8f9;
+    min-height:18px;
+    letter-spacing:1px;
+}
+
+.progress{
+    width:100%;
+    max-width:500px;
+    height:3px;
+    background:#1e293b;
+    border-radius:5px;
+    margin:12px auto 0;
+    overflow:hidden;
+}
+
+.progress-bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#0891b2,#2563eb);
+    transition:width .3s;
+}
+
+
+/* =========================================================
+   BOTÕES
+========================================================= */
+
+.action-buttons{
+    width:100%;
+    max-width:500px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    margin:18px auto 0;
+}
+
+.action-btn{
+    flex:1;
+    min-height:44px;
+    border:none;
+    border-radius:10px;
+    padding:0 18px;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:10px;
+    font-weight:bold;
+    letter-spacing:1px;
+    cursor:pointer;
+    transition:
+        transform .2s,
+        box-shadow .2s,
+        opacity .2s;
+}
+
+.action-btn:hover{
+    transform:translateY(-2px);
+}
+
+.action-btn:active{
+    transform:scale(.97);
+}
+
+.btn-voltar{
+    background:#0f172a;
+    color:#94a3b8;
+    border:1px solid #334155;
+}
+
+.btn-voltar:hover{
+    color:#e2e8f0;
+    border-color:#475569;
+}
+
+.btn-proposta{
+    background:linear-gradient(
+        135deg,
+        #0891b2,
+        #2563eb
+    );
+    color:#fff;
+    box-shadow:
+        0 0 20px rgba(37,99,235,.25);
+}
+
+.btn-proposta:hover{
+    box-shadow:
+        0 0 28px rgba(34,211,238,.35);
+}
+
+.footer{
+    margin-top:22px;
+    font-size:8px;
+    color:#475569;
+    text-align:center;
+}
+
+@media(max-width:760px){
+
+    .demo{
+        padding-top:15px;
+    }
+
+    .stage{
+        gap:15px;
+    }
+
+    .phone{
+        width:45vw;
+        max-width:230px;
+        height:480px;
+        border-width:6px;
+        border-radius:28px;
+    }
+
+    .phone::before{
+        width:75px;
+        height:18px;
+    }
+
+    .phone-screen{
+        padding-top:29px;
+    }
+
+    .qr{
+        width:115px;
+        height:115px;
+    }
+
+    .qr-corner{
+        width:27px;
+        height:27px;
+        border-width:4px;
+    }
+
+    .qr-corner.a{top:12px;left:12px}
+    .qr-corner.b{top:12px;right:12px}
+    .qr-corner.c{bottom:12px;left:12px}
+
+    .qr-corner::after{
+        width:9px;
+        height:9px;
+        top:5px;
+        left:5px;
+    }
+
+    .scanner{
+        width:125px;
+    }
+
+    .center-status{
+        width:130px;
+    }
+
+    .center-status strong{
+        font-size:7px;
+    }
+
+    .center-status span{
+        font-size:6px;
+    }
+
+    .status-ring{
+        width:42px;
+        height:42px;
+        font-size:17px;
+    }
+
+    .transfer-line{
+        width:70px;
+    }
+
+    .transfer-label{
+        font-size:6px;
+    }
+}
+
+@media(max-width:460px){
+
+    .brand h1{
+        font-size:17px;
+    }
+
+    .brand p{
+        font-size:8px;
+    }
+
+    .demo-label{
+        margin-bottom:15px;
+    }
+
+    .stage{
+        gap:8px;
+    }
+
+    .phone{
+        width:46vw;
+        height:430px;
+        border-width:5px;
+    }
+
+    .phone-header{
+        padding-top:5px;
+    }
+
+    .phone-title strong{
+        font-size:8px;
+    }
+
+    .phone-title span{
+        font-size:5px;
+    }
+
+    .phone-title .mini-logo{
+        width:24px;
+        height:24px;
+        font-size:12px;
+    }
+
+    .connection{
+        padding-top:10px;
+    }
+
+    .msg{
+        font-size:7px;
+        padding:7px;
+    }
+
+    .feature-item{
+        font-size:5px;
+    }
+
+    .feature-item div{
+        font-size:13px;
+    }
+
+    .action-buttons{
+        gap:8px;
+        margin-top:15px;
+    }
+
+    .action-btn{
+        min-height:42px;
+        padding:0 8px;
+        font-size:8px;
+        letter-spacing:.7px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<div class="demo">
+
+    <div class="brand">
+
+        <div class="logo">📡</div>
+
+        <h1>ESIP-Sistemas</h1>
+
+        <p>COMUNICAÇÃO PRIVADA</p>
+
+    </div>
+
+
+    <div class="demo-label">
+        DEMONSTRAÇÃO INTERATIVA
+    </div>
+
+
+    <div class="stage">
+
+        <!-- CELULAR A -->
+
+        <div class="phone">
+
+            <div class="phone-screen">
+
+                <div class="phone-header">
+
+                    <div class="phone-title">
+
+                        <div class="mini-logo">
+                            📡
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                ESIP-Sistemas
+                            </strong>
+
+                            <span>
+                                DISPOSITIVO A
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="signal">
+                        ● ONLINE
+                    </div>
+
+                </div>
+
+
+                <div class="screen-content">
+
+                    <div class="connection"
+                         id="connectionA">
+
+                        <span class="dot"></span>
+
+                        <strong id="stateA">
+                            AGUARDANDO
+                        </strong>
+
+                        <small id="subA">
+                            Preparando comunicação
+                        </small>
+
+                    </div>
+
+
+                    <div class="qr-zone"
+                         id="qrZone">
+
+                        <div class="qr">
+
+                            <div class="qr-pattern"></div>
+
+                            <div class="qr-corner a"></div>
+
+                            <div class="qr-corner b"></div>
+
+                            <div class="qr-corner c"></div>
+
+                        </div>
+
+
+                        <div class="scanner"
+                             id="scanner">
+                        </div>
+
+
+                        <div class="qr-title">
+                            ACESSO ESIP
+                        </div>
+
+
+                        <div class="qr-sub">
+                            Identificação do terminal
+                        </div>
+
+                    </div>
+
+
+                    <div class="chat"
+                         id="chatA"
+                         style="display:none">
+
+                        <div class="messages"
+                             id="messagesA">
+                        </div>
+
+
+                        <div class="wave"
+                             id="waveA">
+
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+
+                        </div>
+
+
+                        <div class="feature">
+
+                            <div class="feature-item"
+                                 id="featureMsgA">
+
+                                <div>💬</div>
+                                MENSAGEM
+
+                            </div>
+
+
+                            <div class="feature-item"
+                                 id="featureVoiceA">
+
+                                <div>🎙️</div>
+                                VOZ/PTT
+
+                            </div>
+
+
+                            <div class="feature-item"
+                                 id="featureFileA">
+
+                                <div>📎</div>
+                                ARQUIVO
+
+                            </div>
+
+
+                            <div class="feature-item"
+                                 id="featureLocA">
+
+                                <div>📍</div>
+                                LOCAL
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ANIMAÇÃO CENTRAL -->
+
+        <div class="center-status"
+             id="centerStatus">
+
+            <div class="status-ring"
+                 id="centerIcon">
+                📡
+            </div>
+
+            <strong id="centerTitle">
+                INICIANDO
+            </strong>
+
+            <span id="centerSub">
+                Preparando demonstração
+            </span>
+
+        </div>
+
+
+        <div class="transfer"
+             id="transfer">
+
+            <div class="transfer-line">
+            </div>
+
+            <div class="transfer-label"
+                 id="transferLabel">
+
+                TRANSMITINDO
+
+            </div>
+
+        </div>
+
+
+        <!-- CELULAR B -->
+
+        <div class="phone">
+
+            <div class="phone-screen">
+
+                <div class="phone-header">
+
+                    <div class="phone-title">
+
+                        <div class="mini-logo">
+                            📱
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                ESIP-Sistemas
+                            </strong>
+
+                            <span>
+                                DISPOSITIVO B
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                    <div class="signal">
+                        ● ONLINE
+                    </div>
+
+                </div>
+
+
+                <div class="screen-content">
+
+                    <div class="connection"
+                         id="connectionB">
+
+                        <span class="dot"></span>
+
+                        <strong id="stateB">
+                            AGUARDANDO
+                        </strong>
+
+                        <small id="subB">
+                            Aguardando conexão
+                        </small>
+
+                    </div>
+
+
+                    <div class="qr-zone"
+                         id="waitingB">
+
+                        <div style="
+                            font-size:45px;
+                            opacity:.8;
+                        ">
+                            📱
+                        </div>
+
+                        <div class="qr-title">
+                            TERMINAL
+                        </div>
+
+                        <div class="qr-sub">
+                            Aguardando autenticação
+                        </div>
+
+                    </div>
+
+
+                    <div class="chat"
+                         id="chatB"
+                         style="display:none">
+
+                        <div class="messages"
+                             id="messagesB">
+                        </div>
+
+
+                        <div class="wave"
+                             id="waveB">
+
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+                            <i></i>
+
+                        </div>
+
+
+                        <div class="feature">
+
+                            <div class="feature-item"
+                                 id="featureMsgB">
+
+                                <div>💬</div>
+                                MENSAGEM
+
+                            </div>
+
+
+                            <div class="feature-item"
+                                 id="featureVoiceB">
+
+                                <div>🎙️</div>
+                                VOZ/PTT
+
+                            </div>
+
+
+                            <div class="feature-item"
+                                 id="featureFileB">
+
+                                <div>📎</div>
+                                ARQUIVO
+
+                            </div>
+
+
+                            <div class="feature-item"
+                                 id="featureLocB">
+
+                                <div>📍</div>
+                                LOCAL
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottom">
+
+        <div class="main-status"
+             id="mainStatus">
+
+            PREPARANDO DEMONSTRAÇÃO...
+
+        </div>
+
+
+        <div class="progress">
+
+            <div class="progress-bar"
+                 id="progressBar">
+            </div>
+
+        </div>
+
+
+        <!-- BOTÕES -->
+
+        <div class="action-buttons">
+
+            <button
+                class="action-btn btn-voltar"
+                type="button"
+                onclick="voltarPagina()">
+
+                ↩ VOLTAR
+
+            </button>
+
+
+            <button
+                class="action-btn btn-proposta"
+                type="button"
+                onclick="solicitarProposta()">
+
+                📄 SOLICITAR PROPOSTA
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div class="footer">
+
+        📡 ESIP-Sistemas · Demonstração de conceito
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+============================================================
+ ESIP-SISTEMAS
+ DEMONSTRAÇÃO AUTOMÁTICA
+============================================================
+*/
+
+
+const A = {
+
+    connection:
+        document.getElementById("connectionA"),
+
+    state:
+        document.getElementById("stateA"),
+
+    sub:
+        document.getElementById("subA"),
+
+    qr:
+        document.getElementById("qrZone"),
+
+    chat:
+        document.getElementById("chatA"),
+
+    messages:
+        document.getElementById("messagesA"),
+
+    wave:
+        document.getElementById("waveA")
+
+};
+
+
+const B = {
+
+    connection:
+        document.getElementById("connectionB"),
+
+    state:
+        document.getElementById("stateB"),
+
+    sub:
+        document.getElementById("subB"),
+
+    waiting:
+        document.getElementById("waitingB"),
+
+    chat:
+        document.getElementById("chatB"),
+
+    messages:
+        document.getElementById("messagesB"),
+
+    wave:
+        document.getElementById("waveB")
+
+};
+
+
+const scanner =
+    document.getElementById("scanner");
+
+
+const transfer =
+    document.getElementById("transfer");
+
+
+const transferLabel =
+    document.getElementById("transferLabel");
+
+
+const centerStatus =
+    document.getElementById("centerStatus");
+
+
+const centerIcon =
+    document.getElementById("centerIcon");
+
+
+const centerTitle =
+    document.getElementById("centerTitle");
+
+
+const centerSub =
+    document.getElementById("centerSub");
+
+
+const mainStatus =
+    document.getElementById("mainStatus");
+
+
+const progressBar =
+    document.getElementById("progressBar");
+
+
+
+/* =========================================================
+   SOM
+========================================================= */
+
+let audioContext = null;
+
+
+function audio(){
+
+    if(!audioContext){
+
+        audioContext =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+    }
+
+
+    if(audioContext.state === "suspended"){
+
+        audioContext
+            .resume()
+            .catch(()=>{});
+
+    }
+
+
+    return audioContext;
+
+}
+
+
+
+/* =========================================================
+   BIP ÚNICO
+========================================================= */
+
+function bip(){
+
+    try{
+
+        const ctx =
+            audio();
+
+        if(!ctx) return;
+
+
+        const now =
+            ctx.currentTime;
+
+
+        const oscillator =
+            ctx.createOscillator();
+
+
+        const gain =
+            ctx.createGain();
+
+
+        oscillator.type =
+            "sine";
+
+
+        oscillator.frequency.setValueAtTime(
+            1200,
+            now
+        );
+
+
+        oscillator.frequency.exponentialRampToValueAtTime(
+            1550,
+            now + 0.07
+        );
+
+
+        /*
+         * VOLUME AUMENTADO
+         */
+
+        gain.gain.setValueAtTime(
+            0.0001,
+            now
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.32,
+            now + 0.012
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            now + 0.11
+        );
+
+
+        oscillator.connect(gain);
+
+        gain.connect(ctx.destination);
+
+
+        oscillator.start(now);
+
+
+        oscillator.stop(
+            now + 0.12
+        );
+
+
+    }catch(e){}
+
+}
+
+
+
+/* =========================================================
+   TEXTO / STATUS
+========================================================= */
+
+function center(
+    icon,
+    title,
+    sub
+){
+
+    centerIcon.textContent =
+        icon;
+
+    centerTitle.textContent =
+        title;
+
+    centerSub.textContent =
+        sub;
+
+}
+
+
+function main(text){
+
+    mainStatus.textContent =
+        text;
+
+}
+
+
+function progress(value){
+
+    progressBar.style.width =
+        value + "%";
+
+}
+
+
+
+/* =========================================================
+   MENSAGEM
+========================================================= */
+
+function message(
+    screen,
+    text,
+    side="left"
+){
+
+    const div =
+        document.createElement("div");
+
+
+    div.className =
+        "msg " + side;
+
+
+    div.innerHTML =
+        text +
+        "<small>" +
+        new Date().toLocaleTimeString(
+            "pt-BR",
+            {
+                hour:"2-digit",
+                minute:"2-digit"
+            }
+        ) +
+        "</small>";
+
+
+    screen.messages.appendChild(div);
+
+
+    screen.messages.scrollTop =
+        screen.messages.scrollHeight;
+
+
+    /*
+     * CADA MENSAGEM TEM SEU PRÓPRIO BIP.
+     */
+
+    bip();
+
+}
+
+
+
+/* =========================================================
+   ATIVA CONEXÃO
+========================================================= */
+
+function activateConnection(){
+
+    A.connection.classList.add("active");
+
+    B.connection.classList.add("active");
+
+
+    A.state.textContent =
+        "CONECTADO";
+
+
+    B.state.textContent =
+        "CONECTADO";
+
+
+    A.sub.textContent =
+        "Canal privado ativo";
+
+
+    B.sub.textContent =
+        "Canal privado ativo";
+
+
+    A.qr.style.display =
+        "none";
+
+
+    B.waiting.style.display =
+        "none";
+
+
+    A.chat.style.display =
+        "flex";
+
+
+    B.chat.style.display =
+        "flex";
+
+
+    centerStatus.classList.add(
+        "hidden"
+    );
+
+
+    main(
+        "🟢 COMUNICAÇÃO PRIVADA ESTABELECIDA"
+    );
+
+}
+
+
+
+/* =========================================================
+   TRANSFERÊNCIA
+========================================================= */
+
+function transferStart(label){
+
+    transfer.classList.add(
+        "active"
+    );
+
+    transferLabel.textContent =
+        label;
+
+}
+
+
+function transferStop(){
+
+    transfer.classList.remove(
+        "active"
+    );
+
+}
+
+
+
+/* =========================================================
+   DEMONSTRAÇÃO
+========================================================= */
+
+async function runDemo(){
+
+    locationStateReset();
+
+
+    /*
+     * ETAPA 1
+     */
+
+    center(
+        "📡",
+        "INICIANDO",
+        "Preparando canal privado"
+    );
+
+
+    main(
+        "Inicializando sistema..."
+    );
+
+
+    progress(5);
+
+
+    await wait(1800);
+
+
+
+    /*
+     * ETAPA 2
+     * QR
+     */
+
+    center(
+        "🔐",
+        "AUTENTICAÇÃO",
+        "QR Code disponível"
+    );
+
+
+    main(
+        "Acesso seguro disponível"
+    );
+
+
+    progress(15);
+
+
+    await wait(1400);
+
+
+
+    /*
+     * ETAPA 3
+     * LEITURA
+     */
+
+    scanner.classList.add(
+        "active"
+    );
+
+
+    center(
+        "📷",
+        "LEITURA DO QR",
+        "Autenticando dispositivo"
+    );
+
+
+    main(
+        "QR Code sendo lido..."
+    );
+
+
+    progress(27);
+
+
+    await wait(2200);
+
+
+    scanner.classList.remove(
+        "active"
+    );
+
+
+    /*
+     * QR LIDO = BIP
+     */
+
+    bip();
+
+
+    await wait(500);
+
+
+
+    /*
+     * ETAPA 4
+     */
+
+    center(
+        "🔄",
+        "CONECTANDO",
+        "Estabelecendo comunicação"
+    );
+
+
+    main(
+        "Estabelecendo canal P2P..."
+    );
+
+
+    progress(40);
+
+
+    transferStart(
+        "ESTABELECENDO CANAL"
+    );
+
+
+    await wait(1900);
+
+
+    transferStop();
+
+
+    activateConnection();
+
+
+    await wait(1200);
+
+
+
+    /*
+     * ETAPA 5
+     * MENSAGEM A -> B
+     */
+
+    transferStart(
+        "TRANSMITINDO MENSAGEM"
+    );
+
+
+    main(
+        "Mensagem sendo transmitida..."
+    );
+
+
+    progress(50);
+
+
+    await wait(700);
+
+
+    message(
+        A,
+        "Central: comunicação estabelecida.",
+        "right"
+    );
+
+
+    await wait(900);
+
+
+    message(
+        B,
+        "Recebido. Canal operacional ativo.",
+        "left"
+    );
+
+
+    transferStop();
+
+
+    progress(58);
+
+
+    await wait(1500);
+
+
+
+    /*
+     * B -> A
+     */
+
+    transferStart(
+        "RETORNO RECEBIDO"
+    );
+
+
+    main(
+        "Resposta recebida pelo sistema..."
+    );
+
+
+    await wait(800);
+
+
+    message(
+        B,
+        "Informação recebida. Retornando confirmação.",
+        "right"
+    );
+
+
+    await wait(850);
+
+
+    message(
+        A,
+        "Confirmação recebida.",
+        "left"
+    );
+
+
+    transferStop();
+
+
+    progress(65);
+
+
+    await wait(1400);
+
+
+
+    /*
+     * ETAPA 6
+     * VOZ / PTT
+     *
+     * SEM SOM
+     */
+
+    document
+        .getElementById("featureVoiceA")
+        .classList.add("active");
+
+
+    document
+        .getElementById("featureVoiceB")
+        .classList.add("active");
+
+
+    A.wave.classList.add(
+        "active"
+    );
+
+
+    centerStatus.classList.remove(
+        "hidden"
+    );
+
+
+    center(
+        "🎙️",
+        "COMUNICAÇÃO DE VOZ",
+        "Transmissão PTT"
+    );
+
+
+    main(
+        "🎙️ Transmissão de voz iniciada..."
+    );
+
+
+    progress(72);
+
+
+    transferStart(
+        "TRANSMITINDO ÁUDIO"
+    );
+
+
+    await wait(1800);
+
+
+    A.wave.classList.remove(
+        "active"
+    );
+
+
+    B.wave.classList.add(
+        "active"
+    );
+
+
+    center(
+        "🔊",
+        "ÁUDIO RECEBIDO",
+        "Comunicação operacional"
+    );
+
+
+    main(
+        "🔊 Áudio recebido pelo outro dispositivo"
+    );
+
+
+    await wait(1800);
+
+
+    B.wave.classList.remove(
+        "active"
+    );
+
+
+    transferStop();
+
+
+    progress(78);
+
+
+    await wait(1200);
+
+
+
+    /*
+     * ETAPA 7
+     * ARQUIVO
+     */
+
+    document
+        .getElementById("featureFileA")
+        .classList.add("active");
+
+
+    document
+        .getElementById("featureFileB")
+        .classList.add("active");
+
+
+    centerStatus.classList.remove(
+        "hidden"
+    );
+
+
+    center(
+        "📎",
+        "TRANSFERÊNCIA",
+        "Arquivo operacional"
+    );
+
+
+    main(
+        "📎 Enviando arquivo..."
+    );
+
+
+    progress(84);
+
+
+    transferStart(
+        "ENVIANDO ARQUIVO"
+    );
+
+
+    await wait(1800);
+
+
+    message(
+        B,
+        "📎 Arquivo recebido.",
+        "left"
+    );
+
+
+    transferStop();
+
+
+    main(
+        "✓ Arquivo recebido com sucesso"
+    );
+
+
+    await wait(1300);
+
+
+
+    /*
+     * ETAPA 8
+     * LOCALIZAÇÃO
+     */
+
+    document
+        .getElementById("featureLocA")
+        .classList.add("active");
+
+
+    document
+        .getElementById("featureLocB")
+        .classList.add("active");
+
+
+    center(
+        "📍",
+        "LOCALIZAÇÃO",
+        "Compartilhamento operacional"
+    );
+
+
+    main(
+        "📍 Compartilhando localização..."
+    );
+
+
+    progress(90);
+
+
+    transferStart(
+        "ENVIANDO LOCALIZAÇÃO"
+    );
+
+
+    await wait(1600);
+
+
+    message(
+        B,
+        "📍 Localização recebida.",
+        "left"
+    );
+
+
+    transferStop();
+
+
+    await wait(1300);
+
+
+
+    /*
+     * ETAPA FINAL
+     */
+
+    centerStatus.classList.remove(
+        "hidden"
+    );
+
+
+    center(
+        "🟢",
+        "OPERAÇÃO ATIVA",
+        "Comunicação privada estabelecida"
+    );
+
+
+    main(
+        "📡 ESIP-Sistemas — comunicação privada ativa"
+    );
+
+
+    progress(100);
+
+
+    await wait(4500);
+
+
+    /*
+     * REINICIA
+     */
+
+    runDemo();
+
+}
+
+
+
+/* =========================================================
+   RESET
+========================================================= */
+
+function locationStateReset(){
+
+    A.connection.classList.remove(
+        "active"
+    );
+
+
+    B.connection.classList.remove(
+        "active"
+    );
+
+
+    A.state.textContent =
+        "AGUARDANDO";
+
+
+    B.state.textContent =
+        "AGUARDANDO";
+
+
+    A.sub.textContent =
+        "Preparando comunicação";
+
+
+    B.sub.textContent =
+        "Aguardando conexão";
+
+
+    A.qr.style.display =
+        "flex";
+
+
+    B.waiting.style.display =
+        "flex";
+
+
+    A.chat.style.display =
+        "none";
+
+
+    B.chat.style.display =
+        "none";
+
+
+    A.messages.innerHTML =
+        "";
+
+
+    B.messages.innerHTML =
+        "";
+
+
+    A.wave.classList.remove(
+        "active"
+    );
+
+
+    B.wave.classList.remove(
+        "active"
+    );
+
+
+    document
+        .querySelectorAll(".feature-item")
+        .forEach(el=>{
+
+            el.classList.remove(
+                "active"
+            );
+
+        });
+
+
+    transferStop();
+
+
+    centerStatus.classList.remove(
+        "hidden"
+    );
+
+
+    progress(0);
+
+}
+
+
+
+/* =========================================================
+   ESPERA
+========================================================= */
+
+function wait(ms){
+
+    return new Promise(
+        resolve =>
+            setTimeout(
+                resolve,
+                ms
+            )
+    );
+
+}
+
+
+
+/* =========================================================
+   BOTÃO VOLTAR
+========================================================= */
+
+function voltarPagina(){
+
+    if(
+        window.history.length > 1
+    ){
+
+        window.history.back();
+
+    }else{
+
+        window.location.href =
+            "https://sites.google.com/site/esipseguranca";
+
+    }
+
+}
+
+
+
+/* =========================================================
+   BOTÃO SOLICITAR PROPOSTA
+========================================================= */
+
+function solicitarProposta(){
+
+    window.location.href =
+        "https://sites.google.com/site/esipseguranca";
+
+}
+
+
+
+/* =========================================================
+   COMEÇA SOZINHO
+========================================================= */
+
+setTimeout(
+    runDemo,
+    700
+);
+
+</script>
+
+</body>
+</html>
