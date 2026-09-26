@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESIP-Sistemas | Ofuscador HTML Definitivo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0b132b; 
+            margin: 0;
+            padding: 20px;
+            color: #f8fafc;
+        }
+        .container {
+            max-width: 850px;
+            margin: 40px auto;
+            background: #1c2541; 
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #3a506b;
+        }
+        .logo-container {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3a506b;
+        }
+        .logo-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #5bc0be; 
+            letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            font-size: 20px;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 20px;
+            color: #cbd5e1;
+        }
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            background: #0b132b;
+            border: 1px solid #3a506b;
+            border-radius: 6px;
+            color: #fff;
+            margin-top: 5px;
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        input[type="password"]:focus, textarea:focus {
+            outline: none;
+            border-color: #5bc0be;
+            box-shadow: 0 0 5px rgba(91, 192, 190, 0.5);
+        }
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 12px;
+            background: #0b132b;
+            border: 1px solid #3a506b;
+            border-radius: 6px;
+            color: #fff;
+            margin-top: 5px;
+            font-family: 'Courier New', Courier, monospace;
+            resize: vertical;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        .btn-principal {
+            background-color: #5bc0be;
+            color: #0b132b;
+            border: none;
+            padding: 14px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 25px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-principal:hover {
+            background-color: #46a19f;
+            box-shadow: 0 0 15px rgba(91, 192, 190, 0.4);
+        }
+        .btn-copiar {
+            background-color: #3a506b;
+            color: #ffffff;
+            border: 1px solid #5bc0be;
+            padding: 10px 15px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        .btn-copiar:hover {
+            background-color: #5bc0be;
+            color: #0b132b;
+        }
+        .info {
+            background: #3a506b;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 10px;
+            line-height: 1.5;
+            border-left: 4px solid #5bc0be;
+        }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <div class="logo-container">
+        <div class="logo-text">📡 ESIP-Sistemas</div>
+        <h1>Ofuscador Autossuficiente para GitHub Pages</h1>
+    </div>
+
+    <div class="info">
+        ⚡ <strong>Zero Dependências Externas:</strong> Esta versão não usa links ou bibliotecas da internet, garantindo que o botão funcione instantaneamente. O código reescreve o DOM para liberar senhas aninhadas no GitHub.
+    </div>
+
+    <label for="inputHtml">Código HTML Original (Seu sistema com senha):</label>
+    <textarea id="inputHtml" placeholder="<!-- Insira o HTML do sistema que exige senha aqui -->"></textarea>
+
+    <label for="inputSenha">Defina a Senha de Acesso do Ofuscador:</label>
+    <input type="password" id="inputSenha" placeholder="Digite a senha de proteção externa">
+
+    <button class="btn-principal" onclick="gerarCodigoProtegido()">Gerar Código Ofuscado de Alta Compatibilidade</button>
+
+    <label for="outputHtml">Resultado Ofuscado:</label>
+    <textarea id="outputHtml" readonly placeholder="O script protegido aparecerá aqui..."></textarea>
+    
+    <button class="btn-copiar" onclick="copiarCodigo()">📋 Copiar Código</button>
+</div>
+
+<script>
+    // Gerador de Hash matemático ultra leve (MurmurHash3) - Não descriptografável diretamente
+    function calcularHash(str) {
+        var h1 = 0x811c9dc5;
+        for (var i = 0; i < str.length; i++) {
+            h1 ^= str.charCodeAt(i);
+            h1 = Math.imul(h1, 0x01000193);
+        }
+        return (h1 >>> 0).toString(16);
+    }
+
+    function codificarBase64(str) {
+        return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) { 
+            return String.fromCharCode('0x' + p1); 
+        }));
+    }
+
+    function gerarCodigoProtegido() {
+        var htmlOriginal = document.getElementById('inputHtml').value.trim();
+        var senha = document.getElementById('inputSenha').value.trim();
+
+        if (!htmlOriginal || !senha) { 
+            alert('Preencha todos os campos obrigatórios.'); 
+            return; 
+        }
+
+        var hashSenha = calcularHash(senha);
+        var htmlProtegido = codificarBase64(htmlOriginal);
+
+        var resultadoFinal = 
+            '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>' +
+            '<div id="esip_tela" style="font-family:sans-serif;background-color:#0b132b;color:#fff;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;display:flex;justify-content:center;align-items:center;">' +
+            '  <div style="background:#1c2541;padding:35px;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.5);width:90%;max-width:380px;border:1px solid #3a506b;text-align:center;">' +
+            '    <div style="font-size:26px;font-weight:bold;color:#5bc0be;margin-bottom:8px;">📡 ESIP-Sistemas</div>' +
+            '    <p style="font-size:14px;color:#cbd5e1;margin-bottom:22px;margin-top:0;">Este sistema privado está protegido por senha.</p>' +
+            '    <input type="password" id="esip_pass" placeholder="Digite a senha de acesso" style="width:100%;padding:12px;margin-bottom:15px;background:#0b132b;border:1px solid #3a506b;border-radius:6px;color:#fff;box-sizing:border-box;font-size:16px;text-align:center;outline:none;">' +
+            '    <button id="esip_btn" style="width:100%;background:#5bc0be;color:#0b132b;border:none;padding:13px;font-size:16px;font-weight:bold;border-radius:6px;cursor:pointer;">Entrar no Sistema</button>' +
+            '    <div id="esip_erro" style="color:#ff4d4d;margin-top:12px;font-size:14px;display:none;font-weight:600;">⚠️ Senha Incorreta!</div>' +
+            '  </div>' +
+            '</div>' +
+            '<script>' +
+            '  (function() {' +
+            '    var sH = "' + hashSenha + '";' +
+            '    var hC = "' + htmlProtegido + '";' +
+            '    function dec(str) { return decodeURIComponent(atob(str).split("").map(function(c) { return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2); }).join("")); }\n' +
+            '    function hash(str) { var h = 0x811c9dc5; for(var i=0; i<str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16); }\n' +
+            '    document.addEventListener("contextmenu", function(e){ e.preventDefault(); });' +
+            '    document.getElementById("esip_btn").onclick = function() {' +
+            '      var input = document.getElementById("esip_pass").value;' +
+            '      if(hash(input) === sH) {' +
+            '        var decodedHTML = dec(hC);' +
+            '        document.open();' +
+            '        document.write(decodedHTML);' +
+            '        document.close();' +
+            '      } else {' +
+            '        document.getElementById("esip_erro").style.display = "block";' +
+            '      }' +
+            '    };' +
+            '  })();' +
+            '<\/script></body></html>';
+
+        document.getElementById('outputHtml').value = resultadoFinal;
+    }
+
+    function copiarCodigo() {
+        var output = document.getElementById('outputHtml');
+        if (!output.value) { 
+            alert('Não há código para copiar.'); 
+            return; 
+        }
+        output.select();
+        document.execCommand('copy');
+        alert('Código copiado com sucesso!');
+    }
+</script>
+
+</body>
+</html>
