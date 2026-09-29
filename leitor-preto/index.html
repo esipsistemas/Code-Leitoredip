@@ -7373,7 +7373,218 @@ if (
     );
 
 }
+/* =======================================
+   ESIP — MODO LIGAÇÃO
+======================================= */
 
+const esipTelaLigacao =
+    document.getElementById("esipTelaLigacao");
+
+const esipEncerrarLigacao =
+    document.getElementById("esipEncerrarLigacao");
+
+
+/* =======================================
+   VIBRAÇÃO
+======================================= */
+
+function esipVibrarLigacao() {
+
+    try {
+
+        if ("vibrate" in navigator) {
+            navigator.vibrate([180, 100, 180]);
+        }
+
+    } catch (e) {
+
+        console.log("Vibração não disponível:", e);
+
+    }
+}
+
+
+/* =======================================
+   SOM DA LIGAÇÃO
+======================================= */
+
+function esipSomLigacao() {
+
+    try {
+
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContext) return;
+
+        const audio =
+            new AudioContext();
+
+        const oscillator =
+            audio.createOscillator();
+
+        const gain =
+            audio.createGain();
+
+        oscillator.type = "sine";
+
+        oscillator.frequency.value = 880;
+
+        gain.gain.value = 0.08;
+
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+
+        oscillator.start();
+
+        setTimeout(() => {
+
+            try {
+                oscillator.stop();
+                audio.close();
+            } catch (e) {}
+
+        }, 180);
+
+    } catch (e) {
+
+        console.log("Áudio não disponível:", e);
+
+    }
+}
+
+
+/* =======================================
+   ENTRAR NO MODO LIGAÇÃO
+======================================= */
+
+function esipEntrarModoLigacao() {
+
+    if (!esipTelaLigacao) return;
+
+    /* Tela preta */
+
+    esipTelaLigacao.classList.add("ativa");
+
+    /* Vibração */
+
+    esipVibrarLigacao();
+
+    /* Som */
+
+    esipSomLigacao();
+
+    /* Tenta impedir bloqueio automático da tela,
+       quando o navegador suportar Wake Lock */
+
+    if ("wakeLock" in navigator) {
+
+        navigator.wakeLock.request("screen")
+            .then(lock => {
+
+                window.esipWakeLock = lock;
+
+                console.log("ESIP: tela mantida ativa.");
+
+            })
+            .catch(err => {
+
+                console.log(
+                    "Wake Lock não disponível:",
+                    err
+                );
+
+            });
+
+    }
+}
+
+
+/* =======================================
+   SAIR DO MODO LIGAÇÃO
+======================================= */
+
+async function esipSairModoLigacao() {
+
+    if (esipTelaLigacao) {
+        esipTelaLigacao.classList.remove("ativa");
+    }
+
+    /* Para vibração */
+
+    try {
+
+        if ("vibrate" in navigator) {
+            navigator.vibrate(0);
+        }
+
+    } catch (e) {}
+
+
+    /* Libera o Wake Lock */
+
+    try {
+
+        if (window.esipWakeLock) {
+
+            await window.esipWakeLock.release();
+
+            window.esipWakeLock = null;
+        }
+
+    } catch (e) {
+
+        console.log(
+            "Erro liberando Wake Lock:",
+            e
+        );
+
+    }
+}
+
+
+/* =======================================
+   BOTÃO ENCERRAR
+======================================= */
+
+if (esipEncerrarLigacao) {
+
+    esipEncerrarLigacao.addEventListener(
+        "click",
+        function(event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            /*
+             * IMPORTANTE:
+             *
+             * AQUI NÃO devemos criar uma nova lógica
+             * de desligamento se seu código já possui
+             * uma função para encerrar a chamada.
+             *
+             * Primeiro fechamos a tela preta.
+             */
+
+            esipSairModoLigacao();
+
+            /*
+             * Se seu código já possui uma função como:
+             *
+             * encerrarChamada()
+             *
+             * ou
+             *
+             * finalizarLigacao()
+             *
+             * ela deve ser chamada aqui.
+             */
+
+        }
+    );
+
+}
 </script>
       
 <!-- =======================================
