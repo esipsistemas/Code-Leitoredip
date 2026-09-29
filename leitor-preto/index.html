@@ -428,7 +428,7 @@ body {
 }
 
 /* =======================================
-   BOTÃO FAZER LIGAÇÃO (VERSÃO PREMIUM)
+   BOTÃO FAZER LIGAÇÃO (VERSÃO PREMIUM - CORRIGIDA)
 ======================================= */
 
 .btn-fazer-ligacao {
@@ -458,29 +458,20 @@ body {
     /* Sombra suave e realista (efeito de elevação) */
     box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
     
-    /* Transição suave para efeitos visuais */
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Transição normal para quando o botão voltar ao normal */
+    transition: all 0.3s ease;
 }
 
-/* Injeta o ícone de telefone automaticamente antes do texto */
-.btn-fazer-ligacao::before {
-    content: "📞"; /* Ícone universal de telefone */
-    font-size: 16px;
-}
+/* Removido o ::before para sumir com o segundo ícone repetido! */
 
-/* Efeito sutil ao passar o dedo/mouse */
+/* Efeito sutil ao passar o mouse */
 .btn-fazer-ligacao:hover {
     background: linear-gradient(135deg, #047857 0%, #065f46 100%);
     box-shadow: 0 6px 16px rgba(4, 120, 87, 0.3);
 }
 
-/* Efeito rápido de clique (retorno tátil) */
+/* O TRUQUE DA TELA PRETA: Quando clicado (:active), ele vira a tela preta e "gruda" */
 .btn-fazer-ligacao:active {
-    transform: scale(0.97);
-}
-
-/* O truque profissional que vira a tela preta anti-toque */
-.btn-fazer-ligacao:focus {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
@@ -489,14 +480,15 @@ body {
     z-index: 99999 !important;
     border-radius: 0 !important;
     background: #000000 !important; /* Tela apaga contra a orelha */
+    color: #000000 !important;      /* Esconde o texto do próprio botão */
+    border: none !important;
     box-shadow: none !important;
-    outline: none !important;
+    
+    /* Este comando faz a tela preta demorar 7200 segundos (2 horas) para sumir! 
+       Ou seja, ela fica travada no modo escuro durante toda a ligação */
+    transition: opacity 7200s step-end !important; 
 }
 
-/* Quando o botão estiver no modo tela preta, o ícone some para não confundir */
-.btn-fazer-ligacao:focus::before {
-    display: none !important;
-}
 
 
 /* =========================
