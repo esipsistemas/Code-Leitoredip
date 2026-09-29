@@ -427,60 +427,77 @@ body {
         13px;
 }
 
-/* =========================
-   BOTÃO FAZER LIGAÇÃO
-========================= */
+/* =======================================
+   BOTÃO FAZER LIGAÇÃO (VERSÃO PREMIUM)
+======================================= */
 
 .btn-fazer-ligacao {
-
-    width:
-        100%;
-
-    min-height:
-        48px;
-
-    margin-bottom:
-        10px;
-
-    background:
-        #065f46;
-
-    border:
-        1px solid #10b981;
-
-    color:
-        #fff;
-
-    border-radius:
-        8px;
-
-    font-weight:
-        bold;
-
-    font-size:
-        13px;
-
-    cursor:
-        pointer;
-
-    box-shadow:
-        0 0 10px rgba(16,185,129,.18);
-
-    transition:
-        .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; /* Espaço perfeito entre o ícone e o texto */
+    
+    width: 100%;
+    min-height: 52px; /* Altura ideal para toque mobile de forma elegante */
+    margin-bottom: 12px;
+    
+    /* Fundo moderno com gradiente sutil */
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border: 1px solid rgba(16, 185, 129, 0.4); /* Borda fina e semi-transparente */
+    color: #ffffff;
+    
+    /* Cantos mais arredondados e elegantes */
+    border-radius: 12px; 
+    
+    /* Tipografia refinada */
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.5px; /* Pequeno espaçamento entre as letras */
+    cursor: pointer;
+    
+    /* Sombra suave e realista (efeito de elevação) */
+    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
+    
+    /* Transição suave para efeitos visuais */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Injeta o ícone de telefone automaticamente antes do texto */
+.btn-fazer-ligacao::before {
+    content: "📞"; /* Ícone universal de telefone */
+    font-size: 16px;
+}
+
+/* Efeito sutil ao passar o dedo/mouse */
+.btn-fazer-ligacao:hover {
+    background: linear-gradient(135deg, #047857 0%, #065f46 100%);
+    box-shadow: 0 6px 16px rgba(4, 120, 87, 0.3);
+}
+
+/* Efeito rápido de clique (retorno tátil) */
 .btn-fazer-ligacao:active {
-
-    transform:
-        scale(.98);
-
-    background:
-        #047857;
-
-    box-shadow:
-        0 0 18px rgba(16,185,129,.35);
+    transform: scale(0.97);
 }
+
+/* O truque profissional que vira a tela preta anti-toque */
+.btn-fazer-ligacao:focus {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 99999 !important;
+    border-radius: 0 !important;
+    background: #000000 !important; /* Tela apaga contra a orelha */
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Quando o botão estiver no modo tela preta, o ícone some para não confundir */
+.btn-fazer-ligacao:focus::before {
+    display: none !important;
+}
+
 
 /* =========================
    LINK / QR
