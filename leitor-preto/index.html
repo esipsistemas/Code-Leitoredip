@@ -428,67 +428,192 @@ body {
 }
 
 /* =======================================
-   BOTÃO FAZER LIGAÇÃO (VERSÃO PREMIUM - CORRIGIDA)
+   BOTÃO FAZER LIGAÇÃO — ESIP
 ======================================= */
 
 .btn-fazer-ligacao {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* Espaço perfeito entre o ícone e o texto */
-    
+    gap: 8px;
+
     width: 100%;
-    min-height: 52px; /* Altura ideal para toque mobile de forma elegante */
+    min-height: 52px;
     margin-bottom: 12px;
-    
-    /* Fundo moderno com gradiente sutil */
+
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
-    border: 1px solid rgba(16, 185, 129, 0.4); /* Borda fina e semi-transparente */
+    border: 1px solid rgba(16, 185, 129, 0.4);
     color: #ffffff;
-    
-    /* Cantos mais arredondados e elegantes */
-    border-radius: 12px; 
-    
-    /* Tipografia refinada */
+
+    border-radius: 12px;
+
     font-weight: 600;
     font-size: 14px;
-    letter-spacing: 0.5px; /* Pequeno espaçamento entre as letras */
+    letter-spacing: 0.5px;
+
     cursor: pointer;
-    
-    /* Sombra suave e realista (efeito de elevação) */
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+
     box-shadow: 0 4px 12px rgba(4, 120, 87, 0.2);
-    
-    /* Transição normal para quando o botão voltar ao normal */
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
-/* Removido o ::before para sumir com o segundo ícone repetido! */
-
-/* Efeito sutil ao passar o mouse */
 .btn-fazer-ligacao:hover {
     background: linear-gradient(135deg, #047857 0%, #065f46 100%);
     box-shadow: 0 6px 16px rgba(4, 120, 87, 0.3);
 }
 
-/* O TRUQUE DA TELA PRETA: Quando clicado (:active), ele vira a tela preta e "gruda" */
 .btn-fazer-ligacao:active {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 99999 !important;
-    border-radius: 0 !important;
-    background: #000000 !important; /* Tela apaga contra a orelha */
-    color: #000000 !important;      /* Esconde o texto do próprio botão */
-    border: none !important;
-    box-shadow: none !important;
-    
-    /* Este comando faz a tela preta demorar 7200 segundos (2 horas) para sumir! 
-       Ou seja, ela fica travada no modo escuro durante toda a ligação */
-    transition: opacity 7200s step-end !important; 
+    transform: scale(0.97);
 }
 
+
+/* =======================================
+   TELA PRETA DURANTE A LIGAÇÃO
+======================================= */
+
+#esipTelaLigacao {
+    position: fixed;
+    inset: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    background: #000000;
+
+    z-index: 2147483647;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+
+    /* Evita o destaque de toque */
+    -webkit-tap-highlight-color: transparent;
+}
+
+
+/* Tela preta ativa */
+
+#esipTelaLigacao.ativa {
+    display: flex;
+}
+
+
+/* =======================================
+   CONTEÚDO MÍNIMO DA LIGAÇÃO
+======================================= */
+
+.esip-ligacao-conteudo {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+
+    pointer-events: none;
+}
+
+
+/* Ícone de telefone */
+
+.esip-icone-ligacao {
+    font-size: 54px;
+    line-height: 1;
+
+    margin-bottom: 20px;
+
+    animation: esipPulsoLigacao 1.5s infinite;
+}
+
+
+/* Texto */
+
+.esip-status-ligacao {
+    font-size: 16px;
+    letter-spacing: 1px;
+
+    color: #ffffff;
+
+    opacity: 0.9;
+}
+
+
+/* Botão encerrar */
+
+#esipEncerrarLigacao {
+    position: absolute;
+
+    bottom: 55px;
+
+    left: 50%;
+    transform: translateX(-50%);
+
+    width: 68px;
+    height: 68px;
+
+    border-radius: 50%;
+
+    border: none;
+
+    background: #dc2626;
+    color: #ffffff;
+
+    font-size: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    pointer-events: auto;
+
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+
+    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.35);
+}
+
+
+#esipEncerrarLigacao:active {
+    transform: translateX(-50%) scale(0.92);
+}
+
+
+/* =======================================
+   ANIMAÇÃO
+======================================= */
+
+@keyframes esipPulsoLigacao {
+
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.12);
+        opacity: 0.65;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
 
 
 /* =========================
