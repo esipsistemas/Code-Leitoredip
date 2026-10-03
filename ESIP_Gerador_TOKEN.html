@@ -1,783 +1,1361 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>ESIP-Sistemas | Gerador de TOKEN</title>
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0,
+      maximum-scale=1.0, user-scalable=no">
+
+<title>ESIP-Sistemas | Preparador de E-mail</title>
+
 <style>
-*{box-sizing:border-box}
+
+*{
+    box-sizing:border-box;
+}
+
 body{
- margin:0;padding:18px 12px 42px;min-height:100vh;
- background:#02060a;color:#eafaff;font-family:Arial,Helvetica,sans-serif
-}
-.wrap{max-width:620px;margin:auto}
-h1{text-align:center;margin:2px 0;font-size:23px;letter-spacing:1.5px}
-.sub{text-align:center;color:#19caff;font-size:10px;letter-spacing:2.5px;margin:5px 0 18px}
-.panel{
- background:#050d13;border:1px solid #17495d;border-radius:15px;padding:16px;
- box-shadow:0 0 30px rgba(0,174,255,.08)
-}
-label{display:block;color:#63d9fa;font-size:11px;letter-spacing:.6px;margin:10px 0 5px}
-input{
- width:100%;padding:12px;border-radius:7px;border:1px solid #1c3f4c;
- background:#02070a;color:#fff;font-size:14px;outline:none
-}
-input:focus{border-color:#00c8ff;box-shadow:0 0 12px #008db522}
-button{cursor:pointer;font-weight:bold;letter-spacing:.6px}
-.generate{
- width:100%;margin-top:14px;padding:13px;border:1px solid #13d6ff;
- border-radius:7px;background:#00a9d7;color:#001018;box-shadow:0 0 16px #00b9ff30
-}
-.out{display:none;margin-top:22px}.out.show{display:block}
-.outtitle{text-align:center;color:#55ddff;font-size:10px;letter-spacing:2px;margin-bottom:10px}
-
-/* =========================================================
-   CARTÃO ESIP — VISUAL PRINCIPAL
-   ========================================================= */
-.card{
- position:relative;overflow:hidden;width:100%;min-height:720px;border-radius:22px;
- padding:25px 24px 22px;
- background:
-   radial-gradient(circle at 12% 30%,#008cff18,transparent 22%),
-   radial-gradient(circle at 87% 96%,#008cff1c,transparent 25%),
-   repeating-linear-gradient(125deg,#ffffff05 0 1px,transparent 1px 6px),
-   linear-gradient(135deg,#0a1014 0%,#020507 48%,#07141c 100%);
- border:1px solid #8bb3c666;
- box-shadow:0 0 35px #008cff22,inset 0 0 55px #008cff0b
-}
-.card:before{
- content:"";position:absolute;inset:10px;border:1px solid #00baff28;
- border-radius:16px;pointer-events:none
-}
-.card:after{
- content:"";position:absolute;left:-70px;top:265px;width:280px;height:180px;
- background:radial-gradient(ellipse,#009dff10,transparent 68%);
- transform:rotate(-20deg)
-}
-.c{position:relative;z-index:2}
-
-/* =========================================================
-   TOPO / MARCA
-   ========================================================= */
-.top{
- display:flex;justify-content:space-between;align-items:flex-start
-}
-.brand{
- display:flex;align-items:center;gap:14px
+    margin:0;
+    padding:20px;
+    background:#020617;
+    color:#fff;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
-/* ANTENA + RADAR ESIP */
-.logoIcon{
- position:relative;width:78px;height:78px;flex:none;
- filter:drop-shadow(0 0 8px #00aaff99)
+.laboratorio{
+    width:100%;
+    max-width:620px;
+    margin:0 auto 25px;
+    padding:22px;
+    background:#07111f;
+    border:1px solid #12334d;
 }
 
-/* haste da antena */
-.logoIcon:before{
- content:"";
- position:absolute;
- left:36px;top:27px;
- width:7px;height:47px;
- background:linear-gradient(90deg,#007fb0,#00d8ff,#007fb0);
- border-radius:3px;
- transform:skew(-7deg);
- box-shadow:0 0 8px #00c9ff,0 0 18px #00aaff55
+.titulo{
+    text-align:center;
+    color:#00f5d4;
+    font-size:22px;
+    font-weight:bold;
+    letter-spacing:1.5px;
 }
 
-/* radar circular */
-.logoIcon:after{
- content:"";
- position:absolute;
- left:4px;top:2px;
- width:66px;height:66px;
- border:3px solid #00c9ff;
- border-left-color:transparent;
- border-bottom-color:#00a8ed;
- border-radius:50%;
- box-shadow:
-   0 0 7px #00c9ff,
-   inset 0 0 9px #008cff55;
+.subtitulo{
+    margin-top:7px;
+    text-align:center;
+    color:#71839a;
+    font-size:12px;
+    line-height:18px;
 }
 
-/* círculos internos do radar */
-.radar{
- position:absolute;
- left:13px;top:11px;
- width:48px;height:48px;
- border:1px solid #00bfff88;
- border-radius:50%;
- box-shadow:0 0 8px #008cff33
-}
-.radar:before{
- content:"";
- position:absolute;
- left:9px;top:9px;
- width:28px;height:28px;
- border:1px solid #00d5ff66;
- border-radius:50%
-}
-.radar:after{
- content:"";
- position:absolute;
- left:23px;top:23px;
- width:7px;height:7px;
- border-radius:50%;
- background:#00e0ff;
- box-shadow:0 0 9px #00e0ff,0 0 18px #00aaff
+.campo{
+    margin-top:18px;
 }
 
-/* feixe do radar */
-.beam{
- position:absolute;
- left:39px;top:5px;
- width:2px;height:34px;
- background:linear-gradient(#00eaff,transparent);
- transform:rotate(38deg);
- transform-origin:bottom center;
- box-shadow:0 0 8px #00eaff
+.campo label{
+    display:block;
+    margin-bottom:8px;
+    color:#00f5d4;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:1px;
 }
 
-.logoText{
- font-weight:900;font-size:39px;line-height:32px;
- letter-spacing:-2px;color:#e4ecef
-}
-.sis{
- font-size:12px;letter-spacing:6px;color:#dce6e9;margin-left:3px
-}
-.comm{
- font-size:8px;letter-spacing:2.4px;color:#00b8f2;margin:5px 0 0 3px
-}
-.tag{
- border-left:3px solid #00bfff;padding:3px 0 3px 11px;
- font-size:9px;line-height:1.65;letter-spacing:1.7px;color:#e7f4f7
-}
-.tag b{color:#18c9ff}
-
-/* =========================================================
-   CIRCUITOS DECORATIVOS SUPERIORES
-   ========================================================= */
-.circuit{
- position:absolute;right:20px;top:145px;width:170px;height:112px;opacity:.85
-}
-.circuit span{
- position:absolute;height:1px;background:#00aef0;
- box-shadow:0 0 7px #00aef0;
- transform-origin:right center
-}
-.circuit span:after{
- content:"";position:absolute;right:-3px;top:-2px;
- width:5px;height:5px;border-radius:50%;
- background:#00d5ff;box-shadow:0 0 8px #00d5ff
-}
-.s1{width:90px;top:15px;right:0}
-.s2{width:130px;top:43px;right:0}
-.s3{width:72px;top:70px;right:0}
-.s4{width:110px;top:95px;right:0}
-
-/* =========================================================
-   CHIP — SUBIDO E COM CIRCUITOS
-   ========================================================= */
-.chip{
- position:absolute;
- left:25px;
- top:142px;
- width:150px;
- height:112px;
- border-radius:17px;
- background:
-   radial-gradient(circle at 30% 25%,#59636633,transparent 35%),
-   linear-gradient(145deg,#30383a,#090c0e 47%,#171d1f);
- border:2px solid #69777a;
- box-shadow:
-   inset 0 0 22px #000,
-   inset 0 0 8px #71808355,
-   0 0 17px #008cff22
-}
-.chip:before{
- content:"";
- position:absolute;
- inset:13px;
- border:1px solid #8a9799;
- border-radius:9px;
- box-shadow:inset 0 0 12px #000
-}
-.chip:after{
- content:"";
- position:absolute;
- left:50%;top:13px;
- width:1px;height:84px;
- background:#7b898b;
- box-shadow:
-   -38px 27px #718083,
-   38px 27px #718083
+.campo input{
+    width:100%;
+    min-height:55px;
+    padding:14px;
+    background:#020812;
+    border:2px solid #00f5d4;
+    border-radius:4px;
+    color:#fff;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:17px;
+    font-weight:bold;
+    outline:none;
 }
 
-/* linhas horizontais do chip */
-.cc{
- position:absolute;
- background:#718083;
- height:1px;
- box-shadow:0 0 3px #00bfff44
-}
-.cc.a{left:14px;top:35px;width:27px}
-.cc.b{right:14px;top:35px;width:27px}
-.cc.d{left:14px;bottom:35px;width:27px}
-.cc.e{right:14px;bottom:35px;width:27px}
-
-/* circuitos internos */
-.chipCircuit{
- position:absolute;
- left:39px;
- top:25px;
- width:72px;
- height:60px;
- opacity:.9
-}
-.chipCircuit i{
- position:absolute;
- display:block;
- height:2px;
- background:#00a9d7;
- box-shadow:0 0 5px #00a9d7;
- border-radius:2px
-}
-.chipCircuit i:after{
- content:"";
- position:absolute;
- width:5px;height:5px;
- border-radius:50%;
- background:#00d8ff;
- box-shadow:0 0 6px #00d8ff;
- top:-2px;right:-2px
-}
-.ch1{width:35px;left:0;top:8px}
-.ch2{width:52px;left:17px;top:22px}
-.ch3{width:30px;left:0;top:38px}
-.ch4{width:47px;left:24px;top:51px}
-
-/* =========================================================
-   DADOS
-   ========================================================= */
-.data{
- margin-top:43px;
- margin-left:178px;
- display:grid;
- gap:17px;
- min-height:132px
-}
-.field small{
- display:block;color:#00bfff;font-size:9px;
- letter-spacing:1.7px;margin-bottom:5px
-}
-.field strong{
- display:block;color:#edf7fa;font-size:14px;
- letter-spacing:.4px;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis
+.campo input:focus{
+    border-color:#ffffff;
+    box-shadow:0 0 0 2px rgba(0,245,212,.15);
 }
 
-/* =========================================================
-   TOKEN
-   ========================================================= */
-.tokenTitle{
- margin-top:34px;text-align:center;font-size:23px;
- font-weight:900;letter-spacing:4px;color:#e9eff1;
- text-shadow:0 0 9px #fff2
-}
-.rule{
- height:2px;margin:10px 0 17px;
- background:linear-gradient(90deg,transparent,#00baff,transparent);
- box-shadow:0 0 8px #00baff
+.botoes{
+    margin-top:20px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
-/* =========================================================
-   CHAVE
-   ========================================================= */
-.key{
- border:1px solid #008ed088;border-radius:11px;
- padding:14px 14px 13px;
- background:#020609b8;
- box-shadow:inset 0 0 24px #008cff0a
-}
-.keylabel{
- color:#11c9ff;font-size:11px;
- letter-spacing:1.7px;margin-bottom:10px
-}
-.keyrow{
- display:flex;gap:10px;align-items:center
-}
-.value{
- flex:1;min-width:0;height:42px;
- border:1px solid #263c45;border-radius:6px;
- display:flex;align-items:center;padding:0 13px;
- background:#03080b;color:#fff;
- font-family:monospace;font-size:14px;
- letter-spacing:3px;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis
-}
-.smallBtn{
- height:42px;padding:0 14px;border-radius:6px;
- border:1px solid #008fc9;
- background:#04131b;color:#9ceeff;font-size:10px
-}
-.smallBtn:hover{
- background:#082431;box-shadow:0 0 12px #00bfff22
+button{
+    width:100%;
+    min-height:55px;
+    border:0;
+    border-radius:4px;
+    font-family:Arial,Helvetica,sans-serif;
+    font-size:15px;
+    font-weight:bold;
+    letter-spacing:1px;
+    cursor:pointer;
 }
 
-/* =========================================================
-   BOTÕES
-   ========================================================= */
-.actions{
- display:grid;grid-template-columns:1fr 1fr;
- gap:10px;margin-top:13px
-}
-.action{
- height:46px;border:1px solid #008fc9;
- border-radius:6px;background:#020b10;
- color:#a5efff;font-size:11px;
- box-shadow:inset 0 0 15px #008cff09
-}
-.action:hover{background:#06202b}
-.copied{
- display:none;text-align:center;color:#60efb7;
- font-size:11px;margin-top:8px
-}
-.copied.on{display:block}
-
-/* =========================================================
-   RODAPÉ / GLOBO
-   ========================================================= */
-.footer{
- display:flex;justify-content:space-between;gap:10px;
- margin-top:22px;font-size:9px;
- letter-spacing:1.2px;color:#77919a
-}
-.footer b{
- color:#b5cbd0;font-weight:normal
-}
-.globe{
- position:absolute;right:-10px;bottom:-57px;
- width:255px;height:125px;
- border-radius:50% 50% 0 0;
- border-top:2px solid #00a9ef;
- background:radial-gradient(circle at 50% 100%,#008cff26,transparent 68%);
- opacity:.85
-}
-.globe:before,.globe:after{
- content:"";position:absolute;
- border:1px solid #008ed088;border-radius:50%
-}
-.globe:before{inset:14px 25px 0}
-.globe:after{inset:3px 76px 0}
-.dot{
- position:absolute;width:5px;height:5px;border-radius:50%;
- background:#00c9ff;box-shadow:0 0 8px #00c9ff
-}
-.d1{left:45px;top:55px}
-.d2{left:102px;top:37px}
-.d3{left:164px;top:62px}
-.d4{left:204px;top:42px}
-
-/* =========================================================
-   CONTROLES
-   ========================================================= */
-.note{
- text-align:center;color:#54727d;
- font-size:9px;line-height:1.5;margin-top:12px
-}
-.new{
- width:100%;margin-top:10px;height:43px;
- border:1px solid #183b48;border-radius:7px;
- background:transparent;color:#6e929d
+.btn-preview{
+    background:#00f5d4;
+    color:#021014;
 }
 
-/* =========================================================
-   CELULAR
-   ========================================================= */
-@media(max-width:470px){
- .card{
-   min-height:680px;
-   padding:21px 17px
- }
-
- .logoIcon{
-   width:59px;
-   height:59px
- }
- .logoIcon:before{
-   left:27px;
-   top:21px;
-   height:38px
- }
- .logoIcon:after{
-   left:2px;
-   top:1px;
-   width:51px;
-   height:51px
- }
- .radar{
-   left:9px;
-   top:8px;
-   width:39px;
-   height:39px
- }
- .radar:before{
-   left:7px;
-   top:7px;
-   width:23px;
-   height:23px
- }
- .radar:after{
-   left:18px;
-   top:18px;
-   width:6px;
-   height:6px
- }
- .beam{
-   left:29px;
-   top:4px;
-   height:27px
- }
-
- .logoText{font-size:31px}
- .sis{font-size:9px;letter-spacing:4px}
- .comm{font-size:7px}
- .tag{font-size:7px}
-
- .chip{
-   left:18px;
-   top:132px;
-   width:116px;
-   height:88px
- }
- .chip:before{inset:10px}
- .chip:after{
-   top:10px;
-   height:65px
- }
- .cc.a,.cc.b{top:28px}
- .cc.d,.cc.e{bottom:28px}
-
- .chipCircuit{
-   left:29px;
-   top:19px;
-   transform:scale(.75);
-   transform-origin:top left
- }
-
- .data{
-   margin-left:139px;
-   margin-top:35px;
-   gap:12px
- }
- .field small{font-size:8px}
- .field strong{font-size:11px}
-
- .circuit{
-   right:10px;
-   top:118px;
-   width:125px
- }
-
- .tokenTitle{
-   font-size:17px;
-   letter-spacing:2.5px;
-   margin-top:30px
- }
-
- .keyrow{flex-wrap:wrap}
- .value{
-   flex-basis:100%;
-   width:100%
- }
- .smallBtn{flex:1}
-
- .actions{gap:7px}
- .action{
-   font-size:9px;
-   padding:0 5px
- }
-
- .footer{font-size:7px}
+.btn-copiar{
+    background:#12334d;
+    color:#fff;
+    border:1px solid #00f5d4;
 }
+
+.status{
+    margin-top:15px;
+    min-height:20px;
+    text-align:center;
+    color:#00f5d4;
+    font-size:13px;
+}
+
+.preview-titulo{
+    max-width:620px;
+    margin:25px auto 10px;
+    color:#00f5d4;
+    font-size:12px;
+    font-weight:bold;
+    letter-spacing:1.5px;
+    text-align:center;
+}
+
+#preview{
+    width:100%;
+    max-width:620px;
+    margin:auto;
+    background:#030712;
+    min-height:300px;
+}
+
+iframe{
+    display:block;
+    width:100%;
+    min-height:1100px;
+    border:1px solid #12334d;
+    background:#030712;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<div class="wrap">
-
-<h1>📡 ESIP-Sistemas</h1>
-<div class="sub">GERADOR DE TOKEN DE ACESSO</div>
-
-<div class="panel">
-
-<label>Nome do usuário</label>
-<input id="nome" placeholder="Ex.: João da Silva">
-
-<label>Identificação</label>
-<input id="id" placeholder="Ex.: ESIP-000458">
-
-<label>Chave / TOKEN de acesso</label>
-<input id="token" placeholder="Digite ou cole o TOKEN">
-
-<label>Validade</label>
-<input id="validade" placeholder="Ex.: 31/12/2026">
-
-<button class="generate" onclick="gerar()">GERAR CARTÃO TOKEN</button>
-
-</div>
-
-<div class="out" id="out">
-
-<div class="outtitle">CREDENCIAL GERADA</div>
-
-<div class="card">
-
-<div class="c">
 
 <!-- =====================================================
-     TOPO
-     ===================================================== -->
-<div class="top">
+     PAINEL DE PREPARAÇÃO
+====================================================== -->
 
-<div class="brand">
+<div class="laboratorio">
 
-<div class="logoIcon">
-<div class="radar"></div>
-<div class="beam"></div>
+    <div class="titulo">
+        📡 ESIP-SISTEMAS
+    </div>
+
+    <div class="subtitulo">
+        PREPARAÇÃO DO CARTÃO TOKEN
+    </div>
+
+
+    <div class="campo">
+
+        <label for="usuario">
+            👤 USUÁRIO
+        </label>
+
+        <input
+            id="usuario"
+            type="text"
+            placeholder="Nome do usuário"
+            autocomplete="off">
+
+    </div>
+
+
+    <div class="campo">
+
+        <label for="identificacao">
+            🪪 IDENTIFICAÇÃO
+        </label>
+
+        <input
+            id="identificacao"
+            type="text"
+            placeholder="E-mail ou identificação"
+            autocomplete="off">
+
+    </div>
+
+
+    <div class="campo">
+
+        <label for="validade">
+            📅 VALIDADE
+        </label>
+
+        <input
+            id="validade"
+            type="text"
+            placeholder="DD/MM/AAAA"
+            autocomplete="off">
+
+    </div>
+
+
+    <div class="campo">
+
+        <label for="token">
+            🔐 TOKEN DE ACESSO
+        </label>
+
+        <input
+            id="token"
+            type="text"
+            placeholder="Digite o TOKEN"
+            autocomplete="off">
+
+    </div>
+
+
+    <div class="campo">
+
+        <label for="chave">
+            🔑 CHAVE DE ACESSO
+        </label>
+
+        <input
+            id="chave"
+            type="text"
+            placeholder="Digite a CHAVE"
+            autocomplete="off">
+
+    </div>
+
+
+    <div class="campo">
+
+        <label for="link">
+            🚀 LINK DA PÁGINA ESIP
+        </label>
+
+        <input
+            id="link"
+            type="url"
+            placeholder="https://seu-link"
+            autocomplete="off">
+
+    </div>
+
+
+    <div class="botoes">
+
+        <button
+            class="btn-preview"
+            type="button"
+            onclick="gerarPreview()">
+
+            👁 VISUALIZAR CARTÃO
+
+        </button>
+
+
+        <button
+            class="btn-copiar"
+            type="button"
+            onclick="copiarHTML()">
+
+            📋 COPIAR HTML FINAL
+
+        </button>
+
+    </div>
+
+
+    <div id="status" class="status"></div>
+
 </div>
 
-<div>
-<div class="logoText">ESIP</div>
-<div class="sis">SISTEMAS</div>
-<div class="comm">COMUNICAÇÃO PRIVADA</div>
-</div>
+
+
+<div class="preview-titulo">
+
+    PRÉ-VISUALIZAÇÃO DO E-MAIL
 
 </div>
 
-<div class="tag">
-<b>SEGURANÇA</b><br>
-PRIVACIDADE<br>
-CONEXÃO REAL
-</div>
+
+<div id="preview">
+
+    <iframe id="frame"></iframe>
 
 </div>
 
-<!-- CIRCUITOS DECORATIVOS -->
-<div class="circuit">
-<span class="s1"></span>
-<span class="s2"></span>
-<span class="s3"></span>
-<span class="s4"></span>
-</div>
+
+
+<script>
+
+
+function escaparHTML(valor){
+
+    return String(valor)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+
+function escaparAtributo(valor){
+
+    return escaparHTML(valor);
+
+}
+
+
+
+function gerarHTML(){
+
+
+    const usuario =
+        escaparHTML(
+            document.getElementById("usuario").value.trim()
+        );
+
+
+    const identificacao =
+        escaparHTML(
+            document.getElementById("identificacao").value.trim()
+        );
+
+
+    const validade =
+        escaparHTML(
+            document.getElementById("validade").value.trim()
+        );
+
+
+    const token =
+        escaparHTML(
+            document.getElementById("token").value.trim()
+        );
+
+
+    const chave =
+        escaparHTML(
+            document.getElementById("chave").value.trim()
+        );
+
+
+    const linkOriginal =
+        document.getElementById("link").value.trim()
+        || "https://SEU-LINK-DA-PAGINA";
+
+
+    const link =
+        escaparAtributo(linkOriginal);
+
+
+
+    return `<!DOCTYPE html>
+
+<html lang="pt-BR">
+
+<head>
+
+<meta http-equiv="Content-Type"
+      content="text/html; charset=UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>ESIP-Sistemas | TOKEN DE ACESSO</title>
+
+</head>
+
+
+<body
+style="
+margin:0;
+padding:0;
+background-color:#020812;
+">
+
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+width:100%;
+margin:0;
+padding:0;
+background-color:#020812;
+">
+
+<tr>
+
+<td
+align="center"
+style="
+padding:30px 10px;
+background-color:#020812;
+">
+
+
+<!--[if mso]>
+
+<table
+width="620"
+cellpadding="0"
+cellspacing="0"
+border="0">
+
+<tr>
+
+<td>
+
+<![endif]-->
+
 
 <!-- =====================================================
-     CHIP
-     ===================================================== -->
-<div class="chip">
+     CARTÃO PRINCIPAL
+====================================================== -->
 
-<i class="cc a"></i>
-<i class="cc b"></i>
-<i class="cc d"></i>
-<i class="cc e"></i>
+<table
+width="620"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+width:100%;
+max-width:620px;
+background-color:#030b14;
+border:1px solid #12334d;
+">
 
-<div class="chipCircuit">
-<i class="ch1"></i>
-<i class="ch2"></i>
-<i class="ch3"></i>
-<i class="ch4"></i>
-</div>
-
-</div>
 
 <!-- =====================================================
-     DADOS
-     ===================================================== -->
-<div class="data">
+     CABEÇALHO
+====================================================== -->
 
-<div class="field">
-<small>USUÁRIO</small>
-<strong id="cn">---</strong>
+<tr>
+
+<td
+align="center"
+style="
+padding:28px 20px 22px;
+background-color:#020812;
+border-bottom:1px solid #12334d;
+">
+
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:26px;
+font-weight:bold;
+letter-spacing:2px;
+line-height:32px;
+color:#00f5d4;
+">
+
+📡 ESIP-SISTEMAS
+
 </div>
 
-<div class="field">
-<small>IDENTIFICAÇÃO</small>
-<strong id="ci">---</strong>
+
+<div
+style="
+padding-top:6px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:11px;
+font-weight:bold;
+letter-spacing:2px;
+line-height:18px;
+color:#71839a;
+">
+
+COMUNICAÇÃO PRIVADA
+
 </div>
 
-<div class="field">
-<small>VALIDADE</small>
-<strong id="cv">---</strong>
-</div>
+
+<!-- LOGO / ANTENA EM HTML -->
+
+<table
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+margin-top:18px;
+">
+
+<tr>
+
+<td
+align="center"
+width="82"
+height="82"
+style="
+width:82px;
+height:82px;
+background-color:#04131f;
+border:1px solid #00f5d4;
+font-family:Arial,Helvetica,sans-serif;
+font-size:34px;
+line-height:82px;
+color:#00f5d4;
+">
+
+◉
+
+</td>
+
+</tr>
+
+</table>
+
+
+<div
+style="
+padding-top:12px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:10px;
+font-weight:bold;
+letter-spacing:2px;
+color:#00f5d4;
+">
+
+SEGURANÇA • PRIVACIDADE • CONEXÃO REAL
 
 </div>
 
-<div class="tokenTitle">TOKEN DE ACESSO</div>
 
-<div class="rule"></div>
+</td>
+
+</tr>
+
+
+
+<!-- =====================================================
+     ÁREA DO CARTÃO
+====================================================== -->
+
+<tr>
+
+<td
+style="
+padding:25px 22px;
+background-color:#030b14;
+">
+
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+background-color:#061522;
+border:1px solid #12415b;
+">
+
+
+<!-- =====================================================
+     PARTE SUPERIOR DO CARTÃO
+====================================================== -->
+
+<tr>
+
+<td
+style="
+padding:22px 20px;
+background-color:#061522;
+">
+
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0">
+
+<tr>
+
+
+<!-- CHIP -->
+
+<td
+width="115"
+valign="top"
+style="
+width:115px;
+padding-right:18px;
+">
+
+
+<table
+width="82"
+height="58"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+width:82px;
+height:58px;
+background-color:#111827;
+border:1px solid #6b7f8d;
+">
+
+<tr>
+
+<td
+align="center"
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:27px;
+color:#b6c7d6;
+">
+
+▦
+
+</td>
+
+</tr>
+
+</table>
+
+
+<div
+style="
+padding-top:10px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:8px;
+font-weight:bold;
+letter-spacing:1.5px;
+color:#71839a;
+">
+
+ESIP SECURE
+
+</div>
+
+
+</td>
+
+
+
+<!-- IDENTIDADE -->
+
+<td
+valign="top"
+style="
+padding-left:5px;
+">
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:10px;
+font-weight:bold;
+letter-spacing:1.5px;
+color:#71839a;
+">
+
+USUÁRIO
+
+</div>
+
+
+<div
+style="
+padding-top:5px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:17px;
+font-weight:bold;
+line-height:22px;
+color:#ffffff;
+word-break:break-word;
+">
+
+${usuario || "NOME DO USUÁRIO"}
+
+</div>
+
+
+<div
+style="
+padding-top:14px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:10px;
+font-weight:bold;
+letter-spacing:1.5px;
+color:#71839a;
+">
+
+IDENTIFICAÇÃO
+
+</div>
+
+
+<div
+style="
+padding-top:5px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:13px;
+font-weight:bold;
+line-height:19px;
+color:#d9e9f3;
+word-break:break-all;
+">
+
+${identificacao || "IDENTIFICAÇÃO"}
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
+
+<!-- =====================================================
+     LINHA DE STATUS
+====================================================== -->
+
+<tr>
+
+<td
+style="
+padding:0 20px 20px;
+background-color:#061522;
+">
+
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0">
+
+<tr>
+
+<td
+style="
+border-top:1px solid #12334d;
+padding-top:15px;
+">
+
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:10px;
+font-weight:bold;
+letter-spacing:1.5px;
+color:#71839a;
+">
+
+VALIDADE
+
+</div>
+
+
+<div
+style="
+padding-top:4px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:14px;
+font-weight:bold;
+color:#00f5d4;
+">
+
+${validade || "DD/MM/AAAA"}
+
+</div>
+
+
+</td>
+
+
+<td
+align="right"
+style="
+border-top:1px solid #12334d;
+padding-top:15px;
+">
+
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:10px;
+font-weight:bold;
+letter-spacing:1.5px;
+color:#71839a;
+">
+
+STATUS
+
+</div>
+
+
+<div
+style="
+padding-top:4px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:14px;
+font-weight:bold;
+color:#00f5d4;
+">
+
+● ATIVO
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
+
+<!-- =====================================================
+     TOKEN
+====================================================== -->
+
+<tr>
+
+<td
+style="
+padding:20px;
+background-color:#04131f;
+border-top:1px solid #12415b;
+">
+
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:11px;
+font-weight:bold;
+letter-spacing:2px;
+color:#00f5d4;
+">
+
+TOKEN DE ACESSO
+
+</div>
+
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+margin-top:10px;
+">
+
+<tr>
+
+<td
+style="
+padding:17px 14px;
+background-color:#020812;
+border:2px solid #00f5d4;
+">
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:20px;
+font-weight:bold;
+line-height:26px;
+letter-spacing:2px;
+color:#ffffff;
+word-break:break-all;
+">
+
+${token || "SEU-TOKEN-AQUI"}
+
+</div>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
 
 <!-- =====================================================
      CHAVE
-     ===================================================== -->
-<div class="key">
+====================================================== -->
 
-<div class="keylabel">🔐 CHAVE DE ACESSO</div>
+<tr>
 
-<div class="keyrow">
+<td
+style="
+padding:0 20px 22px;
+background-color:#04131f;
+">
 
-<div class="value" id="ct">••••••••••••</div>
 
-<button class="smallBtn" onclick="revelar()">
-REVELAR CHAVE
-</button>
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:11px;
+font-weight:bold;
+letter-spacing:2px;
+color:#00f5d4;
+">
 
-</div>
-
-</div>
-
-<div class="actions">
-
-<button class="action" onclick="revelar()">
-◉ &nbsp; REVELAR CHAVE
-</button>
-
-<button class="action" onclick="copiar()">
-▣ &nbsp; COPIAR CHAVE
-</button>
+🔐 CHAVE DE ACESSO
 
 </div>
 
-<div class="copied" id="copied">
-✓ CHAVE COPIADA
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+margin-top:10px;
+">
+
+<tr>
+
+<td
+style="
+padding:15px 14px;
+background-color:#020812;
+border:1px solid #12415b;
+">
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:17px;
+font-weight:bold;
+line-height:24px;
+letter-spacing:2px;
+color:#ffffff;
+word-break:break-all;
+">
+
+${chave || "SUA-CHAVE-AQUI"}
+
 </div>
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
+
+<!-- =====================================================
+     CIRCUITOS INFERIORES
+====================================================== -->
+
+<tr>
+
+<td
+align="center"
+style="
+padding:14px 10px;
+background-color:#020812;
+border-top:1px solid #12334d;
+">
+
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:10px;
+font-weight:bold;
+letter-spacing:3px;
+color:#00f5d4;
+">
+
+━━━━━━━━ ESIP SECURE NETWORK ━━━━━━━━
+
+</div>
+
+
+</td>
+
+</tr>
+
+
+</table>
+
+
+<!-- =====================================================
+     BOTÃO COM LINK
+====================================================== -->
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+margin-top:25px;
+">
+
+<tr>
+
+<td
+align="center"
+>
+
+
+<!--[if mso]>
+
+<v:roundrect
+xmlns:v="urn:schemas-microsoft-com:vml"
+href="${link}"
+style="
+height:56px;
+v-text-anchor:middle;
+width:300px;
+"
+arcsize="8%"
+strokecolor="#00f5d4"
+fillcolor="#00f5d4">
+
+<w:anchorlock/>
+
+<center
+style="
+color:#021014;
+font-family:Arial,Helvetica,sans-serif;
+font-size:15px;
+font-weight:bold;
+letter-spacing:1px;
+">
+
+🚀 INICIAR ATIVAÇÃO ESIP
+
+</center>
+
+</v:roundrect>
+
+<![endif]-->
+
+
+<!--[if !mso]><!-->
+
+
+<a
+href="${link}"
+target="_blank"
+style="
+display:inline-block;
+padding:18px 30px;
+background-color:#00f5d4;
+border:1px solid #00f5d4;
+color:#021014;
+font-family:Arial,Helvetica,sans-serif;
+font-size:15px;
+font-weight:bold;
+letter-spacing:1px;
+text-decoration:none;
+">
+
+🚀 INICIAR ATIVAÇÃO ESIP
+
+</a>
+
+
+<!--<![endif]-->
+
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td
+align="center"
+style="
+padding-top:11px;
+font-family:Arial,Helvetica,sans-serif;
+font-size:11px;
+line-height:18px;
+color:#71839a;
+">
+
+Acesso ao ambiente autorizado ESIP-Sistemas
+
+</td>
+
+</tr>
+
+</table>
+
+
+
+<!-- =====================================================
+     MENSAGEM
+====================================================== -->
+
+<table
+width="100%"
+cellpadding="0"
+cellspacing="0"
+border="0"
+style="
+margin-top:25px;
+">
+
+<tr>
+
+<td
+align="center"
+style="
+padding:20px;
+background-color:#04131f;
+border:1px solid #12334d;
+">
+
+
+<div
+style="
+font-family:Arial,Helvetica,sans-serif;
+font-size:13px;
+line-height:22px;
+color:#b6c7d6;
+">
+
+Utilize o botão acima para acessar
+o ambiente autorizado da ESIP-Sistemas.
+
+<br><br>
+
+<strong
+style="color:#00f5d4;">
+COMUNICAÇÃO PRIVADA
+</strong>
+
+</div>
+
+
+</td>
+
+</tr>
+
+</table>
+
+
+</td>
+
+</tr>
+
+
 
 <!-- =====================================================
      RODAPÉ
-     ===================================================== -->
-<div class="footer">
+====================================================== -->
 
-<b>
-UMA REDE PRIVADA FEITA PARA PESSOAS,<br>
-EMPRESAS E GRANDES INDÚSTRIAS.
-</b>
+<tr>
 
-<span>ESIP-SISTEMAS</span>
+<td
+align="center"
+style="
+padding:24px 20px;
+background-color:#020812;
+font-family:Arial,Helvetica,sans-serif;
+font-size:11px;
+line-height:18px;
+color:#5f7184;
+border-top:1px solid #12334d;
+">
 
-</div>
 
-<!-- GLOBO -->
-<div class="globe">
-<i class="dot d1"></i>
-<i class="dot d2"></i>
-<i class="dot d3"></i>
-<i class="dot d4"></i>
-</div>
+<strong
+style="color:#00f5d4;">
 
-</div>
-</div>
+📡 ESIP-Sistemas
 
-<button class="new" onclick="novo()">NOVO CARTÃO</button>
+</strong>
 
-<div class="note">
-A chave permanece protegida até ser revelada.
-Funcionamento local no navegador.
-</div>
+<br>
 
-</div>
-</div>
+Comunicação Privada • Segurança • Tecnologia
 
-<script>
-let chave="",vis=false;
+<br><br>
 
-function gerar(){
- const nome=document.getElementById("nome").value.trim();
- const id=document.getElementById("id").value.trim();
- const tok=document.getElementById("token").value.trim();
- const val=document.getElementById("validade").value.trim();
+Este acesso é destinado exclusivamente
+ao ambiente autorizado do cliente.
 
- if(!nome){
-  alert("Digite o nome do usuário.");
-  return
- }
+<br><br>
 
- if(!tok){
-  alert("Digite ou cole o TOKEN de acesso.");
-  return
- }
+© ESIP-Sistemas
 
- chave=tok;
- vis=false;
+</td>
 
- document.getElementById("cn").textContent=nome;
- document.getElementById("ci").textContent=id||"USUÁRIO ESIP";
- document.getElementById("cv").textContent=val||"TOKEN ATIVO";
+</tr>
 
- document.getElementById("ct").textContent=
-   "•".repeat(Math.min(Math.max(chave.length,8),18));
 
- document.getElementById("out").classList.add("show");
+</table>
 
- document.getElementById("out").scrollIntoView({
-  behavior:"smooth",
-  block:"start"
- });
+
+<!--[if mso]>
+
+</td>
+</tr>
+</table>
+
+<![endif]-->
+
+
+</td>
+
+</tr>
+
+</table>
+
+
+</body>
+
+</html>`;
+
 }
 
-function revelar(){
- if(!chave)return;
 
- vis=!vis;
 
- document.getElementById("ct").textContent=
-   vis
-   ? chave
-   : "•".repeat(Math.min(Math.max(chave.length,8),18));
+function gerarPreview(){
+
+    const html = gerarHTML();
+
+    const frame =
+        document.getElementById("frame");
+
+    frame.srcdoc = html;
+
+    document.getElementById("status").textContent =
+        "✓ Pré-visualização atualizada.";
+
 }
 
-async function copiar(){
 
- if(!chave){
-  alert("Gere um cartão primeiro.");
-  return
- }
 
- try{
-  await navigator.clipboard.writeText(chave)
- }
- catch(e){
-  const t=document.createElement("textarea");
-  t.value=chave;
-  document.body.appendChild(t);
-  t.select();
-  document.execCommand("copy");
-  t.remove();
- }
+async function copiarHTML(){
 
- const x=document.getElementById("copied");
+    const html = gerarHTML();
 
- x.classList.add("on");
+    try{
 
- setTimeout(()=>{
-  x.classList.remove("on")
- },2200);
+        await navigator.clipboard.writeText(html);
+
+        document.getElementById("status").textContent =
+            "✓ HTML FINAL COPIADO. Agora é só colar no seu processo de envio.";
+
+    }
+
+    catch(erro){
+
+        const area =
+            document.createElement("textarea");
+
+        area.value = html;
+
+        document.body.appendChild(area);
+
+        area.select();
+
+        document.execCommand("copy");
+
+        area.remove();
+
+        document.getElementById("status").textContent =
+            "✓ HTML FINAL COPIADO.";
+
+    }
+
 }
 
-function novo(){
 
- chave="";
- vis=false;
 
- ["nome","id","token","validade"].forEach(
-  x=>document.getElementById(x).value=""
- );
+/* =====================================================
+   ATUALIZAÇÃO AUTOMÁTICA
+====================================================== */
 
- document.getElementById("out").classList.remove("show");
+document
+.getElementById("usuario")
+.addEventListener("input",gerarPreview);
 
- window.scrollTo({
-  top:0,
-  behavior:"smooth"
- });
-}
+document
+.getElementById("identificacao")
+.addEventListener("input",gerarPreview);
+
+document
+.getElementById("validade")
+.addEventListener("input",gerarPreview);
+
+document
+.getElementById("token")
+.addEventListener("input",gerarPreview);
+
+document
+.getElementById("chave")
+.addEventListener("input",gerarPreview);
+
+document
+.getElementById("link")
+.addEventListener("input",gerarPreview);
+
+
+/* Primeira visualização */
+
+gerarPreview();
+
 </script>
 
 </body>
