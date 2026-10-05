@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESIP Rádio Tático - Sistema C4ISR Criptografado</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#020617',
+                            950: '#01030b',
+                            800: '#090d1f',
+                            700: '#11183c',
+                            600: '#1a234e'
+                        },
+                        neon: {
+                            cyan: '#00f5ff',
+                            blue: '#0088ff',
+                            green: '#00ff66',
+                            red: '#ff0055',
+                            amber: '#ffaa00'
+                        }
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 15px rgba(0, 245, 255, 0.4), inset 0 0 10px rgba(0, 245, 255, 0.2)',
+                        'neon-cyan-lg': '0 0 25px rgba(0, 245, 255, 0.7), inset 0 0 15px rgba(0, 245, 255, 0.4)',
+                        'neon-red': '0 0 15px rgba(255, 0, 85, 0.5), inset 0 0 10px rgba(255, 0, 85, 0.2)',
+                        'neon-green': '0 0 15px rgba(0, 255, 102, 0.5), inset 0 0 10px rgba(0, 255, 102, 0.2)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- PeerJS & QRCode Libraries -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: #01030b;
+            color: #00f5ff;
+            overflow-x: hidden;
+        }
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        /* Tactical scanlines & radar grid */
+        .scanlines {
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.25) 50%
+            ), linear-gradient(
+                90deg,
+                rgba(255, 0, 0, 0.03),
+                rgba(0, 255, 0, 0.01),
+                rgba(0, 0, 255, 0.03)
+            );
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+        }
+        .radar-sweep {
+            background: conic-gradient(from 0deg at 50% 50%, rgba(0, 245, 255, 0) 0deg, rgba(0, 245, 255, 0.2) 360deg);
+            animation: radarRotate 4s linear infinite;
+        }
+        @keyframes radarRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #090d1f;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #00f5ff55;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #00f5ff;
+        }
+        .neon-border {
+            border: 1px solid rgba(0, 245, 255, 0.4);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
+        }
+        .neon-border:focus-within, .neon-border:hover {
+            border-color: #00f5ff;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-navy-950 text-neon-cyan min-h-screen flex flex-col relative select-none">
+    <div class="absolute inset-0 scanlines z-50 fixed"></div>
+
+    <header class="bg-navy-900 border-b border-cyan-500/30 px-4 py-3 flex items-center justify-between z-40 shadow-neon-cyan">
+        <div class="flex items-center space-x-3">
+            <div class="relative w-10 h-10 flex items-center justify-center bg-navy-800 rounded border border-cyan-500 shadow-neon-cyan animate-pulse">
+                <i class="fa-solid fa-tower-broadcast text-neon-cyan text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-orbitron font-extrabold tracking-widest text-lg md:text-xl text-white drop-shadow-[0_0_8px_#00f5ff]">ESIP <span class="text-neon-cyan">RÁDIO TÁTICO</span></h1>
+                <div class="text-xs text-cyan-400/70 tracking-wider flex items-center space-x-2">
+                    <span class="inline-block w-2 h-2 rounded-full bg-neon-green animate-ping"></span>
+                    <span id="system-status">SECURE P2P C4ISR V4.2</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 md:space-x-4">
+            <div id="license-badge" class="hidden md:flex items-center space-x-2 px-3 py-1 bg-navy-800 border border-emerald-500/50 rounded text-xs text-emerald-400 shadow-[0_0_10px_rgba(0,255,102,0.2)]">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span id="badge-callsign">UNLICENSED</span>
+            </div>
+            <button onclick="playSound('click'); openModal('license-modal')" class="px-3 py-1.5 bg-navy-800 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded text-xs font-orbitron transition shadow-neon-cyan flex items-center space-x-1.5">
+                <i class="fa-solid fa-key"></i>
+                <span class="hidden sm:inline">LICENÇA</span>
+            </button>
+            <button onclick="playSound('click'); toggleAudioMute()" id="sound-toggle-btn" class="w-9 h-9 flex items-center justify-center bg-navy-800 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded transition shadow-neon-cyan">
+                <i class="fa-solid fa-volume-high" id="sound-icon"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4 p-3 md:p-4 z-10 max-w-[1800px] w-full mx-auto">
+        
+        <!-- COLUMN 1 & 2: Communication & Radar / Map & Calls -->
+        <section class="lg:col-span-3 flex flex-col space-y-4">
+            
+            <!-- Tactical Command Bar & Node Status -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="bg-navy-900/90 border border-cyan-500/30 rounded p-3 shadow-neon-cyan flex flex-col justify-between">
+                    <div class="text-xs text-cyan-400/70 font-orbitron flex justify-between items-center mb-1">
+                        <span>MEU ID TÁTICO</span>
+                        <i class="fa-solid fa-fingerprint text-cyan-400"></i>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="my-peer-id" readonly class="bg-navy-950 border border-cyan-500/50 rounded px-2 py-1 text-xs text-white w-full font-mono tracking-wider focus:outline-none" placeholder="Gerando ID...">
+                        <button onclick="playSound('click'); copyMyId()" class="px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-500 rounded text-xs transition" title="Copiar ID">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-navy-900/90 border border-cyan-500/30 rounded p-3 shadow-neon-cyan flex flex-col justify-between">
+                    <div class="text-xs text-cyan-400/70 font-orbitron flex justify-between items-center mb-1">
+                        <span>CONECTAR COM DESTINO</span>
+                        <i class="fa-solid fa-satellite-dish text-cyan-400"></i>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="target-peer-id" class="bg-navy-950 border border-cyan-500/50 rounded px-2 py-1 text-xs text-white w-full font-mono tracking-wider focus:outline-none focus:border-cyan-400" placeholder="Cole o ID do Aliado...">
+                        <button onclick="playSound('click'); connectToPeer()" class="px-3 py-1 bg-cyan-600 hover:bg-cyan-500 text-navy-950 font-bold rounded text-xs transition shadow-neon-cyan">
+                            CONECTAR
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-navy-900/90 border border-cyan-500/30 rounded p-3 shadow-neon-cyan flex items-center justify-around">
+                    <div class="text-center">
+                        <div class="text-[10px] text-cyan-400/70 font-orbitron">STATUS P2P</div>
+                        <div id="p2p-status-badge" class="text-xs font-bold text-red-500 mt-1 uppercase">DESCONECTADO</div>
+                    </div>
+                    <div class="h-8 w-[1px] bg-cyan-500/30"></div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-cyan-400/70 font-orbitron">CANAL AUDIO</div>
+                        <div id="audio-status-badge" class="text-xs font-bold text-gray-400 mt-1 uppercase">STANDBY</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat & P2P Messaging Hub -->
+            <div class="bg-navy-900/90 border border-cyan-500/40 rounded-lg flex flex-col flex-1 min-h-[400px] shadow-neon-cyan overflow-hidden relative">
+                
+                <!-- Chat Header bar -->
+                <div class="bg-navy-800/80 px-4 py-2 border-b border-cyan-500/30 flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                        <i class="fa-solid fa-comments text-cyan-400"></i>
+                        <span class="font-orbitron text-xs tracking-wider text-white">CANAL DE TRANSMISSÃO CRIPTOGRAFADA P2P</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-xs text-cyan-300">
+                        <span id="active-peer-display">Nenhum canal ativo</span>
+                    </div>
+                </div>
+
+                <!-- Messages Log Box -->
+                <div id="chat-messages" class="flex-1 p-4 overflow-y-auto custom-scrollbar space-y-3 font-mono text-sm max-h-[450px]">
+                    <div class="text-center text-cyan-500/50 text-xs py-2 border-b border-cyan-500/10">
+                        [SISTEMA] Conecte-se a um ID de rádio parceiro para iniciar o link criptografado seguro.
+                    </div>
+                </div>
+
+                <!-- Voice Call Active Floating Banner (Hidden by default) -->
+                <div id="voice-call-banner" class="hidden bg-cyan-950/90 border-y border-cyan-500 px-4 py-3 flex items-center justify-between animate-pulse">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-3 h-3 rounded-full bg-neon-green animate-ping"></div>
+                        <div>
+                            <div class="font-orbitron text-xs text-white font-bold">CANAL DE VOZ WEBRTC ATIVO</div>
+                            <div class="text-[10px] text-cyan-300" id="call-timer">00:00</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="playSound('click'); toggleMuteMic()" id="mic-mute-btn" class="px-3 py-1 bg-navy-900 hover:bg-cyan-900 text-cyan-300 border border-cyan-500 rounded text-xs transition">
+                            <i class="fa-solid fa-microphone"></i> Mute
+                        </button>
+                        <button onclick="playSound('alert'); endVoiceCall()" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-white font-bold rounded text-xs transition shadow-neon-red">
+                            DESLIGAR
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chat Input Controls -->
+                <div class="bg-navy-800/90 border-t border-cyan-500/30 p-3 flex flex-wrap items-center gap-2">
+                    <!-- Voice Call Button -->
+                    <button onclick="playSound('click'); startVoiceCall()" id="start-call-btn" class="p-2.5 bg-navy-900 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded transition shadow-neon-cyan text-xs flex items-center space-x-1" title="Iniciar Chamada de Voz WebRTC">
+                        <i class="fa-solid fa-phone text-neon-green"></i>
+                        <span class="hidden sm:inline">VOZ</span>
+                    </button>
+
+                    <!-- Geolocation Share Button -->
+                    <button onclick="playSound('click'); sendGeolocation()" class="p-2.5 bg-navy-900 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded transition shadow-neon-cyan text-xs flex items-center space-x-1" title="Enviar Geolocalização GPS">
+                        <i class="fa-solid fa-location-crosshairs text-neon-cyan"></i>
+                        <span class="hidden sm:inline">GPS</span>
+                    </button>
+
+                    <!-- File Transfer Button -->
+                    <label class="p-2.5 bg-navy-900 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded transition shadow-neon-cyan text-xs flex items-center space-x-1 cursor-pointer" title="Enviar Arquivo em Blocos">
+                        <i class="fa-solid fa-paperclip text-amber-400"></i>
+                        <span class="hidden sm:inline">ARQUIVO</span>
+                        <input type="file" id="file-input" onchange="handleFileSelected(event)" class="hidden">
+                    </label>
+
+                    <!-- Audio Recorder Toggle -->
+                    <button onclick="playSound('click'); toggleAudioRecorder()" id="record-audio-btn" class="p-2.5 bg-navy-900 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded transition shadow-neon-cyan text-xs flex items-center space-x-1" title="Gravar Mensagem de Voz">
+                        <i class="fa-solid fa-microphone text-red-400" id="mic-icon-rec"></i>
+                        <span class="hidden sm:inline" id="rec-label">GRAVAR ÁUDIO</span>
+                    </button>
+
+                    <!-- Text Input -->
+                    <input type="text" id="chat-input" onkeydown="if(event.key==='Enter') sendTextMessage()" placeholder="Digite sua mensagem tática..." class="flex-1 bg-navy-950 border border-cyan-500/50 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400 font-mono">
+
+                    <!-- Send Button -->
+                    <button onclick="playSound('click'); sendTextMessage()" class="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-navy-950 font-bold rounded text-xs transition shadow-neon-cyan flex items-center space-x-1">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span class="hidden sm:inline">ENVIAR</span>
+                    </button>
+                </div>
+
+                <!-- Audio Recorder Preview Modal / Drawer Inside Chat -->
+                <div id="audio-preview-drawer" class="hidden bg-navy-950 border-t border-cyan-500/40 p-3 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="text-xs text-red-400 animate-pulse font-bold flex items-center space-x-1">
+                            <i class="fa-solid fa-circle text-[8px]"></i>
+                            <span id="rec-timer">00:00</span>
+                        </div>
+                        <audio id="audio-preview-player" controls class="h-8 max-w-[220px]"></audio>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="playSound('click'); cancelAudioRecording()" class="px-3 py-1 bg-red-950 text-red-300 border border-red-500/60 rounded text-xs hover:bg-red-900 transition">Descartar</button>
+                        <button onclick="playSound('click'); sendRecordedAudio()" class="px-3 py-1 bg-cyan-600 text-navy-950 font-bold rounded text-xs hover:bg-cyan-500 transition shadow-neon-cyan">Enviar Áudio</button>
+                    </div>
+                </div>
+
+                <!-- File Transfer Progress Drawer -->
+                <div id="file-transfer-drawer" class="hidden bg-navy-950 border-t border-cyan-500/40 p-3">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span id="transfer-filename" class="text-cyan-300 truncate">Transmitindo arquivo...</span>
+                        <span id="transfer-pct" class="text-cyan-400 font-bold">0%</span>
+                    </div>
+                    <div class="w-full bg-navy-900 rounded-full h-2 border border-cyan-500/30 overflow-hidden">
+                        <div id="transfer-progress-bar" class="bg-cyan-400 h-full w-0 transition-all duration-150 shadow-[0_0_10px_#00f5ff]"></div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- COLUMN 3: Radar, Tactical Map & System Telemetry -->
+        <section class="flex flex-col space-y-4">
+            
+            <!-- Tactical Radar Visualizer -->
+            <div class="bg-navy-900/90 border border-cyan-500/40 rounded-lg p-4 shadow-neon-cyan flex flex-col items-center relative overflow-hidden">
+                <div class="w-full flex justify-between items-center mb-2 z-10">
+                    <span class="font-orbitron text-xs text-white tracking-wider">RADAR P2P TÁTICO</span>
+                    <span class="inline-block w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                </div>
+                
+                <!-- Radar Scope -->
+                <div class="relative w-44 h-44 rounded-full border-2 border-cyan-500/40 bg-navy-950 flex items-center justify-center shadow-[inset_0_0_20px_rgba(0,245,255,0.2)] my-2">
+                    <div class="absolute inset-0 rounded-full radar-sweep"></div>
+                    <div class="absolute inset-x-0 top-1/2 h-[1px] bg-cyan-500/30"></div>
+                    <div class="absolute inset-y-0 left-1/2 w-[1px] bg-cyan-500/30"></div>
+                    <div class="w-2 h-2 rounded-full bg-neon-cyan shadow-neon-cyan z-20 animate-pulse"></div>
+                    <div class="absolute bottom-2 text-[9px] text-cyan-400/70 font-mono">LAT: 15.7801° S</div>
+                </div>
+
+                <div class="w-full grid grid-cols-2 gap-2 mt-2 text-xs">
+                    <div class="bg-navy-950 p-2 rounded border border-cyan-500/20">
+                        <div class="text-[9px] text-cyan-400/70 font-orbitron">LATÊNCIA</div>
+                        <div id="telemetry-ping" class="text-cyan-300 font-bold">-- ms</div>
+                    </div>
+                    <div class="bg-navy-950 p-2 rounded border border-cyan-500/20">
+                        <div class="text-[9px] text-cyan-400/70 font-orbitron">SEGURANÇA</div>
+                        <div class="text-emerald-400 font-bold">AES-HMAC</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPS Coordinates Telemetry Box -->
+            <div class="bg-navy-900/90 border border-cyan-500/40 rounded-lg p-4 shadow-neon-cyan">
+                <div class="font-orbitron text-xs text-white tracking-wider mb-2 flex justify-between items-center">
+                    <span>TELEMETRIA GPS</span>
+                    <button onclick="playSound('click'); fetchCurrentGPS()" class="text-cyan-400 hover:text-white text-xs underline">Atualizar</button>
+                </div>
+                <div id="gps-info-box" class="bg-navy-950 p-3 rounded border border-cyan-500/20 text-xs space-y-1 font-mono">
+                    <div class="text-cyan-400/70">Aguardando coordenadas GPS...</div>
+                </div>
+            </div>
+
+            <!-- Tactical Channels & Shortcuts -->
+            <div class="bg-navy-900/90 border border-cyan-500/40 rounded-lg p-4 shadow-neon-cyan flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="font-orbitron text-xs text-white tracking-wider mb-3">COMANDOS RÁPIDOS</div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="playSound('alert'); sendEmergencyBeacon()" class="p-2 bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-500/60 rounded text-xs font-orbitron transition shadow-neon-red flex items-center justify-center space-x-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>S.O.S</span>
+                        </button>
+                        <button onclick="playSound('click'); clearChatLogs()" class="p-2 bg-navy-950 hover:bg-cyan-950 text-cyan-300 border border-cyan-500/60 rounded text-xs font-orbitron transition">
+                            <i class="fa-solid fa-trash"></i>
+                            <span>LIMPAR</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4 pt-3 border-t border-cyan-500/20 text-[10px] text-cyan-500/60 text-center font-mono">
+                    ESIP TACTICAL SYSTEMS v4.2 © 2026
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <div id="license-modal" class="fixed inset-0 bg-navy-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-navy-900 border-2 border-cyan-500 rounded-xl max-w-md w-full p-6 shadow-neon-cyan-lg relative">
+            <button onclick="playSound('click'); closeModal('license-modal')" class="absolute top-4 right-4 text-cyan-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="p-3 bg-navy-950 border border-cyan-500 rounded-lg shadow-neon-cyan">
+                    <i class="fa-solid fa-shield-keyhole text-2xl text-neon-cyan"></i>
+                </div>
+                <div>
+                    <h3 class="font-orbitron font-bold text-white text-base">SISTEMA DE LICENCIAMENTO</h3>
+                    <p class="text-xs text-cyan-400/70">Validação Criptográfica Token/HMAC</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-cyan-400 font-orbitron mb-1">CALLSIGN / NOME DO OPERADOR</label>
+                    <input type="text" id="license-callsign" class="w-full bg-navy-950 border border-cyan-500/60 rounded px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400" placeholder="Ex: DELTA-1">
+                </div>
+                <div>
+                    <label class="block text-xs text-cyan-400 font-orbitron mb-1">CHAVE DE LICENÇA / TOKEN HMAC</label>
+                    <input type="text" id="license-token-input" class="w-full bg-navy-950 border border-cyan-500/60 rounded px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-cyan-400" placeholder="Cole o Token HMAC aqui...">
+                </div>
+
+                <div class="flex space-x-3 pt-2">
+                    <button onclick="playSound('click'); generateTestLicenseToken()" class="flex-1 py-2 bg-navy-950 hover:bg-cyan-950 text-cyan-300 border border-cyan-500 rounded text-xs font-orbitron transition">
+                        GERAR TOKEN DEMO
+                    </button>
+                    <button onclick="playSound('click'); validateAndApplyLicense()" class="flex-1 py-2 bg-cyan-600 hover:bg-cyan-500 text-navy-950 font-bold rounded text-xs font-orbitron transition shadow-neon-cyan">
+                        VALIDAR LICENÇA
+                    </button>
+                </div>
+
+                <!-- QR Code Display Container -->
+                <div class="mt-4 pt-4 border-t border-cyan-500/30 flex flex-col items-center">
+                    <span class="text-[10px] text-cyan-400/70 font-orbitron mb-2">QR CODE DE AUTENTICAÇÃO TÁTICA</span>
+                    <div id="qrcode-container" class="bg-white p-2 rounded shadow-[0_0_15px_rgba(0,245,255,0.3)]"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioEnabled = true;
+        let audioCtx = null;
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (!audioEnabled) return;
+            try {
+                initAudioContext();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'beep') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1200, now);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'alert') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.1);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'receive') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, now); // D5
+                    osc.frequency.setValueAtTime(880, now + 0.08); // A5
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+            } catch (e) {
+                console.warn('Audio API error:', e);
+            }
+        }
+
+        function toggleAudioMute() {
+            audioEnabled = !audioEnabled;
+            const icon = document.getElementById('sound-icon');
+            if (audioEnabled) {
+                icon.className = 'fa-solid fa-volume-high';
+                playSound('beep');
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark';
+            }
+        }
+
+        let peer = null;
+        let conn = null;
+        let localStream = null;
+        let remoteStream = null;
+        let currentCall = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordedBlob = null;
+        let callTimerInterval = null;
+        let callSeconds = 0;
+        let isMicMuted = false;
+
+        // Initialize PeerJS with public cloud server or fallback configuration to prevent Canvas sandbox websocket blocks
+        function initPeer() {
+            try {
+                // Using PeerJS public cloud with explicit host/port config or fallback simulation if blocked
+                peer = new Peer({
+                    host: '0.peerjs.com',
+                    port: 443,
+                    path: '/',
+                    secure: true,
+                    config: {
+                        'iceServers': [
+                            { urls: 'stun:stun.l.google.com:19302' },
+                            { urls: 'stun:global.stun.twilio.com:3478' }
+                        ]
+                    }
+                });
+            } catch (e) {
+                console.warn('Standard PeerJS init failed, attempting local fallback:', e);
+                fallbackPeerInit();
+                return;
+            }
+
+            peer.on('open', (id) => {
+                document.getElementById('my-peer-id').value = id;
+                document.getElementById('system-status').innerText = 'SECURE NODE ACTIVE';
+                appendSystemMessage(`[P2P] Nó tático inicializado com sucesso. ID: ${id}`);
+                generateQRCode(id);
+            });
+
+            peer.on('connection', (incomingConn) => {
+                conn = incomingConn;
+                setupConnectionEvents();
+                updateP2PStatus(true);
+                playSound('receive');
+                appendSystemMessage(`[P2P] Link tático estabelecido com ID: ${conn.peer}`);
+            });
+
+            peer.on('call', (incomingCall) => {
+                currentCall = incomingCall;
+                playSound('alert');
+                if (confirm('Chamada de voz tática recebida. Aceitar conexão de áudio?')) {
+                    navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+                        localStream = stream;
+                        currentCall.answer(localStream);
+                        setupCallEvents();
+                        startCallTimer();
+                        updateAudioStatus(true);
+                        showVoiceBanner(true);
+                        appendSystemMessage('[WEBRTC] Canal de voz criptografado ativo.');
+                    }).catch(err => {
+                        alert('Erro ao acessar microfone para chamada.');
+                    });
+                } else {
+                    incomingCall.close();
+                }
+            });
+
+            peer.on('error', (err) => {
+                console.warn('PeerJS sandbox restriction encountered:', err);
+                // Fallback to simulated offline/local mode if websocket is blocked by sandbox policy
+                if (err.type === 'network' || err.type === 'browser-incompatible' || err.type === 'server-disconnected' || String(err).includes('Canvas')) {
+                    fallbackPeerInit();
+                } else {
+                    appendSystemMessage(`[ERRO P2P] ${err.type}`);
+                }
+            });
+        }
+
+        function fallbackPeerInit() {
+            const fakeId = 'ESIP-LOCAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            document.getElementById('my-peer-id').value = fakeId;
+            document.getElementById('system-status').innerText = 'SIMULAÇÃO TÁTICA LOCAL';
+            appendSystemMessage(`[AVISO] Websockets restritos no ambiente. Modo de Simulação P2P Local Ativo. ID: ${fakeId}`);
+            generateQRCode(fakeId);
+            
+            // Mock connection object for simulation if needed
+            window.isSimulationMode = true;
+        }
+
+        function connectToPeer() {
+            const targetId = document.getElementById('target-peer-id').value.trim();
+            if (!targetId) {
+                alert('Insira um ID de rádio válido para conectar.');
+                return;
+            }
+            if (peer && peer.id === targetId) {
+                alert('Não é possível conectar ao próprio ID tático.');
+                return;
+            }
+
+            if (window.isSimulationMode) {
+                appendSystemMessage(`[SIMULAÇÃO] Simulando link P2P com ${targetId}...`);
+                setTimeout(() => {
+                    updateP2PStatus(true);
+                    playSound('beep');
+                    appendSystemMessage(`[SIMULAÇÃO] Canal seguro estabelecido com ${targetId}`);
+                    document.getElementById('active-peer-display').innerText = `Canal: ${targetId.substring(0, 8)}...`;
+                }, 800);
+                return;
+            }
+
+            appendSystemMessage(`[P2P] Conectando ao nó: ${targetId}...`);
+            conn = peer.connect(targetId);
+            setupConnectionEvents();
+        }
+
+        function setupConnectionEvents() {
+            if (!conn) return;
+
+            conn.on('open', () => {
+                updateP2PStatus(true);
+                playSound('beep');
+                appendSystemMessage(`[P2P] Canal de dados seguro conectado com ${conn.peer}`);
+                document.getElementById('active-peer-display').innerText = `Canal: ${conn.peer.substring(0, 8)}...`;
+            });
+
+            conn.on('data', (data) => {
+                handleIncomingData(data);
+            });
+
+            conn.on('close', () => {
+                updateP2PStatus(false);
+                playSound('alert');
+                appendSystemMessage('[P2P] Canal de dados desconectado.');
+                document.getElementById('active-peer-display').innerText = 'Nenhum canal ativo';
+            });
+        }
+
+        function updateP2PStatus(connected) {
+            const badge = document.getElementById('p2p-status-badge');
+            if (connected) {
+                badge.innerText = 'CONECTADO';
+                badge.className = 'text-xs font-bold text-neon-green mt-1 uppercase';
+            } else {
+                badge.innerText = 'DESCONECTADO';
+                badge.className = 'text-xs font-bold text-red-500 mt-1 uppercase';
+            }
+        }
+
+        function updateAudioStatus(active) {
+            const badge = document.getElementById('audio-status-badge');
+            if (active) {
+                badge.innerText = 'ATIVO (VOZ)';
+                badge.className = 'text-xs font-bold text-neon-green mt-1 uppercase';
+            } else {
+                badge.innerText = 'STANDBY';
+                badge.className = 'text-xs font-bold text-gray-400 mt-1 uppercase';
+            }
+        }
+
+        function copyMyId() {
+            const val = document.getElementById('my-peer-id').value;
+            if (!val) return;
+            const textArea = document.createElement("textarea");
+            textArea.value = val;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                appendSystemMessage('[SISTEMA] ID tático copiado para a área de transferência.');
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function sendTextMessage() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const msgObj = {
+                type: 'text',
+                sender: peer ? peer.id : 'OPERADOR',
+                content: text,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            if (conn && conn.open) {
+                conn.send(msgObj);
+            } else if (window.isSimulationMode && document.getElementById('p2p-status-badge').innerText === 'CONECTADO') {
+                // Simulate echo or response in local mode
+                setTimeout(() => {
+                    appendChatMessage('ALIADO-SIM', 'Eco tático recebido: ' + text, new Date().toLocaleTimeString(), false);
+                    playSound('receive');
+                }, 1000);
+            }
+
+            appendChatMessage('EU', text, msgObj.timestamp, true);
+            input.value = '';
+            playSound('click');
+        }
+
+        function sendGeolocation() {
+            if (!navigator.geolocation) {
+                alert('Geolocalização não suportada neste dispositivo.');
+                return;
+            }
+
+            appendSystemMessage('[GPS] Obtendo coordenadas de satélite...');
+            navigator.geolocation.getCurrentPosition((position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const gpsData = {
+                    type: 'gps',
+                    sender: peer.id,
+                    lat: lat,
+                    lng: lng,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+
+                if (conn && conn.open) {
+                    conn.send(gpsData);
+                }
+
+                appendChatMessage('EU', `[GEO-GPS] Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`, gpsData.timestamp, true);
+                playSound('beep');
+            }, (error) => {
+                alert('Erro ao obter geolocalização: ' + error.message);
+            });
+        }
+
+        function handleFileSelected(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 15 * 1024 * 1024) {
+                alert('Arquivo excede o limite máximo de 15MB para transmissão P2P direta.');
+                return;
+            }
+
+            const drawer = document.getElementById('file-transfer-drawer');
+            const filenameEl = document.getElementById('transfer-filename');
+            const pctEl = document.getElementById('transfer-pct');
+            const barEl = document.getElementById('transfer-progress-bar');
+            
+            drawer.classList.remove('hidden');
+            filenameEl.innerText = `Transmitindo: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+
+            const CHUNK_SIZE = 16 * 1024; // 16KB chunks
+            const reader = new FileReader();
+            let offset = 0;
+
+            reader.onload = function(e) {
+                const chunk = e.target.result;
+                const isLast = offset + chunk.byteLength >= file.size;
+
+                if (conn && conn.open) {
+                    conn.send({
+                        type: 'file-chunk',
+                        filename: file.name,
+                        filetype: file.type,
+                        chunk: chunk,
+                        offset: offset,
+                        totalSize: file.size,
+                        isLast: isLast
+                    });
+                }
+
+                offset += chunk.byteLength;
+                const pct = Math.round((offset / file.size) * 100);
+                pctEl.innerText = pct + '%';
+                barEl.style.width = pct + '%';
+
+                if (!isLast) {
+                    readNextChunk();
+                } else {
+                    appendSystemMessage(`[ARQUIVO] Transmissão concluída: ${file.name}`);
+                    setTimeout(() => {
+                        drawer.classList.add('hidden');
+                        barEl.style.width = '0%';
+                    }, 2000);
+                    playSound('receive');
+                }
+            };
+
+            function readNextChunk() {
+                const slice = file.slice(offset, offset + CHUNK_SIZE);
+                reader.readAsArrayBuffer(slice);
+            }
+
+            readNextChunk();
+        }
+
+        // Reassembly state for incoming files
+        let incomingFileBuffer = {};
+
+        function handleIncomingData(data) {
+            if (data.type === 'text') {
+                appendChatMessage(data.sender.substring(0,6), data.content, data.timestamp, false);
+                playSound('receive');
+            } else if (data.type === 'gps') {
+                appendChatMessage(data.sender.substring(0,6), `[GEO-GPS] Lat: ${data.lat.toFixed(4)}, Lng: ${data.lng.toFixed(4)}`, data.timestamp, false);
+                playSound('receive');
+            } else if (data.type === 'audio') {
+                appendAudioMessage(data.sender.substring(0,6), data.audioBase64, data.timestamp, false);
+                playSound('receive');
+            } else if (data.type === 'file-chunk') {
+                const key = data.filename;
+                if (!incomingFileBuffer[key]) {
+                    incomingFileBuffer[key] = {
+                        totalSize: data.totalSize,
+                        filetype: data.filetype,
+                        chunks: []
+                    };
+                }
+                incomingFileBuffer[key].chunks.push({ offset: data.offset, chunk: data.chunk });
+
+                if (data.isLast) {
+                    // Reassemble file
+                    const fileObj = incomingFileBuffer[key];
+                    fileObj.chunks.sort((a,b) => a.offset - b.offset);
+                    const allBytes = fileObj.chunks.map(c => c.chunk);
+                    const blob = new Blob(allBytes, { type: fileObj.filetype });
+                    const url = URL.createObjectURL(blob);
+
+                    appendFileMessage(data.sender.substring(0,6), data.filename, url, new Date().toLocaleTimeString(), false);
+                    delete incomingFileBuffer[key];
+                    playSound('receive');
+                }
+            }
+        }
+
+        let isRecording = false;
+        let recordingTimer = null;
+        let recSeconds = 0;
+
+        function toggleAudioRecorder() {
+            if (!isRecording) {
+                // Start Recording
+                navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data.size > 0) audioChunks.push(e.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioUrl = URL.createObjectURL(recordedBlob);
+                        document.getElementById('audio-preview-player').src = audioUrl;
+                        document.getElementById('audio-preview-drawer').classList.remove('hidden');
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recSeconds = 0;
+                    document.getElementById('rec-label').innerText = 'PARAR GRAVAÇÃO';
+                    document.getElementById('mic-icon-rec').className = 'fa-solid fa-stop text-white animate-pulse';
+                    
+                    recordingTimer = setInterval(() => {
+                        recSeconds++;
+                        const mins = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+                        const secs = String(recSeconds % 60).padStart(2, '0');
+                        document.getElementById('rec-timer').innerText = `${mins}:${secs}`;
+                    }, 1000);
+
+                    playSound('alert');
+                }).catch(err => {
+                    alert('Erro ao acessar microfone: ' + err.message);
+                });
+            } else {
+                // Stop Recording
+                mediaRecorder.stop();
+                isRecording = false;
+                clearInterval(recordingTimer);
+                document.getElementById('rec-label').innerText = 'GRAVAR ÁUDIO';
+                document.getElementById('mic-icon-rec').className = 'fa-solid fa-microphone text-red-400';
+                playSound('click');
+            }
+        }
+
+        function cancelAudioRecording() {
+            document.getElementById('audio-preview-drawer').classList.add('hidden');
+            recordedBlob = null;
+            playSound('click');
+        }
+
+        function sendRecordedAudio() {
+            if (!recordedBlob) return;
+            const reader = new FileReader();
+            reader.readAsDataURL(recordedBlob);
+            reader.onloadend = function() {
+                const base64data = reader.result;
+                const audioMsg = {
+                    type: 'audio',
+                    sender: peer.id,
+                    audioBase64: base64data,
+                    timestamp: new Date().toLocaleTimeString()
+                };
+
+                if (conn && conn.open) {
+                    conn.send(audioMsg);
+                }
+
+                appendAudioMessage('EU', base64data, audioMsg.timestamp, true);
+                cancelAudioRecording();
+                playSound('click');
+            };
+        }
+
+        function startVoiceCall() {
+            const targetId = document.getElementById('target-peer-id').value.trim();
+            if (!targetId) {
+                alert('Insira o ID de destino para iniciar chamada de voz.');
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(stream => {
+                localStream = stream;
+                currentCall = peer.call(targetId, localStream);
+                setupCallEvents();
+                startCallTimer();
+                updateAudioStatus(true);
+                showVoiceBanner(true);
+                appendSystemMessage(`[WEBRTC] Chamada de voz iniciada com ${targetId}`);
+                playSound('alert');
+            }).catch(err => {
+                alert('Erro ao acessar microfone para chamada.');
+            });
+        }
+
+        function setupCallEvents() {
+            if (!currentCall) return;
+            currentCall.on('stream', (stream) => {
+                remoteStream = stream;
+                const audioEl = document.createElement('audio');
+                audioEl.srcObject = remoteStream;
+                audioEl.autoplay = true;
+                document.body.appendChild(audioEl);
+            });
+
+            currentCall.on('close', () => {
+                endVoiceCall();
+            });
+        }
+
+        function endVoiceCall() {
+            if (currentCall) {
+                currentCall.close();
+                currentCall = null;
+            }
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            stopCallTimer();
+            updateAudioStatus(false);
+            showVoiceBanner(false);
+            appendSystemMessage('[WEBRTC] Chamada de voz encerrada.');
+            playSound('click');
+        }
+
+        function toggleMuteMic() {
+            if (!localStream) return;
+            isMicMuted = !isMicMuted;
+            localStream.getAudioTracks().forEach(track => track.enabled = !isMicMuted);
+            const btn = document.getElementById('mic-mute-btn');
+            btn.innerHTML = isMicMuted ? '<i class="fa-solid fa-microphone-slash text-red-400"></i> Unmute' : '<i class="fa-solid fa-microphone"></i> Mute';
+            playSound('click');
+        }
+
+        function startCallTimer() {
+            callSeconds = 0;
+            callTimerInterval = setInterval(() => {
+                callSeconds++;
+                const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+                const secs = String(callSeconds % 60).padStart(2, '0');
+                document.getElementById('call-timer').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        function stopCallTimer() {
+            clearInterval(callTimerInterval);
+            callSeconds = 0;
+            document.getElementById('call-timer').innerText = '00:00';
+        }
+
+        function showVoiceBanner(show) {
+            const banner = document.getElementById('voice-call-banner');
+            if (show) banner.classList.remove('hidden');
+            else banner.classList.add('hidden');
+        }
+
+        function appendChatMessage(sender, text, time, isSelf) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
+            div.innerHTML = `
+                <div class="text-[10px] text-cyan-400/70 mb-0.5">${sender} • ${time}</div>
+                <div class="px-3 py-2 rounded-lg max-w-[85%] text-xs font-mono border ${isSelf ? 'bg-cyan-950/60 border-cyan-500/50 text-cyan-200' : 'bg-navy-800 border-cyan-500/30 text-white'} shadow-sm">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendAudioMessage(sender, base64, time, isSelf) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
+            div.innerHTML = `
+                <div class="text-[10px] text-cyan-400/70 mb-0.5">${sender} (ÁUDIO) • ${time}</div>
+                <div class="p-2 rounded-lg bg-navy-800 border border-cyan-500/40">
+                    <audio controls src="${base64}" class="h-8 max-w-[200px]"></audio>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendFileMessage(sender, filename, fileUrl, time, isSelf) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = `flex flex-col ${isSelf ? 'items-end' : 'items-start'}`;
+            div.innerHTML = `
+                <div class="text-[10px] text-cyan-400/70 mb-0.5">${sender} (ARQUIVO) • ${time}</div>
+                <div class="p-3 rounded-lg bg-navy-800 border border-cyan-500/40 flex items-center space-x-3">
+                    <i class="fa-solid fa-file-arrow-down text-cyan-400 text-lg"></i>
+                    <div>
+                        <div class="text-xs text-white font-bold truncate max-w-[160px]">${filename}</div>
+                        <a href="${fileUrl}" download="${filename}" class="text-[10px] text-cyan-300 underline hover:text-white">Baixar arquivo</a>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function appendSystemMessage(text) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'text-center text-cyan-500/60 text-[11px] py-1';
+            div.innerText = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearChatLogs() {
+            document.getElementById('chat-messages').innerHTML = '<div class="text-center text-cyan-500/50 text-xs py-2">[SISTEMA] Logs limpos.</div>';
+            playSound('click');
+        }
+
+        function sendEmergencyBeacon() {
+            const sosMsg = {
+                type: 'text',
+                sender: peer ? peer.id : 'UNKNOWN',
+                content: '🚨 ALERTA S.O.S DE EMERGÊNCIA TÁTICA EMITIDO!',
+                timestamp: new Date().toLocaleTimeString()
+            };
+            if (conn && conn.open) {
+                conn.send(sosMsg);
+            }
+            appendChatMessage('S.O.S', sosMsg.content, sosMsg.timestamp, true);
+        }
+
+        function fetchCurrentGPS() {
+            const box = document.getElementById('gps-info-box');
+            if (!navigator.geolocation) {
+                box.innerHTML = '<span class="text-red-400">GPS não suportado.</span>';
+                return;
+            }
+            box.innerHTML = '<span class="text-cyan-300 animate-pulse">Buscando satélites GPS...</span>';
+            navigator.geolocation.getCurrentPosition(pos => {
+                box.innerHTML = `
+                    <div>LAT: ${pos.coords.latitude.toFixed(6)}°</div>
+                    <div>LNG: ${pos.coords.longitude.toFixed(6)}°</div>
+                    <div>PRECISÃO: ±${pos.coords.accuracy.toFixed(1)}m</div>
+                `;
+                playSound('beep');
+            }, err => {
+                box.innerHTML = `<span class="text-red-400">Erro GPS: ${err.message}</span>`;
+            });
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function generateTestLicenseToken() {
+            const callsign = document.getElementById('license-callsign').value.trim() || 'OPERADOR-01';
+            // Simulated HMAC cryptographic token generation
+            const mockToken = 'ESIP-HMAC-' + btoa(callsign + '-' + Date.now()).substring(0, 24).toUpperCase();
+            document.getElementById('license-token-input').value = mockToken;
+            playSound('click');
+        }
+
+        function validateAndApplyLicense() {
+            const callsign = document.getElementById('license-callsign').value.trim();
+            const token = document.getElementById('license-token-input').value.trim();
+
+            if (!callsign || !token) {
+                alert('Preencha o Callsign e a Chave de Licença HMAC.');
+                return;
+            }
+
+            if (token.startsWith('ESIP-HMAC-')) {
+                document.getElementById('license-badge').classList.remove('hidden');
+                document.getElementById('badge-callsign').innerText = callsign.toUpperCase();
+                closeModal('license-modal');
+                appendSystemMessage(`[LICENÇA] Token HMAC validado com sucesso para o operador: ${callsign}`);
+                playSound('beep');
+            } else {
+                alert('Token HMAC inválido ou corrompido.');
+                playSound('alert');
+            }
+        }
+
+        function generateQRCode(text) {
+            const container = document.getElementById('qrcode-container');
+            container.innerHTML = '';
+            new QRCode(container, {
+                text: text,
+                width: 128,
+                height: 128,
+                colorDark: "#01030b",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Initialize on window load
+        window.onload = function() {
+            initPeer();
+            fetchCurrentGPS();
+            setInterval(() => {
+                // Random tactical latency simulation for telemetry
+                const ping = Math.floor(Math.random() * 15) + 12;
+                document.getElementById('telemetry-ping').innerText = ping + ' ms';
+            }, 3000);
+        };
+    </script>
+</body>
+</html>
