@@ -1668,6 +1668,13 @@ body {
     border-radius:8px;
     background:#070d1e;
 }
+.esip-contato-foto {
+    width:48px;height:48px;min-width:48px;border-radius:50%;
+    border:1px solid #00f5ff;background:#10233e;color:#00f5ff;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-size:21px;flex-shrink:0;
+}
+.esip-contato-foto img { width:100%;height:100%;object-fit:cover;display:block; }
 .esip-contato-info { flex:1; min-width:120px; overflow-wrap:anywhere; }
 .esip-contato-acoes { display:flex; gap:5px; flex-wrap:wrap; }
 .esip-contato-acoes button {
@@ -1930,6 +1937,7 @@ body {
                 <input id="esip-contato-canal" type="text" maxlength="100" placeholder="Canal ESIP do contato" autocomplete="off">
             </div>
             <input id="esip-contato-email" type="email" maxlength="160" placeholder="E-mail do contato (opcional)" autocomplete="email" style="margin-top:7px;">
+            <input id="esip-contato-foto-arquivo" type="file" accept="image/*" hidden aria-label="Escolher foto do contato">
             <div style="display:flex;gap:7px;margin-top:7px;">
                 <select id="esip-contato-ponta" aria-label="Destino ESIP do contato">
                     <option value="CONVIDADO">Destino: CONVIDADO</option>
@@ -2525,6 +2533,105 @@ function esipPersistirContatos() {
     }
 }
 
+/* Fotos dos contatos ficam em IndexedDB, separadas da agenda localStorage,
+   para não consumir rapidamente a quota de texto da lista. */
+let esipFotoContatoSelecionado = null;
+const ESIP_FOTOS_DB = "esip_contatos_fotos_v1";
+function esipAbrirBancoFotos() {
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) { reject(new Error("IndexedDB indisponível")); return; }
+        const req = indexedDB.open(ESIP_FOTOS_DB, 1);
+        req.onupgradeneeded = () => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains("fotos")) db.createObjectStore("fotos");
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error || new Error("Falha ao abrir banco de fotos"));
+    });
+}
+async function esipGuardarFotoContato(id, dataUrl) {
+    const db = await esipAbrirBancoFotos();
+    try {
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction("fotos", "readwrite");
+            tx.objectStore("fotos").put(dataUrl, String(id));
+            tx.oncomplete = resolve;
+            tx.onerror = () => reject(tx.error || new Error("Falha ao salvar foto"));
+            tx.onabort = () => reject(tx.error || new Error("Salvamento cancelado"));
+        });
+    } finally { db.close(); }
+}
+async function esipLerFotoContato(id) {
+    const db = await esipAbrirBancoFotos();
+    try {
+        return await new Promise((resolve, reject) => {
+            const req = db.transaction("fotos", "readonly").objectStore("fotos").get(String(id));
+            req.onsuccess = () => resolve(typeof req.result === "string" ? req.result : null);
+            req.onerror = () => reject(req.error || new Error("Falha ao ler foto"));
+        });
+    } finally { db.close(); }
+}
+async function esipExcluirFotoContato(id) {
+    try {
+        const db = await esipAbrirBancoFotos();
+        try {
+            await new Promise((resolve, reject) => {
+                const tx = db.transaction("fotos", "readwrite");
+                tx.objectStore("fotos").delete(String(id));
+                tx.oncomplete = resolve;
+                tx.onerror = () => reject(tx.error);
+            });
+        } finally { db.close(); }
+    } catch (erro) { console.warn("[ESIP] Não foi possível remover a foto do contato.", erro); }
+}
+function esipEscolherFotoContato(id) {
+    esipFotoContatoSelecionado = id;
+    const campo = document.getElementById("esip-contato-foto-arquivo");
+    if (campo) { campo.value = ""; campo.click(); }
+}
+async function esipProcessarFotoContato(arquivo) {
+    const id = esipFotoContatoSelecionado;
+    if (!id || !arquivo) return;
+    if (!arquivo.type || !arquivo.type.startsWith("image/")) {
+        mostrarToast("Escolha um arquivo de imagem."); return;
+    }
+    try {
+        const imagem = await new Promise((resolve, reject) => {
+            const img = new Image();
+            const url = URL.createObjectURL(arquivo);
+            img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagem inválida")); };
+            img.src = url;
+        });
+        const limite = 256;
+        const escala = Math.min(1, limite / Math.max(imagem.naturalWidth, imagem.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(imagem.naturalWidth * escala));
+        canvas.height = Math.max(1, Math.round(imagem.naturalHeight * escala));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("Canvas indisponível");
+        ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+        const foto = canvas.toDataURL("image/jpeg", 0.72);
+        await esipGuardarFotoContato(id, foto);
+        esipRenderizarContatos();
+        mostrarToast("Foto do contato salva neste aparelho.");
+    } catch (erro) {
+        console.error("[ESIP] Falha ao guardar foto do contato:", erro);
+        mostrarToast("Não foi possível salvar a foto. Verifique o espaço do navegador.");
+    }
+}
+(function esipVincularCampoFotoContato() {
+    const vincular = () => {
+        const campo = document.getElementById("esip-contato-foto-arquivo");
+        if (campo && !campo.dataset.esipFotoVinculada) {
+            campo.addEventListener("change", () => esipProcessarFotoContato(campo.files && campo.files[0]));
+            campo.dataset.esipFotoVinculada = "1";
+        }
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", vincular, { once: true });
+    else vincular();
+})();
+
 function esipSalvarContato() {
     const campoNome = document.getElementById("esip-contato-nome");
     const campoCanal = document.getElementById("esip-contato-canal");
@@ -2609,6 +2716,19 @@ function esipRenderizarContatos() {
         const item = document.createElement("div");
         item.className = "esip-contato-item";
 
+        const avatar = document.createElement("div");
+        avatar.className = "esip-contato-foto";
+        avatar.textContent = "👤";
+        esipLerFotoContato(contato.id).then(foto => {
+            if (foto && avatar.isConnected) {
+                const img = document.createElement("img");
+                img.alt = `Foto de ${contato.nome}`;
+                img.src = foto;
+                avatar.textContent = "";
+                avatar.appendChild(img);
+            }
+        }).catch(() => {});
+
         const info = document.createElement("div");
         info.className = "esip-contato-info";
 
@@ -2641,14 +2761,20 @@ function esipRenderizarContatos() {
         emailBtn.title = "Abrir e-mail preparado para este contato";
         emailBtn.addEventListener("click", () => esipAbrirEmailContato(contato));
 
+        const fotoBtn = document.createElement("button");
+        fotoBtn.type = "button";
+        fotoBtn.textContent = "📷 FOTO";
+        fotoBtn.title = "Adicionar ou trocar a foto deste contato";
+        fotoBtn.addEventListener("click", () => esipEscolherFotoContato(contato.id));
+
         const excluir = document.createElement("button");
         excluir.type = "button";
         excluir.textContent = "✕";
         excluir.title = "Excluir contato";
         excluir.addEventListener("click", () => esipExcluirContato(contato.id));
 
-        acoes.append(ligar, video, emailBtn, excluir);
-        item.append(info, acoes);
+        acoes.append(ligar, video, emailBtn, fotoBtn, excluir);
+        item.append(avatar, info, acoes);
         lista.appendChild(item);
     });
 }
@@ -2690,6 +2816,7 @@ function esipExcluirContato(id) {
     const anterior = esipContatos.length;
     esipContatos = esipContatos.filter(c => c.id !== id);
     if (esipContatos.length !== anterior && esipPersistirContatos()) {
+        esipExcluirFotoContato(id);
         mostrarToast("Contato removido da memória ESIP.");
     }
 }
