@@ -1908,7 +1908,7 @@ body {
 
         <!-- ACESSO À LISTA PERSISTENTE DE CONTATOS ESIP -->
         <button type="button" id="esip-btn-abrir-contatos" onclick="esipAlternarPainelContatos()" aria-expanded="false" style="width:100%;padding:12px;margin:8px 0;border-radius:9px;border:1px solid #00f5ff;background:#0b1d3b;color:#00f5ff;font-weight:bold;letter-spacing:.4px;">
-            👥 CONTATOS ESIP <span id="esip-contatos-resumo">· 0 salvos</span>　⌄
+            👥 MEUS CONTATOS <span id="esip-contatos-resumo">· 0 salvos</span>　⌄
         </button>
         <section id="esip-contatos" hidden>
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;">
@@ -1916,6 +1916,7 @@ body {
                 <span id="esip-contatos-total" style="font-size:10px;color:#94a3b8;">0 contatos salvos</span>
             </div>
             <input id="esip-contato-pesquisa" type="search" placeholder="🔎 Pesquisar contato salvo" aria-label="Pesquisar contato" oninput="esipRenderizarContatos()" style="margin-bottom:8px;">
+            <button type="button" id="esip-btn-visibilidade-lista" onclick="esipAlternarVisibilidadeLista()" aria-expanded="true" style="width:100%;padding:9px;margin:0 0 9px;border-radius:7px;border:1px solid #00f5ff;background:#102b46;color:#00f5ff;font-weight:bold;">🙈 OCULTAR LISTA</button>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
                 <input id="esip-contato-nome" type="text" maxlength="80" placeholder="Nome do contato" autocomplete="name">
                 <input id="esip-contato-canal" type="text" maxlength="100" placeholder="Canal ESIP do contato" autocomplete="off">
@@ -2230,7 +2231,19 @@ let tokenAtual = null;
 /* Lista persistente de contatos: armazenamento local deste navegador */
 const ESIP_CONTATOS_STORAGE = "esip_contatos_v1";
 let esipContatos = [];
+let esipListaContatosVisivel = true;
 let contatoDestinoSelecionado = "";
+
+/* Cada token possui sua própria lista neste navegador. */
+function esipChaveArmazenamentoContatos() {
+    const identidade = String(tokenAtual || (canalAtual ? "canal:" + canalAtual : "sem-token"));
+    let hash = 2166136261;
+    for (let i = 0; i < identidade.length; i++) {
+        hash ^= identidade.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+    }
+    return ESIP_CONTATOS_STORAGE + "_" + (hash >>> 0).toString(16);
+}
 
 let tokenQR = null;
 let idQR = null;
@@ -2406,6 +2419,16 @@ function esipAlternarPainelContatos() {
     }
 }
 
+function esipAlternarVisibilidadeLista() {
+    const lista = document.getElementById("esip-contatos-lista");
+    const botao = document.getElementById("esip-btn-visibilidade-lista");
+    if (!lista || !botao) return;
+    esipListaContatosVisivel = !esipListaContatosVisivel;
+    lista.hidden = !esipListaContatosVisivel;
+    botao.setAttribute("aria-expanded", String(esipListaContatosVisivel));
+    botao.textContent = esipListaContatosVisivel ? "🙈 OCULTAR LISTA" : "👁️ MOSTRAR LISTA";
+}
+
 function esipTestarAlertaContatos() {
     try {
         prepararAudio();
@@ -2436,7 +2459,17 @@ function esipAbrirEmailContato(contato) {
 
 function esipCarregarContatos() {
     try {
-        const dados = localStorage.getItem(ESIP_CONTATOS_STORAGE);
+        const chave = esipChaveArmazenamentoContatos();
+        let dados = localStorage.getItem(chave);
+        /* Migração única da lista antiga para o token autenticado atual. */
+        if (dados === null && tokenAtual) {
+            const legado = localStorage.getItem(ESIP_CONTATOS_STORAGE);
+            if (legado !== null) {
+                localStorage.setItem(chave, legado);
+                localStorage.removeItem(ESIP_CONTATOS_STORAGE);
+                dados = legado;
+            }
+        }
         const lista = dados ? JSON.parse(dados) : [];
         esipContatos = Array.isArray(lista)
             ? lista.filter(c => c && typeof c.nome === "string" &&
@@ -2452,7 +2485,11 @@ function esipCarregarContatos() {
 
 function esipPersistirContatos() {
     try {
-        localStorage.setItem(ESIP_CONTATOS_STORAGE, JSON.stringify(esipContatos));
+        if (!tokenAtual) {
+            mostrarToast("Autentique a linha com o token antes de salvar contatos.");
+            return false;
+        }
+        localStorage.setItem(esipChaveArmazenamentoContatos(), JSON.stringify(esipContatos));
         esipRenderizarContatos();
         return true;
     } catch (erro) {
@@ -3535,6 +3572,8 @@ function inicializarPainelP2P(
 
     tokenAtual =
         tokenOriginal;
+
+    esipCarregarContatos();
 
     document.querySelector(
         ".logo-esip"
@@ -8516,7 +8555,6 @@ window.addEventListener(
     "load",
     () => {
 
-        esipCarregarContatos();
         initCrypto();
 
     }
