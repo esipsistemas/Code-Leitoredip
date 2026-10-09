@@ -1636,7 +1636,15 @@ body {
     border-radius:10px;
     padding:10px;
     margin-bottom:10px;
-    flex-shrink:0;
+    flex-shrink:1;
+    min-height:0;
+    max-height:calc(100vh - 120px);
+    max-height:calc(100dvh - 120px);
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    position:relative;
 }
 #esip-contatos[hidden] { display:none !important; }
 #esip-contatos input, #esip-contatos select {
@@ -2429,25 +2437,6 @@ function esipAlternarVisibilidadeLista() {
     lista.hidden = !esipListaContatosVisivel;
     botao.setAttribute("aria-expanded", String(esipListaContatosVisivel));
     botao.textContent = esipListaContatosVisivel ? "🙈 OCULTAR LISTA" : "👁️ MOSTRAR LISTA";
-
-    /* Ajuste cirúrgico mobile: ao mostrar a lista, desloca a página
-       para que os contatos apareçam na tela. Não altera chamadas,
-       armazenamento, pesquisa ou comportamento no PC. */
-    if (esipListaContatosVisivel && window.matchMedia &&
-        window.matchMedia("(max-width: 768px)").matches) {
-        window.setTimeout(() => {
-            const primeiroContato = lista.querySelector(".esip-contato-item");
-            const alvo = primeiroContato || lista;
-            const rect = alvo.getBoundingClientRect();
-            const margemSuperior = 95;
-            if (rect.top > window.innerHeight - 80 || rect.top < margemSuperior) {
-                window.scrollBy({
-                    top: rect.top - margemSuperior,
-                    behavior: "smooth"
-                });
-            }
-        }, 120);
-    }
 }
 
 function esipTestarAlertaContatos() {
@@ -2592,9 +2581,20 @@ function esipRenderizarContatos() {
     const resumo = document.getElementById("esip-contatos-resumo");
     if (resumo) resumo.textContent = `· ${esipContatos.length} salvos`;
     lista.innerHTML = "";
-    const termo = (document.getElementById("esip-contato-pesquisa")?.value || "").trim().toLocaleLowerCase();
+    /* Pesquisa resiliente: ignora diferenças entre maiúsculas/minúsculas
+       e acentos (ex.: Joao encontra João), sem alterar os dados salvos. */
+    const normalizarPesquisaESIP = valor => String(valor ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLocaleLowerCase()
+        .trim();
+    const termo = normalizarPesquisaESIP(
+        document.getElementById("esip-contato-pesquisa")?.value || ""
+    );
     const contatosVisiveis = esipContatos.filter(c =>
-        !termo || [c.nome, c.canal, c.ponta, c.email || ""].some(v => String(v).toLocaleLowerCase().includes(termo))
+        !termo || [c.nome, c.canal, c.ponta, c.email || ""].some(v =>
+            normalizarPesquisaESIP(v).includes(termo)
+        )
     );
 
     if (!contatosVisiveis.length) {
@@ -2652,6 +2652,22 @@ function esipRenderizarContatos() {
         lista.appendChild(item);
     });
 }
+
+/* Garante que a pesquisa atualize a lista também em navegadores móveis. */
+(function esipVincularPesquisaContatos() {
+    const vincular = () => {
+        const campo = document.getElementById("esip-contato-pesquisa");
+        if (campo && !campo.dataset.esipPesquisaVinculada) {
+            campo.addEventListener("input", esipRenderizarContatos);
+            campo.dataset.esipPesquisaVinculada = "1";
+        }
+    };
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", vincular, { once: true });
+    } else {
+        vincular();
+    }
+})();
 
 function esipLigarContato(contato, tipo) {
     if (!peer || peer.destroyed) {
