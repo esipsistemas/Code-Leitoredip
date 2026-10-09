@@ -2429,6 +2429,25 @@ function esipAlternarVisibilidadeLista() {
     lista.hidden = !esipListaContatosVisivel;
     botao.setAttribute("aria-expanded", String(esipListaContatosVisivel));
     botao.textContent = esipListaContatosVisivel ? "🙈 OCULTAR LISTA" : "👁️ MOSTRAR LISTA";
+
+    /* Ajuste cirúrgico mobile: ao mostrar a lista, desloca a página
+       para que os contatos apareçam na tela. Não altera chamadas,
+       armazenamento, pesquisa ou comportamento no PC. */
+    if (esipListaContatosVisivel && window.matchMedia &&
+        window.matchMedia("(max-width: 768px)").matches) {
+        window.setTimeout(() => {
+            const primeiroContato = lista.querySelector(".esip-contato-item");
+            const alvo = primeiroContato || lista;
+            const rect = alvo.getBoundingClientRect();
+            const margemSuperior = 95;
+            if (rect.top > window.innerHeight - 80 || rect.top < margemSuperior) {
+                window.scrollBy({
+                    top: rect.top - margemSuperior,
+                    behavior: "smooth"
+                });
+            }
+        }, 120);
+    }
 }
 
 function esipTestarAlertaContatos() {
