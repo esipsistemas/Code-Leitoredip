@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP - Gerador de Múltiplas Licenças</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:#020617;color:#f8fafc;display:flex;justify-content:center;align-items:center;padding:20px;min-height:100vh}
+.painel-admin{background:#0f172a;border:1px solid #00eaff;padding:25px;border-radius:12px;width:100%;max-width:550px;box-shadow:0 0 25px rgba(0,234,255,.15)}
+.titulo{font-size:18px;font-weight:bold;color:#00f5ff;text-align:center;margin-bottom:5px;text-shadow:0 0 10px rgba(0,245,255,.5)}
+.subtitulo{font-size:12px;color:#94a3b8;text-align:center;margin-bottom:20px}
+.grupo{margin-bottom:15px}
+label{display:block;font-size:12px;color:#94a3b8;margin-bottom:6px;font-weight:600}
+input,textarea{width:100%;padding:12px;background:#070d1e;border:1px solid #1e40af;color:#fff;border-radius:8px;font-size:14px;font-family:monospace}
+input:focus,textarea:focus{outline:none;border-color:#00f5ff;box-shadow:0 0 8px rgba(0,245,255,.2)}
+textarea{resize:vertical;min-height:90px;word-break:break-all}
+button{width:100%;padding:14px;background:#1e40af;color:#fff;border:1px solid #00f5ff;border-radius:8px;font-weight:bold;cursor:pointer;font-size:15px;margin-top:10px;transition:.2s}
+button:hover{background:#00f5ff;color:#020617}
+.status{margin-top:12px;padding:10px;border-radius:8px;background:#070d1e;color:#00f5ff;font-size:12px;text-align:center;font-weight:bold;overflow-wrap:anywhere}
+@media(max-width:430px){body{padding:12px}.painel-admin{padding:18px}.campos{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body>
+<div class="painel-admin">
+    <div class="titulo">📡 GERADOR DE LICENÇAS ESIP</div>
+    <div class="subtitulo">Console Administrativo de Assinatura de Licenças</div>
+
+    <div class="grupo campos" style="display:grid;grid-template-columns:1fr 1fr;gap:15px">
+        <div>
+            <label for="data-vencimento">Data de Vencimento:</label>
+            <input type="date" id="data-vencimento">
+        </div>
+        <div>
+            <label for="senha-p2p">Nome-base do Canal:</label>
+            <input type="text" id="senha-p2p" placeholder="Ex.: Radio01" maxlength="80" autocomplete="off">
+        </div>
+    </div>
+
+    <div class="grupo">
+        <label for="nome-conectado">Nome para Exibição no Cabeçalho ESIP:</label>
+        <input type="text" id="nome-conectado" placeholder="Ex.: Cláudio" maxlength="80" autocomplete="name">
+        <div style="font-size:11px;color:#67e8f9;margin-top:6px;line-height:1.45">Este nome será assinado no CHIP TOKEN DIGITAL e exibido no cabeçalho do motor ESIP quando a linha estiver conectada.</div>
+    </div>
+
+    <div class="grupo">
+        <label for="email-identidade">E-mail associado a esta rede:</label>
+        <input type="email" id="email-identidade" placeholder="nome@dominio.com" maxlength="254" autocomplete="email" inputmode="email">
+    </div>
+
+    <div class="grupo">
+        <label for="chave-publica">Identificador de Validação do Sistema:</label>
+        <textarea id="chave-publica" readonly placeholder="Inicializando sistema de chaves..."></textarea>
+    </div>
+
+    <button type="button" onclick="gerarToken()">📡 ASSINAR E EMITIR LICENÇA</button>
+
+    <div class="grupo" style="margin-top:15px">
+        <label for="resultado-token">Token de Acesso Assinado:</label>
+        <textarea id="resultado-token" readonly placeholder="O token assinado aparecerá aqui..."></textarea>
+    </div>
+
+    <button type="button" onclick="copiarToken()">📋 COPIAR TOKEN</button>
+    <div class="status" id="status">Inicializando sistema de assinatura...</div>
+</div>
+
+<script>
+"use strict";
+
+let privKey = null;
+let pubKey = null;
+const SEMENTE_SECRETA_SISTEMA = "ESIP_SISTEMAS_TACTICAL_RADIO_KEY_2026";
+
+function bufferToBase64(buf) {
+    return btoa(String.fromCharCode(...new Uint8Array(buf)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
+}
+
+function criarSufixoUnico() {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function initKeys() {
+    try {
+        if (!crypto.subtle) throw new Error("Web Crypto indisponível. Abra em contexto seguro HTTPS.");
+        const encoder = new TextEncoder();
+        const baseKeyMaterial = await crypto.subtle.importKey(
+            "raw", encoder.encode(SEMENTE_SECRETA_SISTEMA), "PBKDF2", false, ["deriveKey"]
+        );
+        const salt = encoder.encode("ESIP_STATIC_SALT_SALT");
+        privKey = await crypto.subtle.deriveKey(
+            {name:"PBKDF2",salt,iterations:100000,hash:"SHA-256"},
+            baseKeyMaterial,
+            {name:"HMAC",hash:"SHA-256",length:256},
+            true,
+            ["sign","verify"]
+        );
+        pubKey = privKey;
+        const tokenValidador = await crypto.subtle.sign(
+            "HMAC", privKey, encoder.encode("ESIP_VALIDATION_STRING")
+        );
+        document.getElementById("chave-publica").value = bufferToBase64(tokenValidador);
+        document.getElementById("status").innerText = "✅ Sistema de assinatura inicializado.";
+    } catch (err) {
+        document.getElementById("status").innerText = "❌ Falha ao inicializar: " + err.message;
+        console.error(err);
+    }
+}
+
+async function gerarToken() {
+    const status = document.getElementById("status");
+    try {
+        if (!privKey) {
+            status.innerText = "⚠️ Aguarde a inicialização do sistema.";
+            return;
+        }
+        const dateVal = document.getElementById("data-vencimento").value;
+        const canalVal = document.getElementById("senha-p2p").value.trim();
+        const nomeVal = document.getElementById("nome-conectado").value.trim();
+        const emailVal = document.getElementById("email-identidade").value.trim().toLowerCase();
+
+        if (!dateVal || !canalVal || !nomeVal || !emailVal) {
+            status.innerText = "⚠️ Preencha a data, o nome-base do canal, o nome e o e-mail.";
+            return;
+        }
+
+        const emailInput = document.getElementById("email-identidade");
+        if (!emailInput.checkValidity() || !emailVal.includes("@")) {
+            status.innerText = "⚠️ Informe um endereço de e-mail válido.";
+            emailInput.focus();
+            return;
+        }
+
+        const timestamp = new Date(dateVal + "T23:59:59").getTime();
+        if (!Number.isFinite(timestamp)) {
+            status.innerText = "⚠️ A data informada é inválida.";
+            return;
+        }
+        if (timestamp < Date.now()) {
+            status.innerText = "⚠️ A data de vencimento já passou.";
+            return;
+        }
+
+        /* Cada emissão ganha um canal aleatório exclusivo.
+           O mesmo token deve ser entregue aos membros da mesma rede. */
+        const baseLimpa = canalVal.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32) || "ESIP";
+        const canalUnico = baseLimpa + "-" + criarSufixoUnico();
+
+        const payload = JSON.stringify({
+            exp: timestamp,
+            ch: canalUnico,
+            canalBase: canalVal,
+            nome: nomeVal,
+            email: emailVal
+        });
+
+        const encoder = new TextEncoder();
+        const payloadBytes = encoder.encode(payload);
+        const signature = await crypto.subtle.sign("HMAC", privKey, payloadBytes);
+        const token = bufferToBase64(payloadBytes) + "." + bufferToBase64(signature);
+
+        document.getElementById("resultado-token").value = token;
+        status.innerText = "✅ Licença emitida | " + nomeVal +
+            " | E-mail: " + emailVal + " | Rede exclusiva: " + canalUnico +
+            " | Compartilhe este mesmo token apenas com os membros desta rede.";
+    } catch (err) {
+        status.innerText = "❌ Erro ao gerar a licença: " + err.message;
+        console.error(err);
+    }
+}
+
+async function copiarToken() {
+    const campo = document.getElementById("resultado-token");
+    const token = campo.value;
+    const status = document.getElementById("status");
+    if (!token) {
+        status.innerText = "⚠️ Gere um token antes de copiar.";
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(token);
+        status.innerText = "✅ Token copiado.";
+    } catch (err) {
+        campo.focus();
+        campo.select();
+        const sucesso = document.execCommand("copy");
+        status.innerText = sucesso
+            ? "✅ Token copiado."
+            : "⚠️ Selecione e copie o token manualmente.";
+    }
+}
+window.addEventListener("load", initKeys);
+</script>
+</body>
+</html>
