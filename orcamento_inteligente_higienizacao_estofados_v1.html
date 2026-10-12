@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07172a">
+<title>Orçamento Inteligente | Higienização de Estofados</title>
+<style>
+:root{--bg:#06111f;--panel:#0b1e32;--panel2:#102943;--line:#1b4968;--cyan:#39d8ff;--cyan2:#8beaff;--text:#f1f8ff;--muted:#a9bfd0;--green:#62e6b3;--warn:#ffd47b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#10304b 0,#06111f 52%,#030913 100%);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--text);min-height:100vh}
+.wrap{max-width:850px;margin:auto;padding:20px 14px 44px}.brand{display:flex;gap:12px;align-items:center;margin:4px 0 22px}.logo{width:54px;height:54px;border:1px solid var(--cyan);border-radius:16px;display:grid;place-items:center;color:var(--cyan);box-shadow:0 0 24px #39d8ff22;font-size:27px}.brand h1{font-size:clamp(19px,4vw,27px);margin:0;letter-spacing:.04em}.brand p{margin:3px 0 0;color:var(--cyan2);font-size:12px;letter-spacing:.12em}.hero{padding:23px 20px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#0d2740,#081728);box-shadow:0 18px 55px #0004;margin-bottom:16px}.eyebrow{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:.17em}.hero h2{font-size:clamp(25px,6vw,37px);line-height:1.08;margin:9px 0 10px}.hero p{color:var(--muted);line-height:1.55;margin:0}.card{background:#091a2bde;border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}.step{color:var(--cyan);font-size:11px;letter-spacing:.13em;font-weight:800}.card h3{font-size:18px;margin:5px 0 14px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{display:flex;flex-direction:column;gap:6px}.field.full{grid-column:1/-1}label{font-size:13px;color:#d7e8f5}input,select,textarea{width:100%;border:1px solid #28516d;border-radius:11px;background:#061321;color:var(--text);padding:12px;font:inherit;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #39d8ff19}input[type=file]{padding:10px;font-size:13px}input[type=number]{appearance:textfield}.help{font-size:12px;color:var(--muted);line-height:1.5}.photo-box{border:1px dashed #3282a8;background:#061522;border-radius:15px;padding:12px}.preview{display:none;max-width:100%;max-height:300px;margin:12px auto 0;border-radius:12px;object-fit:contain}.pill-row{display:flex;gap:8px;flex-wrap:wrap}.pill{padding:8px 11px;border:1px solid #28516d;border-radius:999px;background:#071625;color:#d8e9f5;font-size:12px}.btn{border:0;border-radius:12px;padding:14px 16px;font-weight:800;font-size:14px;cursor:pointer;display:inline-flex;justify-content:center;align-items:center;gap:8px;text-decoration:none}.primary{background:linear-gradient(90deg,#23c6f4,#74e9ff);color:#032033}.secondary{background:#102943;color:var(--text);border:1px solid #28516d}.danger{background:#321923;color:#ffdce4;border:1px solid #6e3445}.btn-row{display:flex;gap:10px;flex-wrap:wrap}.btn-row .btn{flex:1}.quote{border:1px solid #2c7994;background:linear-gradient(145deg,#0c2c40,#081a2a);border-radius:18px;padding:20px}.price{font-size:clamp(34px,9vw,48px);font-weight:850;letter-spacing:-.04em;color:var(--cyan2);margin:8px 0}.line-item{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid #ffffff12;font-size:14px}.line-item:last-child{border:0}.line-item span:last-child{font-weight:700;text-align:right}.status{padding:11px 12px;border-radius:11px;background:#102943;color:#d5e9f6;font-size:12px;line-height:1.5;margin-top:10px}.status.warn{border:1px solid #82652a;color:#ffe7ae;background:#2b2414}.status.good{border:1px solid #226d59;color:#a7f4d8;background:#0c2a25}.admin details summary{cursor:pointer;color:var(--cyan2);font-weight:800}.admin-note{font-size:12px;color:var(--muted);line-height:1.5}.admin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.footer{text-align:center;color:#819bad;font-size:11px;line-height:1.5;margin-top:20px}.hidden{display:none!important}
+@media(max-width:520px){.grid,.admin-grid{grid-template-columns:1fr}.hero{padding:20px 16px}.card{padding:15px}.btn-row{flex-direction:column}.brand{align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <div class="logo" aria-hidden="true">✧</div>
+    <div><h1>ORÇAMENTO INTELIGENTE</h1><p>HIGIENIZAÇÃO PROFISSIONAL DE ESTOFADOS</p></div>
+  </header>
+  <section class="hero">
+    <div class="eyebrow">AVALIAÇÃO DIGITAL • PELO CELULAR</div>
+    <h2>Seu estofado merece<br>uma limpeza profissional.</h2>
+    <p>Envie uma foto, informe alguns detalhes e receba uma estimativa calculada com a tabela da empresa. Rápido, simples e sem instalar aplicativo.</p>
+  </section>
+
+  <section class="card">
+    <div class="step">ETAPA 01</div><h3>Fotografe o estofado</h3>
+    <div class="photo-box">
+      <div class="field"><label for="photo">Tirar foto ou escolher imagem</label><input id="photo" type="file" accept="image/*" capture="environment"><div class="help">Dica: fotografe o móvel inteiro com boa iluminação. Evite filtros e mantenha as manchas visíveis.</div></div>
+      <img id="preview" class="preview" alt="Prévia da foto do estofado">
+    </div>
+    <div id="photoStatus" class="status">A foto será usada como referência visual neste protótipo. A análise automática por IA será ativada quando um serviço de visão computacional for conectado.</div>
+  </section>
+
+  <section class="card">
+    <div class="step">ETAPA 02</div><h3>Conte-nos sobre o móvel</h3>
+    <div class="grid">
+      <div class="field"><label for="kind">Tipo de estofado</label><select id="kind"><option value="sofa">Sofá</option><option value="colchao">Colchão</option><option value="poltrona">Poltrona</option><option value="cadeira">Cadeira estofada</option></select></div>
+      <div class="field"><label for="qty">Quantidade de móveis</label><input id="qty" type="number" min="1" max="99" value="1"></div>
+      <div class="field" id="sofaField"><label for="sofaSize">Tamanho do sofá</label><select id="sofaSize"><option value="2">2 lugares</option><option value="3" selected>3 lugares</option><option value="4">4 lugares</option><option value="5">5 ou mais lugares</option></select></div>
+      <div class="field hidden" id="mattressField"><label for="mattressSize">Tamanho do colchão</label><select id="mattressSize"><option value="solteiro">Solteiro</option><option value="casal" selected>Casal</option><option value="queen">Queen</option><option value="king">King</option></select></div>
+      <div class="field"><label for="condition">Condição aparente</label><select id="condition"><option value="normal">Limpeza de manutenção</option><option value="stains">Manchas visíveis</option><option value="heavy">Sujidade intensa / odor</option></select></div>
+      <div class="field"><label for="fabric">Tecido (se souber)</label><select id="fabric"><option value="unknown">Não sei informar</option><option value="linho">Linho</option><option value="suede">Suede / camurça sintética</option><option value="chenille">Chenille</option><option value="synthetic">Sintético</option><option value="other">Outro</option></select></div>
+      <div class="field full"><label for="notes">Observações (opcional)</label><textarea id="notes" rows="2" placeholder="Ex.: manchas de café, pelos de animais, odor..."></textarea></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="step">ETAPA 03</div><h3>Receba sua estimativa</h3>
+    <p class="help">O valor é calculado com os preços configurados pela empresa. No primeiro acesso, confira a tabela de exemplo e personalize-a antes de divulgar este link aos clientes.</p>
+    <div class="quote">
+      <div class="eyebrow">ESTIMATIVA DO SERVIÇO</div>
+      <div id="total" class="price">R$ 0,00</div>
+      <div id="breakdown"></div>
+      <div class="status warn" id="quoteNotice">Protótipo: valores iniciais são apenas exemplos e devem ser substituídos pelos preços reais da empresa.</div>
+    </div>
+    <div class="btn-row" style="margin-top:14px">
+      <button class="btn primary" id="whatsappBtn" type="button">Solicitar confirmação</button>
+      <button class="btn secondary" id="resetBtn" type="button">Limpar orçamento</button>
+    </div>
+    <div id="contactFields" class="grid" style="margin-top:14px">
+      <div class="field"><label for="customer">Seu nome</label><input id="customer" autocomplete="name" placeholder="Nome completo"></div>
+      <div class="field"><label for="phone">WhatsApp com DDD</label><input id="phone" inputmode="tel" autocomplete="tel" placeholder="(00) 00000-0000"></div>
+      <div class="field full"><label for="city">Bairro / cidade</label><input id="city" autocomplete="address-level2" placeholder="Onde será realizado o serviço?"></div>
+    </div>
+    <div id="resultMsg" class="status hidden" role="status"></div>
+  </section>
+
+  <section class="card admin">
+    <details>
+      <summary>⚙ Configurar preços da empresa</summary>
+      <p class="admin-note">Edite os valores abaixo para calcular as estimativas. Eles ficam salvos apenas neste navegador neste protótipo; para publicar uma tabela central e protegida, será necessário um painel administrativo com armazenamento seguro.</p>
+      <div class="admin-grid" style="margin-top:12px">
+        <div class="field"><label for="pSofa2">Sofá 2 lugares (R$)</label><input id="pSofa2" type="number" min="0" step="0.01" value="120"></div>
+        <div class="field"><label for="pSofa3">Sofá 3 lugares (R$)</label><input id="pSofa3" type="number" min="0" step="0.01" value="150"></div>
+        <div class="field"><label for="pSofa4">Sofá 4 lugares (R$)</label><input id="pSofa4" type="number" min="0" step="0.01" value="180"></div>
+        <div class="field"><label for="pSofa5">Sofá 5+ lugares (R$)</label><input id="pSofa5" type="number" min="0" step="0.01" value="220"></div>
+        <div class="field"><label for="pMattressSolteiro">Colchão solteiro (R$)</label><input id="pMattressSolteiro" type="number" min="0" step="0.01" value="90"></div>
+        <div class="field"><label for="pMattressCasal">Colchão casal (R$)</label><input id="pMattressCasal" type="number" min="0" step="0.01" value="120"></div>
+        <div class="field"><label for="pMattressQueen">Colchão queen (R$)</label><input id="pMattressQueen" type="number" min="0" step="0.01" value="140"></div>
+        <div class="field"><label for="pMattressKing">Colchão king (R$)</label><input id="pMattressKing" type="number" min="0" step="0.01" value="160"></div>
+        <div class="field"><label for="pArmchair">Poltrona (unidade, R$)</label><input id="pArmchair" type="number" min="0" step="0.01" value="80"></div>
+        <div class="field"><label for="pChair">Cadeira estofada (unidade, R$)</label><input id="pChair" type="number" min="0" step="0.01" value="25"></div>
+        <div class="field"><label for="stainPct">Adicional manchas (%)</label><input id="stainPct" type="number" min="0" max="200" step="1" value="10"></div>
+        <div class="field"><label for="heavyPct">Adicional sujidade intensa (%)</label><input id="heavyPct" type="number" min="0" max="200" step="1" value="20"></div>
+      </div>
+      <div class="btn-row" style="margin-top:14px"><button class="btn primary" id="savePrices" type="button">Salvar tabela neste navegador</button><button class="btn secondary" id="resetPrices" type="button">Restaurar exemplos</button></div>
+      <div id="adminMsg" class="status hidden"></div>
+    </details>
+  </section>
+  <footer class="footer">ORÇAMENTO ESTIMADO • O valor final poderá variar após avaliação técnica presencial.<br>Este protótipo não envia fotos para análise de IA nem armazena dados em servidor.</footer>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const money = n => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+  const priceIds = ['pSofa2','pSofa3','pSofa4','pSofa5','pMattressSolteiro','pMattressCasal','pMattressQueen','pMattressKing','pArmchair','pChair','stainPct','heavyPct'];
+  const defaults = {pSofa2:120,pSofa3:150,pSofa4:180,pSofa5:220,pMattressSolteiro:90,pMattressCasal:120,pMattressQueen:140,pMattressKing:160,pArmchair:80,pChair:25,stainPct:10,heavyPct:20};
+  let photoData = '';
+  function getPrice(id){ const n = Number($(id).value); return Number.isFinite(n) && n >= 0 ? n : 0; }
+  function loadPrices(){
+    try { const saved = JSON.parse(localStorage.getItem('higienizacao_prices_v1') || 'null'); if(saved) priceIds.forEach(id => { if(Number.isFinite(Number(saved[id])) && saved[id] >= 0) $(id).value = saved[id]; }); } catch(e){}
+  }
+  function updateKind(){
+    const kind=$('kind').value;
+    $('sofaField').classList.toggle('hidden',kind!=='sofa');
+    $('mattressField').classList.toggle('hidden',kind!=='colchao');
+    calculate();
+  }
+  function basePrice(){
+    const kind=$('kind').value;
+    if(kind==='sofa') return getPrice(({2:'pSofa2',3:'pSofa3',4:'pSofa4',5:'pSofa5'})[$('sofaSize').value]);
+    if(kind==='colchao') return getPrice(({solteiro:'pMattressSolteiro',casal:'pMattressCasal',queen:'pMattressQueen',king:'pMattressKing'})[$('mattressSize').value]);
+    if(kind==='poltrona') return getPrice('pArmchair');
+    return getPrice('pChair');
+  }
+  function calculate(){
+    const qty=Math.max(1,Math.min(99,parseInt($('qty').value,10)||1));
+    const base=basePrice()*qty;
+    const condition=$('condition').value;
+    const pct=condition==='stains'?getPrice('stainPct'):condition==='heavy'?getPrice('heavyPct'):0;
+    const extra=base*pct/100, total=base+extra;
+    $('total').textContent=money(total);
+    const kindLabel=$('kind').selectedOptions[0].textContent;
+    const size=$('kind').value==='sofa'?` (${ $('sofaSize').selectedOptions[0].textContent})`:$('kind').value==='colchao'?` (${ $('mattressSize').selectedOptions[0].textContent})`:'';
+    $('breakdown').innerHTML='';
+    const rows=[['Serviço',kindLabel+size+' × '+qty],['Subtotal',money(base)]];
+    if(pct>0) rows.push([`Adicional estimado (${pct}%)`,money(extra)]);
+    rows.push(['Total estimado',money(total)]);
+    rows.forEach(([label,value])=>{const div=document.createElement('div');div.className='line-item';const a=document.createElement('span');a.textContent=label;const b=document.createElement('span');b.textContent=value;div.append(a,b);$('breakdown').append(div);});
+    return {kindLabel,size,qty,base,extra,pct,total};
+  }
+  $('photo').addEventListener('change', e=>{
+    const file=e.target.files && e.target.files[0]; if(!file)return;
+    if(!file.type.startsWith('image/')){ $('photoStatus').textContent='Escolha um arquivo de imagem válido.'; return; }
+    if(file.size>12*1024*1024){$('photoStatus').textContent='A imagem ultrapassa 12 MB. Escolha uma foto menor.';e.target.value='';return;}
+    const reader=new FileReader();
+    reader.onload=()=>{photoData=reader.result;$('preview').src=photoData;$('preview').style.display='block';$('photoStatus').textContent='Foto carregada para pré-visualização. A análise por IA ainda precisa ser conectada.';};
+    reader.readAsDataURL(file);
+  });
+  ['kind','qty','sofaSize','mattressSize','condition','fabric'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='kind')updateKind();else calculate();}));
+  priceIds.forEach(id=>$(id).addEventListener('input',calculate));
+  $('savePrices').addEventListener('click',()=>{
+    const data={};priceIds.forEach(id=>data[id]=getPrice(id));
+    try{localStorage.setItem('higienizacao_prices_v1',JSON.stringify(data));$('adminMsg').textContent='Tabela salva neste navegador.';$('adminMsg').className='status good';}
+    catch(e){$('adminMsg').textContent='Não foi possível salvar neste navegador.';$('adminMsg').className='status warn';}
+  });
+  $('resetPrices').addEventListener('click',()=>{
+    priceIds.forEach(id=>$(id).value=defaults[id]);localStorage.removeItem('higienizacao_prices_v1');calculate();$('adminMsg').textContent='Valores de exemplo restaurados. Atualize para os preços reais.';$('adminMsg').className='status warn';
+  });
+  $('whatsappBtn').addEventListener('click',()=>{
+    const q=calculate(),name=$('customer').value.trim(),phone=$('phone').value.trim(),city=$('city').value.trim();
+    if(!name||!phone){$('resultMsg').textContent='Informe seu nome e WhatsApp para preparar a solicitação.';$('resultMsg').className='status warn';return;}
+    const message=`Olá! Gostaria de confirmar um orçamento de higienização de estofados.%0A%0ANome: ${encodeURIComponent(name)}%0AWhatsApp: ${encodeURIComponent(phone)}%0ALocal: ${encodeURIComponent(city||'Não informado')}%0AServiço: ${encodeURIComponent(q.kindLabel+q.size)}%0AQuantidade: ${q.qty}%0ACondição: ${encodeURIComponent($('condition').selectedOptions[0].textContent)}%0ATecido: ${encodeURIComponent($('fabric').selectedOptions[0].textContent)}%0AEstimativa: ${encodeURIComponent(money(q.total))}%0AObservações: ${encodeURIComponent($('notes').value.trim()||'Nenhuma')}%0A%0AEntendo que o valor final depende de confirmação da empresa.`;
+    $('resultMsg').textContent='Solicitação preparada. Para abrir o WhatsApp automaticamente, configure o número comercial no código antes de publicar. Por enquanto, o resumo será exibido para copiar.';$('resultMsg').className='status';
+    const plain=`Olá! Gostaria de confirmar um orçamento de higienização de estofados.\nNome: ${name}\nWhatsApp: ${phone}\nLocal: ${city||'Não informado'}\nServiço: ${q.kindLabel+q.size}\nQuantidade: ${q.qty}\nCondição: ${$('condition').selectedOptions[0].textContent}\nTecido: ${$('fabric').selectedOptions[0].textContent}\nEstimativa: ${money(q.total)}\nObservações: ${$('notes').value.trim()||'Nenhuma'}\nValor sujeito à confirmação da empresa.`;
+    $('resultMsg').textContent=plain+' \n\nConfigure o número comercial no código para ativar o envio direto ao WhatsApp.';
+    $('resultMsg').className='status';
+    let copyBtn=document.getElementById('copyQuote');
+    if(!copyBtn){copyBtn=document.createElement('button');copyBtn.id='copyQuote';copyBtn.className='btn secondary';copyBtn.textContent='Copiar solicitação';copyBtn.style.marginTop='10px';$('resultMsg').after(copyBtn);copyBtn.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(plain);copyBtn.textContent='Copiado!';}catch(e){window.prompt('Copie o texto abaixo:',plain);}});}
+  });
+  $('resetBtn').addEventListener('click',()=>{
+    $('photo').value='';$('preview').removeAttribute('src');$('preview').style.display='none';photoData='';$('kind').value='sofa';$('qty').value='1';$('sofaSize').value='3';$('mattressSize').value='casal';$('condition').value='normal';$('fabric').value='unknown';$('notes').value='';$('customer').value='';$('phone').value='';$('city').value='';$('resultMsg').className='status hidden';const c=document.getElementById('copyQuote');if(c)c.remove();$('photoStatus').textContent='A foto será usada como referência visual neste protótipo. A análise automática por IA será ativada quando um serviço de visão computacional for conectado.';updateKind();
+  });
+  loadPrices();updateKind();
+})();
+</script>
+</body>
+</html>
