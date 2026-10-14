@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#061321">
+<meta name="description" content="ESIP Colmeia — ponta de rastreamento pelo navegador, com permissão explícita.">
+<title>ESIP Colmeia | Ponta</title>
+<style>
+:root{color-scheme:dark;--bg:#061321;--panel:#0a1d2e;--line:#174b63;--cyan:#28d8ff;--mint:#49e6c8;--text:#e9f7ff;--muted:#9ab8c9;--danger:#ff7385;--amber:#ffc66d}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#10314a 0%,var(--bg) 55%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.shell{max-width:760px;margin:auto;padding:16px}header{display:flex;align-items:center;gap:13px;padding:12px 0 22px}.logo{width:52px;height:52px;display:grid;place-items:center;border:1px solid var(--cyan);border-radius:15px;color:var(--cyan)}h1{margin:0;font-size:clamp(1.3rem,4vw,1.8rem);letter-spacing:.04em}.sub{color:var(--muted);margin:3px 0}.panel{background:linear-gradient(145deg,#0c2335,#081827);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px}.panel h2{font-size:1.05rem;margin:0 0 5px}.help{color:var(--muted);font-size:.88rem;margin:0 0 14px}label{display:block;margin:12px 0 6px;color:#c5dfed;font-size:.87rem}input{width:100%;background:#061522;border:1px solid #285269;color:var(--text);border-radius:10px;padding:12px;font:inherit;outline:none}input:focus{border-color:var(--cyan)}button{font:inherit;font-weight:650;border-radius:10px;padding:11px 14px;border:1px solid #2386a6;background:#0b354a;color:#e8faff;cursor:pointer}button.primary{background:linear-gradient(100deg,#087b9c,#0c9eae);border-color:#3de0ff}button.subtle{background:#0a1a28;border-color:#234458}button.danger{background:#351b26;border-color:#87424f;color:#ffdce1}button:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions button{flex:1}.notice{padding:12px;border:1px solid #8b6530;background:#33281966;color:#ffe1ae;border-radius:12px;margin-bottom:14px;font-size:.88rem}.status{padding:12px;border-radius:10px;background:#061522;border:1px solid #23485b;color:var(--muted);margin-top:12px;overflow-wrap:anywhere}.status.good{border-color:#277a68;color:#9cf2d9}.status.bad{border-color:#87505a;color:#ffb8c2}.coords{font-size:1.05rem;color:var(--cyan);overflow-wrap:anywhere}.metric{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.metric div{background:#061522;border:1px solid #173b50;border-radius:10px;padding:12px}.metric span{display:block;color:var(--muted);font-size:.8rem}.metric strong{display:block;margin-top:3px;overflow-wrap:anywhere}.small{font-size:.8rem;color:var(--muted)}footer{text-align:center;color:#7fa0b3;font-size:.78rem;padding:8px 0 20px}
+@media(max-width:430px){.panel{padding:14px}.actions{flex-direction:column}.metric{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+<div class="logo" aria-hidden="true"><svg viewBox="0 0 48 48" width="37" height="37" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="24" cy="24" r="5"/><circle cx="24" cy="24" r="12"/><circle cx="24" cy="24" r="19" stroke-dasharray="3 4"/><path d="M24 3v8M24 37v8M3 24h8M37 24h8M24 19V8M29 24h11"/></svg></div>
+<div><h1>ESIP COLMEIA</h1><p class="sub">Ponta de rastreamento pelo navegador</p></div>
+</header>
+<div class="notice"><strong>Protótipo da ponta:</strong> esta página pode ler a localização após sua autorização, em contexto seguro (HTTPS ou localhost). Nesta versão, os dados ficam nesta tela e podem ser exportados; ainda não são enviados automaticamente à central. Não use para rastrear pessoas sem consentimento.</div>
+<section class="panel">
+<h2>01 · Identificação da colmeia</h2><p class="help">Insira o identificador da colmeia e a credencial de dispositivo que o administrador forneceu.</p>
+<label for="hiveId">Identificador da colmeia</label><input id="hiveId" maxlength="160" placeholder="Ex.: HIVE-...">
+<label for="credential">Credencial da ponta</label><input id="credential" maxlength="240" autocomplete="off" placeholder="Cole a credencial aqui">
+<label for="deviceName">Nome deste dispositivo</label><input id="deviceName" maxlength="70" placeholder="Ex.: Equipe de campo 01">
+<div class="actions"><button class="primary" id="saveIdentity">Guardar identificação neste aparelho</button><button class="subtle" id="loadIdentity">Carregar identificação salva</button></div>
+<div id="identityStatus" class="status" role="status">A identificação ainda não foi guardada.</div>
+</section>
+<section class="panel">
+<h2>02 · Localização</h2><p class="help">Você controla quando compartilhar. O navegador solicitará permissão e pode limitar atualizações em segundo plano.</p>
+<div class="actions"><button class="primary" id="start">Autorizar e iniciar localização</button><button class="danger" id="stop" disabled>Parar compartilhamento</button></div>
+<div id="gpsStatus" class="status" role="status">Localização desligada.</div>
+<div class="metric"><div><span>Latitude</span><strong id="lat">—</strong></div><div><span>Longitude</span><strong id="lon">—</strong></div><div><span>Precisão estimada</span><strong id="accuracy">—</strong></div><div><span>Última leitura</span><strong id="updated">—</strong></div></div>
+<div class="actions"><button class="primary" id="exportUpdate" disabled>Exportar atualização JSON</button><button class="subtle" id="copyUpdate" disabled>Copiar atualização</button></div>
+<div class="small" style="margin-top:10px">O JSON é apenas um pacote de teste. Ele não cria um canal de transmissão e não comprova que o receptor pertence à colmeia.</div>
+</section>
+<section class="panel">
+<h2>03 · Estado desta ponta</h2>
+<div id="connectionStatus" class="status">Sem ligação ao motor. A conexão remota será implementada numa etapa própria.</div>
+<p class="small">Não mantenha a página aberta como se fosse um rastreador garantido: o sistema operacional pode suspender o navegador, e a localização depende de permissões, bateria, sinal de GPS e conectividade.</p>
+</section>
+<footer>ESIP-Sistemas · Ponta experimental de rastreamento</footer>
+</div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const STORAGE='esip_colmeia_ponta_v1';
+let watchId=null,lastUpdate=null,sharing=false;
+function identity(){return {hiveId:$('hiveId').value.trim(),credential:$('credential').value.trim(),deviceName:$('deviceName').value.trim()}}
+function setStatus(id,msg,kind=''){const el=$(id);el.textContent=msg;el.className='status'+(kind?' '+kind:'')}
+function readPosition(pos){
+ const c=pos.coords;
+ lastUpdate={schema:'esip-colmeia-location-test-v1',hiveId:$('hiveId').value.trim(),credential:$('credential').value.trim(),deviceName:$('deviceName').value.trim(),latitude:c.latitude,longitude:c.longitude,accuracyMeters:c.accuracy,altitudeMeters:c.altitude,headingDegrees:c.heading,speedMetersPerSecond:c.speed,recordedAt:new Date(pos.timestamp||Date.now()).toISOString(),source:'browser-geolocation'};
+ $('lat').textContent=c.latitude.toFixed(6);$('lon').textContent=c.longitude.toFixed(6);
+ $('accuracy').textContent=Number.isFinite(c.accuracy)?Math.round(c.accuracy)+' m':'Não informada';
+ $('updated').textContent=new Date(pos.timestamp||Date.now()).toLocaleString('pt-BR');
+ setStatus('gpsStatus','Localização recebida pelo navegador. Ainda não enviada à central.','good');
+ $('exportUpdate').disabled=false;$('copyUpdate').disabled=false;
+}
+function errorPosition(err){
+ const msgs={1:'Permissão de localização negada. Você pode alterar a permissão nas configurações do navegador.',2:'A posição não está disponível no momento.',3:'A leitura demorou demais. Tente novamente.'};
+ setStatus('gpsStatus',msgs[err.code]||'Não foi possível obter a localização.','bad');
+}
+function start(){
+ if(!navigator.geolocation){setStatus('gpsStatus','Este navegador não oferece geolocalização.','bad');return}
+ if(!window.isSecureContext){setStatus('gpsStatus','A localização exige HTTPS ou localhost. Abra a página em um endereço seguro.','bad');return}
+ const i=identity();if(!i.hiveId||!i.credential){setStatus('identityStatus','Preencha o identificador da colmeia e a credencial antes de iniciar.','bad');return}
+ if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+ setStatus('gpsStatus','Solicitando permissão e procurando posição…');
+ watchId=navigator.geolocation.watchPosition(readPosition,errorPosition,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+ sharing=true;$('start').disabled=true;$('stop').disabled=false;
+ setStatus('connectionStatus','Leitura local ativa; aguardando implementação do motor remoto.','good');
+}
+function stop(){
+ if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+ watchId=null;sharing=false;$('start').disabled=false;$('stop').disabled=true;
+ setStatus('gpsStatus','Compartilhamento de localização parado neste navegador.');
+ setStatus('connectionStatus','Ponta parada. Nenhum dado novo será lido.');
+}
+$('saveIdentity').addEventListener('click',()=>{
+ const i=identity();if(!i.hiveId||!i.credential){setStatus('identityStatus','Preencha o identificador da colmeia e a credencial.','bad');return}
+ try{localStorage.setItem(STORAGE,JSON.stringify(i));setStatus('identityStatus','Identificação guardada neste navegador. A validade ainda não foi verificada por um servidor.','good')}
+ catch(e){setStatus('identityStatus','Não foi possível guardar a identificação neste aparelho.','bad')}
+});
+$('loadIdentity').addEventListener('click',()=>{
+ try{const i=JSON.parse(localStorage.getItem(STORAGE)||'null');if(!i)throw new Error();$('hiveId').value=i.hiveId||'';$('credential').value=i.credential||'';$('deviceName').value=i.deviceName||'';setStatus('identityStatus','Identificação carregada do armazenamento local.','good')}
+ catch(e){setStatus('identityStatus','Não há identificação salva neste navegador.','bad')}
+});
+$('start').addEventListener('click',start);$('stop').addEventListener('click',stop);
+function payload(){if(!lastUpdate)return '';return JSON.stringify(lastUpdate,null,2)}
+$('exportUpdate').addEventListener('click',()=>{
+ if(!lastUpdate)return;const blob=new Blob([payload()],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='esip-colmeia-atualizacao-localizacao.json';document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+});
+$('copyUpdate').addEventListener('click',async()=>{
+ if(!lastUpdate)return;const t=payload();
+ try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(t);else throw new Error();setStatus('gpsStatus','Pacote de teste copiado. Ainda não enviado à central.','good')}
+ catch(e){const area=document.createElement('textarea');area.value=t;area.style.width='100%';area.style.height='150px';area.style.marginTop='12px';area.setAttribute('aria-label','Pacote JSON para copiar');$('copyUpdate').after(area);area.focus();area.select();setStatus('gpsStatus','Copie o JSON exibido abaixo manualmente.','good')}
+});
+window.addEventListener('pagehide',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId)});
+})();
+</script>
+</body>
+</html>
