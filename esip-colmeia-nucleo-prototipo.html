@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#061321">
+<meta name="description" content="ESIP Colmeia — núcleo experimental para criação e organização de redes privadas de rastreamento.">
+<title>ESIP Colmeia | Núcleo de Redes</title>
+<style>
+:root{color-scheme:dark;--bg:#061321;--panel:#0a1d2e;--panel2:#0d2639;--line:#174b63;--cyan:#28d8ff;--mint:#49e6c8;--text:#e9f7ff;--muted:#9ab8c9;--danger:#ff7385;--amber:#ffc66d}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#10314a 0%,var(--bg) 52%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.shell{max-width:1120px;margin:auto;padding:18px}
+header{display:flex;align-items:center;gap:14px;padding:14px 0 22px}
+.logo{width:54px;height:54px;border:1px solid var(--cyan);border-radius:16px;display:grid;place-items:center;color:var(--cyan);box-shadow:0 0 24px #28d8ff22;flex-shrink:0}
+h1{font-size:clamp(1.35rem,4vw,2rem);margin:0;letter-spacing:.04em}
+.subtitle{color:var(--muted);margin:3px 0 0}
+.pill{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#0a2031;border-radius:999px;padding:5px 10px;font-size:.78rem;color:#bfefff}
+.dot{width:7px;height:7px;background:var(--amber);border-radius:50%}
+.notice{border:1px solid #8b6530;background:#33281966;color:#ffe1ae;border-radius:12px;padding:12px 14px;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.stat,.panel{background:linear-gradient(145deg,#0c2335f5,#081827f5);border:1px solid var(--line);border-radius:16px}
+.stat{padding:15px}.stat span{display:block;color:var(--muted);font-size:.82rem}.stat strong{font-size:1.55rem;color:var(--cyan)}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{padding:18px;min-width:0}
+.panel h2{font-size:1.08rem;margin:0 0 5px}
+.help{color:var(--muted);font-size:.87rem;margin:0 0 16px}
+label{display:block;color:#c5dfed;font-size:.86rem;margin:12px 0 6px}
+input,select{width:100%;background:#061522;border:1px solid #285269;color:var(--text);border-radius:10px;padding:11px 12px;outline:none}
+input:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #28d8ff1a}
+button{border:1px solid #2386a6;background:#0b354a;color:#e8faff;border-radius:10px;padding:10px 13px;font-weight:650}
+button.primary{background:linear-gradient(100deg,#087b9c,#0c9eae);border-color:#3de0ff;color:white}
+button.subtle{background:#0a1a28;border-color:#234458}
+button.danger{border-color:#87424f;background:#351b26;color:#ffdce1}
+button:disabled{opacity:.45;cursor:not-allowed}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.fieldrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.keybox{margin-top:12px;background:#04111c;border:1px dashed #2a718b;border-radius:10px;padding:12px;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.84rem;color:#9df2ff;min-height:44px}
+.result{margin-top:10px;font-size:.88rem;color:var(--muted);min-height:22px}
+.list{display:grid;gap:9px;margin-top:12px}
+.item{border:1px solid #1c465c;background:#071927;border-radius:12px;padding:12px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.item strong{display:block;overflow-wrap:anywhere}.meta{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.tag{display:inline-block;border-radius:6px;padding:3px 7px;font-size:.72rem;border:1px solid #286477;color:#9beeff;margin-top:5px}
+.tag.ok{border-color:#277a68;color:#85f4d6}.tag.off{border-color:#87505a;color:#ffb8c2}
+.itembuttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.itembuttons button{font-size:.78rem;padding:6px 8px}
+.full{grid-column:1/-1}
+.empty{padding:18px;text-align:center;color:var(--muted);border:1px dashed #285064;border-radius:12px}
+footer{color:#7fa0b3;font-size:.78rem;text-align:center;padding:24px 0 10px}
+.small{font-size:.78rem;color:var(--muted)}
+hr{border:0;border-top:1px solid #18384b;margin:16px 0}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.stats{gap:8px}.stat{padding:11px}.stat strong{font-size:1.25rem}.panel{padding:15px}.shell{padding:13px}.item{flex-direction:column}.itembuttons{justify-content:flex-start}.full{grid-column:auto}}
+@media(max-width:390px){.fieldrow{grid-template-columns:1fr}.pill{display:none}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header>
+  <div class="logo" aria-hidden="true">
+    <svg viewBox="0 0 48 48" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.8">
+      <circle cx="24" cy="24" r="5"/><circle cx="24" cy="24" r="12"/><circle cx="24" cy="24" r="19" stroke-dasharray="3 4"/>
+      <path d="M24 3v8M24 37v8M3 24h8M37 24h8M24 19V8M29 24h11"/>
+      <path d="M12 11l5 5M31 32l5 5M36 11l-5 5M17 32l-5 5"/>
+    </svg>
+  </div>
+  <div style="flex:1">
+    <h1>ESIP COLMEIA</h1>
+    <p class="subtitle">Núcleo de criação e administração de redes</p>
+  </div>
+  <span class="pill"><span class="dot"></span> PROTÓTIPO LOCAL</span>
+</header>
+
+<div class="notice"><strong>Modo de protótipo:</strong> os registros ficam neste navegador. Isto ainda não é um serviço multiusuário nem autenticação de produção; limpar os dados do navegador pode apagar os registros. Não use para rastrear pessoas sem consentimento.</div>
+
+<section class="stats" aria-label="Resumo do núcleo">
+  <div class="stat"><span>Colmeias criadas</span><strong id="statHives">0</strong></div>
+  <div class="stat"><span>Pontas cadastradas</span><strong id="statNodes">0</strong></div>
+  <div class="stat"><span>Credenciais ativas</span><strong id="statKeys">0</strong></div>
+</section>
+
+<div class="layout">
+  <section class="panel">
+    <h2>01 · Criador de colmeias</h2>
+    <p class="help">Crie uma identidade independente para cada rede de rastreamento.</p>
+    <form id="hiveForm">
+      <label for="hiveName">Nome da colmeia</label>
+      <input id="hiveName" maxlength="70" required placeholder="Ex.: Fazenda Horizonte">
+      <label for="hiveOwner">Responsável pela rede</label>
+      <input id="hiveOwner" maxlength="90" placeholder="Nome da empresa ou administrador">
+      <div class="actions"><button class="primary" type="submit">＋ Criar colmeia</button></div>
+    </form>
+    <div id="hiveResult" class="result" role="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>02 · Gerador de credenciais</h2>
+    <p class="help">Gere um identificador aleatório para cadastro. No protótipo, ele não concede acesso remoto nem substitui autenticação no servidor.</p>
+    <label for="keyHive">Colmeia vinculada</label>
+    <select id="keyHive"><option value="">Crie uma colmeia primeiro</option></select>
+    <div class="fieldrow">
+      <div><label for="keyType">Tipo de credencial</label>
+        <select id="keyType"><option value="device">Ponta / dispositivo</option><option value="admin">Administrador da colmeia</option></select>
+      </div>
+      <div><label for="keyLabel">Nome da ponta</label><input id="keyLabel" maxlength="70" placeholder="Ex.: Veículo 01"></div>
+    </div>
+    <div class="actions"><button class="primary" id="generateKey" type="button">Gerar credencial</button><button class="subtle" id="copyKey" type="button" disabled>Copiar identificador</button></div>
+    <div id="keyOutput" class="keybox" aria-live="polite">Nenhuma credencial gerada.</div>
+    <div id="keyResult" class="result" role="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>03 · Validador local</h2>
+    <p class="help">Verifica se o identificador corresponde a uma credencial registrada neste navegador e se ela continua ativa. Não comprova identidade real.</p>
+    <label for="validateInput">Identificador da credencial</label>
+    <input id="validateInput" autocomplete="off" placeholder="Cole o identificador aqui">
+    <div class="actions"><button class="primary" id="validateKey" type="button">Validar credencial</button></div>
+    <div id="validationResult" class="result" role="status">Aguardando identificador.</div>
+  </section>
+
+  <section class="panel">
+    <h2>04 · Exportação e recuperação</h2>
+    <p class="help">Exporte uma cópia dos registros locais para backup. O arquivo contém identificadores de credenciais; guarde-o em local seguro.</p>
+    <div class="actions"><button class="primary" id="exportData" type="button">Exportar backup JSON</button><button class="subtle" id="importButton" type="button">Importar backup</button><input id="importFile" type="file" accept="application/json,.json" hidden></div>
+    <div id="backupResult" class="result" role="status"></div>
+    <hr>
+    <p class="small">A importação valida o formato básico antes de substituir os registros atuais. Exporte o estado atual antes de importar outro backup.</p>
+  </section>
+
+  <section class="panel full">
+    <h2>05 · Colmeias e pontas cadastradas</h2>
+    <p class="help">Gerencie as redes e consulte o estado administrativo de cada credencial.</p>
+    <div id="hiveList" class="list"><div class="empty">Nenhuma colmeia criada.</div></div>
+  </section>
+</div>
+
+<footer>ESIP-Sistemas · Protótipo de arquitetura · Núcleo local experimental</footer>
+</div>
+
+<script>
+(function(){
+'use strict';
+const STORAGE_KEY='esip_colmeia_prototype_v1';
+const $=id=>document.getElementById(id);
+let state={version:1,hives:[],credentials:[]};
+let lastGenerated='';
+function load(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      if(parsed&&parsed.version===1&&Array.isArray(parsed.hives)&&Array.isArray(parsed.credentials)) state=parsed;
+    }
+  }catch(e){console.warn('Não foi possível carregar os registros locais.',e)}
+}
+function save(){
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state));return true}
+  catch(e){alert('Não foi possível salvar no navegador. Verifique o espaço disponível e as permissões.');return false}
+}
+function id(prefix){return prefix+'-'+randomHex(8)+'-'+Date.now().toString(36).toUpperCase()}
+function randomHex(bytes){
+  const a=new Uint8Array(bytes);
+  if(!window.crypto||!crypto.getRandomValues) throw new Error('Este navegador não oferece geração criptográfica segura.');
+  crypto.getRandomValues(a);
+  return Array.from(a,x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function date(iso){try{return new Date(iso).toLocaleString('pt-BR')}catch(e){return iso||'—'}}
+function render(){
+  $('statHives').textContent=state.hives.length;
+  $('statNodes').textContent=state.credentials.filter(c=>c.type==='device').length;
+  $('statKeys').textContent=state.credentials.filter(c=>c.active).length;
+  const selected=$('keyHive').value;
+  $('keyHive').innerHTML=state.hives.length?state.hives.map(h=>`<option value="${esc(h.id)}">${esc(h.name)}</option>`).join(''):'<option value="">Crie uma colmeia primeiro</option>';
+  if(state.hives.some(h=>h.id===selected)) $('keyHive').value=selected;
+  $('hiveList').innerHTML='';
+  if(!state.hives.length){$('hiveList').innerHTML='<div class="empty">Nenhuma colmeia criada.</div>';return}
+  state.hives.forEach(h=>{
+    const creds=state.credentials.filter(c=>c.hiveId===h.id);
+    const wrap=document.createElement('div');wrap.className='item';
+    const details=document.createElement('div');details.style.flex='1';
+    details.innerHTML=`<strong>${esc(h.name)}</strong><div class="meta">Responsável: ${esc(h.owner||'Não informado')} · Criada: ${esc(date(h.createdAt))}</div><div class="meta">ID da colmeia: ${esc(h.id)}</div><span class="tag">${creds.length} credencial(is)</span> <span class="tag ok">Rede registrada localmente</span>`;
+    const btns=document.createElement('div');btns.className='itembuttons';
+    const add=document.createElement('button');add.textContent='＋ Gerar ponta';add.onclick=()=>{$('keyHive').value=h.id;$('keyType').value='device';$('keyLabel').focus();$('keyLabel').scrollIntoView({behavior:'smooth',block:'center'})};
+    const remove=document.createElement('button');remove.textContent='Excluir';remove.className='danger';remove.onclick=()=>deleteHive(h.id);
+    btns.append(add,remove);wrap.append(details,btns);$('hiveList').append(wrap);
+    creds.forEach(c=>{
+      const row=document.createElement('div');row.className='item';row.style.marginLeft='12px';
+      const d=document.createElement('div');d.style.flex='1';
+      d.innerHTML=`<strong>↳ ${esc(c.label|| (c.type==='admin'?'Administrador':'Ponta sem nome'))}</strong><div class="meta">${c.type==='admin'?'Administrador':'Dispositivo'} · ${esc(c.id)}</div><div class="meta">Criada: ${esc(date(c.createdAt))}</div><span class="tag ${c.active?'ok':'off'}">${c.active?'Ativa localmente':'Revogada localmente'}</span>`;
+      const b=document.createElement('div');b.className='itembuttons';
+      const copy=document.createElement('button');copy.textContent='Copiar ID';copy.onclick=()=>copyText(c.id);
+      const toggle=document.createElement('button');toggle.className=c.active?'danger':'subtle';toggle.textContent=c.active?'Revogar':'Reativar';toggle.onclick=()=>toggleCredential(c.id);
+      b.append(copy,toggle);row.append(d,b);$('hiveList').append(row);
+    });
+  });
+}
+function deleteHive(hiveId){
+  const hive=state.hives.find(h=>h.id===hiveId);if(!hive)return;
+  if(!confirm(`Excluir a colmeia "${hive.name}" e todas as suas credenciais deste navegador? Esta ação não pode ser desfeita.`))return;
+  state.hives=state.hives.filter(h=>h.id!==hiveId);
+  state.credentials=state.credentials.filter(c=>c.hiveId!==hiveId);
+  save();render();$('hiveResult').textContent='Colmeia removida dos registros locais.';
+}
+function toggleCredential(credentialId){
+  const c=state.credentials.find(x=>x.id===credentialId);if(!c)return;
+  c.active=!c.active;c.updatedAt=new Date().toISOString();
+  if(save()){render();$('validationResult').textContent='Estado local atualizado. A alteração não revoga acessos em nenhum servidor remoto.'}
+}
+async function copyText(text){
+  try{if(navigator.clipboard&&window.isSecureContext)await navigator.clipboard.writeText(text);
+  else{const t=document.createElement('textarea');t.value=text;document.body.append(t);t.select();const ok=document.execCommand('copy');t.remove();if(!ok)throw new Error('copy failed')}
+  $('backupResult').textContent='Identificador copiado.'}
+  catch(e){prompt('Copie o texto abaixo:',text)}
+}
+$('hiveForm').addEventListener('submit',e=>{
+  e.preventDefault();const name=$('hiveName').value.trim();const owner=$('hiveOwner').value.trim();
+  if(!name){$('hiveResult').textContent='Informe um nome para a colmeia.';return}
+  const h={id:id('HIVE'),name,owner,createdAt:new Date().toISOString()};
+  state.hives.push(h);
+  if(save()){render();$('keyHive').value=h.id;$('hiveName').value='';$('hiveOwner').value='';$('hiveResult').textContent='Colmeia criada neste navegador. Ainda não existe conexão remota.'}
+});
+$('generateKey').addEventListener('click',()=>{
+  const hiveId=$('keyHive').value;if(!hiveId){$('keyResult').textContent='Crie ou selecione uma colmeia primeiro.';return}
+  try{
+    const credential={id:id('ESIP')+'-'+randomHex(16),hiveId,type:$('keyType').value,label:$('keyLabel').value.trim(),active:true,createdAt:new Date().toISOString()};
+    state.credentials.push(credential);
+    if(!save()){state.credentials.pop();return}
+    lastGenerated=credential.id;$('keyOutput').textContent=lastGenerated;$('copyKey').disabled=false;
+    $('validateInput').value=lastGenerated;$('keyLabel').value='';
+    $('keyResult').textContent='Credencial registrada localmente. Não é ainda uma chave de autenticação remota.';
+    render();
+  }catch(e){$('keyResult').textContent=e.message||'Falha ao gerar credencial.'}
+});
+$('copyKey').addEventListener('click',()=>{if(lastGenerated)copyText(lastGenerated)});
+$('validateKey').addEventListener('click',()=>{
+  const value=$('validateInput').value.trim();const out=$('validationResult');
+  if(!value){out.textContent='Informe uma credencial para validar.';return}
+  const c=state.credentials.find(x=>x.id===value);
+  if(!c){out.innerHTML='<span style="color:var(--danger)">REJEITADA</span> — identificador não encontrado neste navegador.';return}
+  const h=state.hives.find(x=>x.id===c.hiveId);
+  if(!h||!c.active){out.innerHTML='<span style="color:var(--danger)">REJEITADA</span> — credencial revogada ou colmeia inexistente.';return}
+  out.innerHTML='<span style="color:var(--mint)">REGISTRADA E ATIVA LOCALMENTE</span><br>Colmeia: '+esc(h.name)+'<br>Tipo: '+(c.type==='admin'?'Administrador':'Dispositivo')+'<br><span class="small">Isto não valida um usuário remoto nem autoriza conexão em rede.</span>';
+});
+$('exportData').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify({...state,exportedAt:new Date().toISOString()},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='esip-colmeia-backup.json';document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+  $('backupResult').textContent='Backup JSON gerado. Guarde-o em local seguro.';
+});
+$('importButton').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change',async e=>{
+  const file=e.target.files&&e.target.files[0];if(!file)return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    if(!parsed||parsed.version!==1||!Array.isArray(parsed.hives)||!Array.isArray(parsed.credentials))throw new Error('Estrutura de backup inválida.');
+    const hiveIds=new Set(parsed.hives.map(h=>h.id));
+    if(parsed.hives.some(h=>!h.id||!h.name)||parsed.credentials.some(c=>!c.id||!hiveIds.has(c.hiveId)||typeof c.active!=='boolean'))throw new Error('Há registros inconsistentes no arquivo.');
+    if(!confirm('Importar este backup e substituir os registros atuais deste navegador? Exporte os dados atuais antes de continuar.'))return;
+    state={version:1,hives:parsed.hives,credentials:parsed.credentials};
+    if(save()){$('backupResult').textContent='Backup importado.';render()}
+  }catch(err){$('backupResult').textContent='Falha na importação: '+(err.message||'arquivo inválido')}
+  finally{e.target.value=''}
+});
+load();render();
+})();
+</script>
+</body>
+</html>
