@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06152b">
+<title>ESIP LOCATION | Minha Própria Rede</title>
+
+<!-- Bibliotecas do motor P2P e do QR Code -->
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+:root {
+  --bg:#030916;
+  --panel:#081a32;
+  --blue:#00c8ff;
+  --cyan:#64f4ff;
+  --text:#e8f8ff;
+  --muted:#91aec7;
+  --border:#16496c;
+  --green:#36f2a0;
+  --red:#ff6686;
+}
+
+* { box-sizing:border-box; }
+
+body {
+  margin:0;
+  padding:14px;
+  background:radial-gradient(ellipse at top,#10345a 0%,#030916 65%);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+.container {
+  max-width:850px;
+  margin:auto;
+}
+
+header {
+  text-align:center;
+  padding:26px 14px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  background:linear-gradient(145deg,#0b2545,#040c19);
+  box-shadow:0 0 25px #00aaff18;
+}
+
+.logo {
+  color:var(--cyan);
+  font-size:29px;
+  font-weight:900;
+  letter-spacing:3px;
+  text-shadow:0 0 18px #00c8ff77;
+}
+
+.subtitle {
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:1.5px;
+  margin-top:9px;
+}
+
+.panel {
+  margin-top:15px;
+  padding:18px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:linear-gradient(145deg,var(--panel),#040d1b);
+  box-shadow:0 0 16px #0077ff10;
+}
+
+h2 {
+  color:var(--cyan);
+  font-size:17px;
+  margin:0 0 15px;
+}
+
+h3 {
+  color:var(--cyan);
+  font-size:14px;
+}
+
+label {
+  display:block;
+  margin:13px 0 7px;
+  color:var(--muted);
+  font-size:13px;
+}
+
+input {
+  width:100%;
+  padding:13px;
+  color:white;
+  background:#020a16;
+  border:1px solid #185078;
+  border-radius:10px;
+  outline:none;
+  font-size:15px;
+}
+
+input:focus {
+  border-color:var(--blue);
+  box-shadow:0 0 12px #00c8ff20;
+}
+
+button {
+  width:100%;
+  padding:13px;
+  margin-top:10px;
+  color:white;
+  background:linear-gradient(135deg,#07517b,#063050);
+  border:1px solid #1e9bca;
+  border-radius:10px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button.secondary {
+  background:#09182b;
+  border-color:#254766;
+}
+
+button.danger {
+  background:#351322;
+  border-color:#9c3550;
+}
+
+button:disabled {
+  opacity:.4;
+  cursor:not-allowed;
+}
+
+.status {
+  margin-top:12px;
+  padding:12px;
+  background:#030b17;
+  border:1px solid #244764;
+  border-radius:10px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+
+.status.good {
+  color:var(--green);
+  border-color:#176f55;
+}
+
+.status.bad {
+  color:#ff91a7;
+  border-color:#78334a;
+}
+
+.metric {
+  padding:12px;
+  background:#041020;
+  border:1px solid #153c5c;
+  border-radius:10px;
+  margin-bottom:10px;
+  overflow-wrap:anywhere;
+}
+
+.metric span {
+  display:block;
+  margin-bottom:6px;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+}
+
+.metric strong {
+  color:var(--cyan);
+  overflow-wrap:anywhere;
+  font-size:14px;
+}
+
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.qr-area {
+  margin-top:15px;
+  padding:18px 10px;
+  background:#fff;
+  border-radius:12px;
+  text-align:center;
+  color:#071426;
+}
+
+#qrcode {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:20px;
+  overflow:hidden;
+}
+
+#qrcode img, #qrcode canvas {
+  max-width:100%;
+  height:auto;
+}
+
+.qr-caption {
+  font-size:12px;
+  margin-top:10px;
+  overflow-wrap:anywhere;
+}
+
+.note {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+
+.log {
+  max-height:180px;
+  overflow-y:auto;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  padding:12px;
+  border-radius:10px;
+  background:#020711;
+  border:1px solid #16334c;
+  color:#a8c9df;
+  font:12px/1.7 monospace;
+}
+
+a {
+  color:var(--cyan);
+  overflow-wrap:anywhere;
+}
+
+.hidden { display:none !important; }
+
+footer {
+  padding:22px 5px;
+  text-align:center;
+  color:#64829b;
+  font-size:11px;
+  line-height:1.8;
+}
+
+@media(max-width:480px) {
+  body { padding:9px; }
+  .panel { padding:14px; }
+  .logo { font-size:24px; }
+  .grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+  <div class="logo">ESIP LOCATION</div>
+  <div class="subtitle">MOTOR P2P • MINHA PRÓPRIA REDE</div>
+  <p class="note">
+    Crie uma rede independente, gere seu convite e expanda
+    suas pontas autorizadas.
+  </p>
+</header>
+
+<section class="panel">
+  <h2>01 — Identificação e token</h2>
+
+  <label for="nome">Nome desta ponta</label>
+  <input id="nome" maxlength="60" placeholder="Ex.: Minha rede pessoal">
+
+  <label for="token">Token recebido do gerador</label>
+  <input id="token" maxlength="200" placeholder="Cole o token recebido">
+
+  <p class="note">
+    Atenção: neste protótipo, o token ainda não é validado.
+    Não use o campo como prova de licença ou autorização.
+  </p>
+
+  <button id="btnAtivar">ATIVAR MOTOR P2P</button>
+
+  <div id="status" class="status">
+    Motor desligado. Ative para começar.
+  </div>
+</section>
+
+<section class="panel">
+  <h2>02 — Minha própria rede</h2>
+
+  <label for="nomeRede">Nome da sua rede</label>
+  <input id="nomeRede" maxlength="60" placeholder="Ex.: Rede Família">
+
+  <button id="btnCriarRede" disabled>
+    CRIAR MINHA PRÓPRIA REDE
+  </button>
+
+  <div class="metric" style="margin-top:14px">
+    <span>Identificação da rede</span>
+    <strong id="redeId">Nenhuma rede criada ou selecionada</strong>
+  </div>
+
+  <div class="metric">
+    <span>Minha ponta P2P</span>
+    <strong id="meuId">Motor ainda não ativado</strong>
+  </div>
+
+  <button id="btnCopiarRede" class="secondary" disabled>
+    COPIAR IDENTIFICAÇÃO DA REDE
+  </button>
+
+  <p class="note">
+    Cada rede possui um identificador próprio. Nesta versão,
+    a identificação é gerada no dispositivo e não existe
+    um cadastro central permanente de redes.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>03 — Link e QR Code de convite</h2>
+
+  <p class="note">
+    Crie sua rede para gerar o convite. A outra ponta deverá
+    abrir o link e ativar o motor para tentar se conectar.
+  </p>
+
+  <div class="metric">
+    <span>Link de convite</span>
+    <strong id="linkConvite">Crie sua rede primeiro.</strong>
+  </div>
+
+  <button id="btnCopiarLink" disabled>
+    COPIAR LINK DE CONVITE
+  </button>
+
+  <button id="btnCompartilharLink" class="secondary" disabled>
+    COMPARTILHAR CONVITE
+  </button>
+
+  <div class="qr-area">
+    <div id="qrcode"></div>
+    <div class="qr-caption" id="qrLegenda">
+      O QR Code aparecerá depois que você criar sua rede.
+    </div>
+  </div>
+
+  <p class="note">
+    O convite contém o identificador da rede e o ID P2P
+    do anfitrião. O anfitrião precisa estar conectado
+    para receber novas conexões.
+  </p>
+</section>
+
+<section class="panel">
+  <h2>04 — Entrar em outra rede</h2>
+
+  <div id="conviteRecebido" class="status">
+    Se você recebeu um convite, abra o link no navegador.
+    Os dados do convite serão carregados automaticamente.
+  </div>
+
+  <div class="metric">
+    <span>Rede do convite</span>
+    <strong id="redeConvite">Nenhum convite identificado</strong>
+  </div>
+
+  <div class="metric">
+    <span>ID do anfitrião</span>
+    <strong id="anfitriaoId">Nenhum anfitrião identificado</strong>
+  </div>
+
+  <label for="idManual">Ou informe manualmente o ID do anfitrião</label>
+  <input id="idManual" placeholder="Cole o ID P2P do anfitrião">
+
+  <button id="btnConectar" disabled>
+    CONECTAR À REDE
+  </button>
+
+  <button id="btnSair" class="danger" disabled>
+    ENCERRAR CONEXÕES
+  </button>
+</section>
+
+<section class="panel">
+  <h2>05 — Compartilhamento de localização</h2>
+
+  <div class="grid">
+    <div class="metric">
+      <span>Latitude recebida</span>
+      <strong id="lat">—</strong>
+    </div>
+    <div class="metric">
+      <span>Longitude recebida</span>
+      <strong id="lon">—</strong>
+    </div>
+    <div class="metric">
+      <span>Precisão estimada</span>
+      <strong id="precisao">—</strong>
+    </div>
+    <div class="metric">
+      <span>Última atualização</span>
+      <strong id="horaPosicao">—</strong>
+    </div>
+  </div>
+
+  <button id="btnCompartilharGps" disabled>
+    AUTORIZAR E COMPARTILHAR MINHA POSIÇÃO
+  </button>
+
+  <button id="btnPararGps" class="secondary" disabled>
+    PARAR COMPARTILHAMENTO
+  </button>
+
+  <p id="mapa" class="note">
+    A posição recebida aparecerá aqui.
+  </p>
+
+  <button id="btnLimparPosicao" class="secondary">
+    LIMPAR POSIÇÃO RECEBIDA
+  </button>
+</section>
+
+<section class="panel">
+  <h2>06 — Histórico da sessão</h2>
+  <div id="log" class="log">ESIP LOCATION pronto.</div>
+  <button id="btnLimparLog" class="secondary">LIMPAR HISTÓRICO</button>
+</section>
+
+<footer>
+  ESIP SISTEMAS • ESIP LOCATION<br>
+  Compartilhamento mediante consentimento.<br>
+  Protótipo P2P — token e permissões ainda não validados.
+</footer>
+
+</div>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let peer = null;
+let connections = [];
+let gpsWatch = null;
+let redeAtual = null;
+let conviteAnfitriao = null;
+let conviteRede = null;
+
+const params = new URLSearchParams(location.search);
+
+conviteRede = params.get("rede");
+conviteAnfitriao = params.get("anfitriao");
+
+if (conviteRede && conviteAnfitriao) {
+  $("redeConvite").textContent = conviteRede;
+  $("anfitriaoId").textContent = conviteAnfitriao;
+  $("idManual").value = conviteAnfitriao;
+  $("conviteRecebido").textContent =
+    "Convite identificado. Ative o motor para continuar.";
+  $("nomeRede").value = "Rede convidada";
+  $("btnConectar").disabled = true;
+}
+
+function log(mensagem) {
+  $("log").textContent =
+    new Date().toLocaleTimeString("pt-BR") +
+    " — " + mensagem + "\n" + $("log").textContent;
+}
+
+function status(mensagem, tipo = "") {
+  $("status").textContent = mensagem;
+  $("status").className = "status" + (tipo ? " " + tipo : "");
+}
+
+function ativo() {
+  return !!peer && !peer.destroyed && !!peer.id;
+}
+
+function atualizarBotoes() {
+  const ligado = ativo();
+  const conectado = connections.some(c => c.open);
+
+  $("btnCriarRede").disabled = !ligado;
+  $("btnConectar").disabled = !ligado;
+  $("btnCopiarLink").disabled = !redeAtual || !ligado;
+  $("btnCompartilharLink").disabled = !redeAtual || !ligado;
+  $("btnCopiarRede").disabled = !redeAtual;
+  $("btnSair").disabled = connections.length === 0;
+  $("btnCompartilharGps").disabled = !conectado;
+  $("btnPararGps").disabled = gpsWatch === null;
+}
+
+function gerarId() {
+  if (window.crypto && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return "esip-" + Date.now().toString(36) + "-" +
+    Math.random().toString(36).slice(2, 12);
+}
+
+function urlBase() {
+  const url = new URL(location.href);
+  url.search = "";
+  url.hash = "";
+  return url.href;
+}
+
+function montarLinkConvite() {
+  if (!redeAtual || !ativo()) return "";
+
+  const url = new URL(urlBase());
+  url.searchParams.set("rede", redeAtual.id);
+  url.searchParams.set("anfitriao", peer.id);
+
+  return url.href;
+}
+
+function desenharQr(link) {
+  $("qrcode").innerHTML = "";
+
+  if (typeof QRCode === "undefined") {
+    $("qrLegenda").textContent =
+      "A biblioteca de QR Code não carregou. Verifique a internet.";
+    return;
+  }
+
+  new QRCode($("qrcode"), {
+    text: link,
+    width: 220,
+    height: 220,
+    colorDark: "#06152b",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.M
+  });
+
+  $("qrLegenda").textContent =
+    "ESIP LOCATION — leia o QR Code para abrir o convite.";
+}
+
+function atualizarConvite() {
+  const link = montarLinkConvite();
+
+  $("linkConvite").textContent =
+    link || "Crie sua rede primeiro.";
+
+  $("qrcode").innerHTML = "";
+
+  if (link) {
+    desenharQr(link);
+  } else {
+    $("qrLegenda").textContent =
+      "O QR Code aparecerá depois que você criar sua rede.";
+  }
+
+  atualizarBotoes();
+}
+
+async function copiar(texto, titulo) {
+  if (!texto) return;
+
+  try {
+    await navigator.clipboard.writeText(texto);
+    status(titulo + " copiado.", "good");
+  } catch {
+    window.prompt("Copie o conteúdo abaixo:", texto);
+  }
+}
+
+function receberDados(data) {
+  if (!data || typeof data !== "object") return;
+
+  if (data.type === "hello") {
+    log("Ponta identificada: " + String(data.nome || "Ponta ESIP"));
+    return;
+  }
+
+  if (data.type !== "location") return;
+
+  const lat = Number(data.latitude);
+  const lon = Number(data.longitude);
+  const accuracy = Number(data.accuracy);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return;
+
+  $("lat").textContent = lat.toFixed(6);
+  $("lon").textContent = lon.toFixed(6);
+  $("precisao").textContent = Number.isFinite(accuracy)
+    ? Math.round(accuracy) + " metros"
+    : "Indisponível";
+
+  $("horaPosicao").textContent =
+    new Date(data.timestamp || Date.now()).toLocaleString("pt-BR");
+
+  const url = "https://www.openstreetmap.org/?mlat=" +
+    encodeURIComponent(lat) + "&mlon=" +
+    encodeURIComponent(lon) + "#map=17/" +
+    encodeURIComponent(lat) + "/" + encodeURIComponent(lon);
+
+  $("mapa").innerHTML = "";
+
+  const texto = document.createElement("p");
+  texto.textContent = "Posição compartilhada por: " +
+    String(data.sender || "ponta conectada");
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = "ABRIR LOCALIZAÇÃO NO MAPA";
+
+  $("mapa").append(texto, link);
+  log("Localização recebida.");
+}
+
+function configurarConexao(conn, idRedeEsperada) {
+  conn.on("open", () => {
+    if (!connections.includes(conn)) connections.push(conn);
+
+    conn.send({
+      type: "hello",
+      nome: $("nome").value.trim() || "Ponta ESIP",
+      rede: idRedeEsperada
+    });
+
+    log("Conexão aberta: " + conn.peer);
+    status("Ponta conectada. Compartilhe localização somente se desejar.", "good");
+    atualizarBotoes();
+  });
+
+  conn.on("data", receberDados);
+
+  conn.on("close", () => {
+    connections = connections.filter(c => c !== conn);
+    log("Conexão encerrada: " + conn.peer);
+    atualizarBotoes();
+
+    if (!connections.some(c => c.open)) {
+      status("Não há pontas conectadas.");
+    }
+  });
+
+  conn.on("error", err => {
+    log("Erro de conexão: " + err.message);
+  });
+
+  if (conn.open && !connections.includes(conn)) {
+    connections.push(conn);
+    atualizarBotoes();
+  }
+}
+
+$("btnAtivar").addEventListener("click", () => {
+  if (ativo()) {
+    status("O motor já está ativo.", "good");
+    return;
+  }
+
+  if (typeof Peer === "undefined") {
+    status("PeerJS não carregou. Verifique sua conexão com a internet.", "bad");
+    return;
+  }
+
+  try {
+    status("Ativando motor P2P...");
+
+    peer = new Peer(undefined, { debug: 1 });
+
+    peer.on("open", id => {
+      $("meuId").textContent = id;
+      status("Motor ativo. Agora você pode criar ou acessar uma rede.", "good");
+      log("Motor ativado. ID: " + id);
+      atualizarBotoes();
+
+      if (conviteRede && conviteAnfitriao) {
+        redeAtual = {
+          id: conviteRede,
+          nome: "Rede convidada",
+          anfitriao: conviteAnfitriao
+        };
+
+        $("redeId").textContent = conviteRede;
+        $("nomeRede").value = "Rede convidada";
+        $("conviteRecebido").textContent =
+          "Convite carregado. Você pode tentar conectar à rede.";
+
+        atualizarConvite();
+
+        // Tenta conectar automaticamente ao anfitrião do convite.
+        conectarAnfitriao(conviteAnfitriao, conviteRede);
+      }
+    });
+
+    peer.on("connection", conn => {
+      const redeInformada = conn.metadata && conn.metadata.rede;
+
+      if (!redeAtual || redeInformada !== redeAtual.id) {
+        log("Conexão recusada: identificador de rede incompatível.");
+        conn.close();
+        return;
+      }
+
+      configurarConexao(conn, redeAtual.id);
+    });
+
+    peer.on("disconnected", () => {
+      status("Sinalização interrompida. Verifique a internet.", "bad");
+      log("Desconectado do serviço de sinalização.");
+    });
+
+    peer.on("error", err => {
+      status("Erro no motor: " + err.type, "bad");
+      log("Erro PeerJS: " + err.type);
+    });
+
+  } catch (err) {
+    status("Não foi possível ativar o motor.", "bad");
+    log(err.message);
+  }
+});
+
+$("btnCriarRede").addEventListener("click", () => {
+  if (!ativo()) return;
+
+  if (connections.length) {
+    status(
+      "Encerre as conexões atuais antes de trocar a rede desta ponta.",
+      "bad"
+    );
+    return;
+  }
+
+  const nome = $("nomeRede").value.trim();
+
+  if (!nome) {
+    status("Digite um nome para sua rede.", "bad");
+    $("nomeRede").focus();
+    return;
+  }
+
+  redeAtual = {
+    id: gerarId(),
+    nome: nome,
+    anfitriao: peer.id
+  };
+
+  conviteRede = null;
+  conviteAnfitriao = null;
+
+  $("redeId").textContent = redeAtual.id;
+  $("redeConvite").textContent = redeAtual.id;
+  $("anfitriaoId").textContent = peer.id;
+  $("conviteRecebido").textContent =
+    "Rede criada neste dispositivo. Compartilhe o convite com quem deseja conectar.";
+
+  atualizarConvite();
+  log("Rede criada: " + nome + " (" + redeAtual.id + ")");
+  status("Sua rede foi criada. Link e QR Code estão disponíveis.", "good");
+});
+
+function conectarAnfitriao(id, idRede) {
+  if (!ativo()) return;
+
+  if (!id || !idRede) {
+    status("Convite incompleto.", "bad");
+    return;
+  }
+
+  if (id === peer.id) {
+    status("Este convite aponta para esta própria ponta.", "bad");
+    return;
+  }
+
+  if (connections.some(c => c.peer === id && c.open)) {
+    status("Você já está conectado a esta ponta.", "good");
+    return;
+  }
+
+  try {
+    status("Solicitando conexão ao anfitrião...");
+
+    const conn = peer.connect(id, {
+      reliable: true,
+      metadata: { rede: idRede }
+    });
+
+    configurarConexao(conn, idRede);
+  } catch (err) {
+    status("Não foi possível iniciar a conexão.", "bad");
+    log(err.message);
+  }
+}
+
+$("btnConectar").addEventListener("click", () => {
+  if (!ativo()) {
+    status("Ative o motor primeiro.", "bad");
+    return;
+  }
+
+  const id = $("idManual").value.trim();
+  const idRede = redeAtual && redeAtual.id;
+
+  if (!idRede) {
+    status("Abra um convite de rede antes de conectar.", "bad");
+    return;
+  }
+
+  conectarAnfitriao(id, idRede);
+});
+
+$("btnCopiarRede").addEventListener("click", () => {
+  if (redeAtual) copiar(redeAtual.id, "Identificação da rede");
+});
+
+$("btnCopiarLink").addEventListener("click", () => {
+  copiar(montarLinkConvite(), "Link de convite");
+});
+
+$("btnCompartilharLink").addEventListener("click", async () => {
+  const link = montarLinkConvite();
+  if (!link) return;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: "Convite ESIP LOCATION",
+        text: "Você foi convidado para uma rede ESIP LOCATION.",
+        url: link
+      });
+    } catch (err) {
+      if (err.name !== "AbortError") copiar(link, "Link de convite");
+    }
+  } else {
+    copiar(link, "Link de convite");
+  }
+});
+
+$("btnCompartilharGps").addEventListener("click", () => {
+  if (!connections.some(c => c.open)) {
+    status("Conecte-se a uma ponta antes de compartilhar.", "bad");
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    status("Este navegador não oferece geolocalização.", "bad");
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    status("O GPS exige HTTPS ou localhost.", "bad");
+    return;
+  }
+
+  if (gpsWatch !== null) return;
+
+  status("Solicitando permissão de localização...");
+
+  gpsWatch = navigator.geolocation.watchPosition(position => {
+    const c = position.coords;
+
+    const data = {
+      type: "location",
+      sender: $("nome").value.trim() || "Ponta ESIP",
+      latitude: c.latitude,
+      longitude: c.longitude,
+      accuracy: c.accuracy,
+      timestamp: position.timestamp
+    };
+
+    let enviados = 0;
+
+    connections.forEach(conn => {
+      if (conn.open) {
+        try {
+          conn.send(data);
+          enviados++;
+        } catch {}
+      }
+    });
+
+    status("Posição compartilhada com " + enviados + " ponta(s).", "good");
+    atualizarBotoes();
+
+  }, err => {
+    status("Não foi possível obter a posição. Confira as permissões.", "bad");
+    log("Erro GPS: " + err.message);
+
+    if (gpsWatch !== null) {
+      navigator.geolocation.clearWatch(gpsWatch);
+      gpsWatch = null;
+    }
+
+    atualizarBotoes();
+
+  }, {
+    enableHighAccuracy: true,
+    maximumAge: 5000,
+    timeout: 20000
+  });
+
+  atualizarBotoes();
+});
+
+$("btnPararGps").addEventListener("click", () => {
+  if (gpsWatch !== null) {
+    navigator.geolocation.clearWatch(gpsWatch);
+    gpsWatch = null;
+  }
+
+  status("Compartilhamento de localização interrompido.");
+  log("Compartilhamento GPS parado.");
+  atualizarBotoes();
+});
+
+$("btnSair").addEventListener("click", () => {
+  if (gpsWatch !== null) {
+    navigator.geolocation.clearWatch(gpsWatch);
+    gpsWatch = null;
+  }
+
+  connections.slice().forEach(conn => {
+    try { conn.close(); } catch {}
+  });
+
+  connections = [];
+  status("Conexões encerradas.");
+  log("Todas as conexões foram encerradas.");
+  atualizarBotoes();
+});
+
+$("btnLimparPosicao").addEventListener("click", () => {
+  $("lat").textContent = "—";
+  $("lon").textContent = "—";
+  $("precisao").textContent = "—";
+  $("horaPosicao").textContent = "—";
+  $("mapa").textContent = "Nenhuma posição exibida.";
+  log("Posição exibida removida da tela.");
+});
+
+$("btnLimparLog").addEventListener("click", () => {
+  $("log").textContent = "Histórico limpo.";
+});
+
+window.addEventListener("beforeunload", () => {
+  if (gpsWatch !== null && navigator.geolocation) {
+    navigator.geolocation.clearWatch(gpsWatch);
+  }
+
+  if (peer && !peer.destroyed) {
+    peer.destroy();
+  }
+});
+</script>
+</body>
+</html>
