@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06152b">
+<title>ESIP | Preparador de Chamada</title>
+<style>
+:root{--bg:#030b17;--panel:#071b33;--panel2:#0b2a49;--cyan:#00d9ff;--blue:#2588ff;--text:#f2f9ff;--muted:#9ebfdd}
+*{box-sizing:border-box}body{margin:0;padding:20px;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#103b60 0,transparent 48%),var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+.wrap{width:min(100%,980px);margin:0 auto}.header{text-align:center;margin:10px 0 25px}.header .symbol{font-size:36px;color:var(--cyan);text-shadow:0 0 20px #00d9ff88}.header h1{margin:7px 0;letter-spacing:.2em}.header p{margin:0;color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns: minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}.panel,.preview{border:1px solid #00d9ff66;border-radius:20px;background:linear-gradient(145deg,#0a2541,#04101f);padding:22px;box-shadow:0 0 24px #00aaff12}.panel h2{font-size:17px;margin:0 0 18px;color:var(--cyan);letter-spacing:.05em}.field{margin-bottom:15px}.field label{display:block;margin-bottom:7px;color:#c4e0f7;font-size:12px;font-weight:700;letter-spacing:.04em}.field input,.field textarea{width:100%;padding:13px 12px;border-radius:10px;border:1px solid #2c628b;background:#020d1b;color:#fff;font:inherit;outline:none}.field input:focus,.field textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #00d9ff18}.field small{display:block;color:#7fa6c8;font-size:11px;line-height:1.5;margin-top:6px}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{border:1px solid var(--cyan);border-radius:11px;padding:13px 16px;background:linear-gradient(90deg,#00cfff,#76ebff);color:#031323;font-size:12px;font-weight:800;letter-spacing:.04em;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.secondary{background:#0a2a48;color:#bfeeff}.status{font-size:12px;line-height:1.5;color:#a6c7e4;margin-top:13px;overflow-wrap:anywhere}.preview{position:sticky;top:14px;text-align:center;padding:25px 22px}.call-card{min-height:440px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:22px}.logo{width:70px;height:70px;display:grid;place-items:center;border:1px solid var(--cyan);border-radius:22px;color:var(--cyan);font-size:30px;box-shadow:0 0 25px #00d9ff22}.brand{font-size:28px;letter-spacing:.22em;margin-top:8px}.subbrand{font-size:10px;color:var(--muted);letter-spacing:.17em;margin-top:8px}.call-label{color:var(--cyan);font-size:10px;font-weight:bold;letter-spacing:.2em;margin-top:24px}.call-name{font-size:25px;font-weight:800;margin:10px 0 8px;overflow-wrap:anywhere}.call-message{font-size:13px;color:var(--muted);line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.waves{height:58px;display:flex;align-items:center;justify-content:center;gap:5px}.waves i{display:block;width:4px;height:var(--h);border-radius:5px;background:linear-gradient(#9af4ff,#168bff);box-shadow:0 0 10px #00d9ff88;animation:wave .8s ease-in-out infinite alternate;animation-delay:var(--d)}@keyframes wave{to{transform:scaleY(.35);opacity:.55}}.call-button{width:100%;border-radius:13px;background:linear-gradient(90deg,#00cfff,#7aeeff);color:#031323;padding:17px 10px;text-decoration:none;font-weight:900;font-size:12px;letter-spacing:.06em;box-shadow:0 0 22px #00d9ff25}.foot{font-size:9px;color:#668bad;letter-spacing:.16em}.notice{margin-top:16px;border:1px solid #00d9ff35;background:#041426;border-radius:12px;padding:12px;color:#a9c9e5;font-size:11px;line-height:1.55;text-align:left}.hidden{display:none!important}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.preview{position:static}.call-card{min-height:420px}.panel,.preview{padding:18px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="header">
+    <div class="symbol">⌁</div>
+    <h1>ESIP</h1>
+    <p>PAINEL EDITÁVEL · PREPARADOR DE CHAMADA</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      <h2>⚙ CONFIGURAR CHAMADA</h2>
+      <div class="field">
+        <label for="nome">NOME / IDENTIFICAÇÃO</label>
+        <input id="nome" type="text" value="LINHA 2" placeholder="Ex.: Linha 2, Família, Equipe">
+      </div>
+      <div class="field">
+        <label for="link">LINK DO MOTOR ESIP</label>
+        <input id="link" type="url" placeholder="https://...">
+        <small>Cole aqui o endereço completo do motor. O botão da prévia usará este link.</small>
+      </div>
+      <div class="field">
+        <label for="mensagem">MENSAGEM CURTA (OPCIONAL)</label>
+        <textarea id="mensagem" rows="3" placeholder="Ex.: Toque abaixo para iniciar a comunicação.">Sua comunicação está pronta.
+Toque abaixo para abrir o ambiente ESIP.</textarea>
+      </div>
+      <div class="field">
+        <label for="textoBotao">TEXTO DO BOTÃO</label>
+        <input id="textoBotao" type="text" value="ATENDER CHAMADA" placeholder="Texto do botão">
+      </div>
+      <div class="buttons">
+        <button class="btn" id="atualizar" type="button">ATUALIZAR PRÉVIA</button>
+        <button class="btn secondary" id="abrir" type="button">TESTAR LINK</button>
+        <button class="btn secondary" id="baixar" type="button">BAIXAR HTML PRONTO</button>
+      </div>
+      <div class="status" id="status" role="status">Preencha o nome e o link. Depois, atualize a prévia e baixe o HTML preparado.</div>
+      <div class="notice"><strong>Como usar:</strong><br>1. Preencha os campos.<br>2. Confira a prévia ao lado ou abaixo.<br>3. Toque em <strong>BAIXAR HTML PRONTO</strong> para gerar uma versão de chamada já com o link inserido.<br><br>O endereço fica no código do HTML baixado; o botão da tela não exibe o endereço escrito.</div>
+    </section>
+
+    <section class="preview">
+      <div class="call-card">
+        <div>
+          <div class="logo">☎</div>
+          <div class="brand">ESIP</div>
+          <div class="subbrand">COMUNICAÇÃO INTEGRADA</div>
+          <div class="call-label">CHAMADA RECEBIDA</div>
+          <div class="call-name" id="prevNome">LINHA 2</div>
+          <div class="call-message" id="prevMensagem">Sua comunicação está pronta.
+Toque abaixo para abrir o ambiente ESIP.</div>
+        </div>
+        <div class="waves" aria-label="Ondas visuais de áudio">
+          <i style="--h:17px;--d:-.1s"></i><i style="--h:29px;--d:-.3s"></i><i style="--h:43px;--d:-.5s"></i><i style="--h:24px;--d:-.2s"></i><i style="--h:52px;--d:-.6s"></i><i style="--h:35px;--d:-.4s"></i><i style="--h:45px;--d:-.1s"></i><i style="--h:21px;--d:-.3s"></i><i style="--h:32px;--d:-.5s"></i>
+        </div>
+        <a href="#" id="prevBotao" class="call-button">ATENDER CHAMADA</a>
+        <div class="foot">ESIP · CONEXÃO WEB</div>
+      </div>
+    </section>
+  </div>
+</main>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const nome = $('nome'), link = $('link'), mensagem = $('mensagem'), textoBotao = $('textoBotao');
+  const status = $('status');
+  function validUrl(value){
+    try { const u = new URL(value); return u.protocol === 'https:' || u.protocol === 'http:'; }
+    catch(e){ return false; }
+  }
+  function updatePreview(){
+    $('prevNome').textContent = nome.value.trim() || 'LINHA 2';
+    $('prevMensagem').textContent = mensagem.value.trim() || 'Toque abaixo para abrir o ambiente ESIP.';
+    $('prevBotao').textContent = textoBotao.value.trim() || 'ATENDER CHAMADA';
+    $('prevBotao').href = validUrl(link.value.trim()) ? link.value.trim() : '#';
+    status.textContent = validUrl(link.value.trim())
+      ? 'Prévia atualizada. O botão está apontando para o link informado.'
+      : 'Prévia atualizada. Insira um link http:// ou https:// válido para habilitar a chamada.';
+  }
+  $('atualizar').addEventListener('click', updatePreview);
+  $('abrir').addEventListener('click', function(){
+    const url = link.value.trim();
+    if(!validUrl(url)){ status.textContent = 'Cole primeiro um link completo começando com https:// ou http://.'; return; }
+    window.open(url, '_blank', 'noopener');
+  });
+  $('prevBotao').addEventListener('click', function(e){
+    if(!validUrl(link.value.trim())){ e.preventDefault(); status.textContent = 'O botão está pronto visualmente. Preencha um link válido no painel para usá-lo.'; }
+  });
+  $('baixar').addEventListener('click', function(){
+    const url = link.value.trim();
+    if(!validUrl(url)){ status.textContent = 'Antes de baixar, cole um link completo válido do motor ESIP (https:// ou http://).'; link.focus(); return; }
+    const safe = s => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const finalHtml = `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#06152b"><title>ESIP | ${safe(nome.value.trim() || 'Linha 2')}</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse at top,#103b60,transparent 48%),#030b17;font-family:Arial,sans-serif;color:#f2f9ff}.card{width:min(100%,420px);min-height:620px;padding:32px 24px 24px;border:1px solid #00d9ff77;border-radius:28px;background:linear-gradient(150deg,#0a2541,#04101f);box-shadow:0 0 28px #00bfff22;text-align:center;display:flex;flex-direction:column;justify-content:space-between;align-items:center;gap:22px}.logo{width:74px;height:74px;display:grid;place-items:center;border:1px solid #00d9ff;border-radius:22px;color:#00d9ff;font-size:32px;box-shadow:0 0 24px #00d9ff33}h1{font-size:31px;letter-spacing:.2em;margin:0}.sub{font-size:10px;color:#9ebfdd;letter-spacing:.16em;margin-top:8px}.label{color:#00d9ff;font-size:11px;font-weight:bold;letter-spacing:.2em;margin-top:30px}.name{font-size:25px;font-weight:bold;margin:12px 0}.msg{color:#a8c5df;font-size:14px;line-height:1.6;white-space:pre-wrap}.waves{height:60px;display:flex;align-items:center;gap:5px}.waves i{width:4px;height:var(--h);border-radius:6px;background:#00d9ff;box-shadow:0 0 10px #00d9ff88;animation:pulse .8s ease-in-out infinite alternate;animation-delay:var(--d)}@keyframes pulse{to{transform:scaleY(.4);opacity:.55}}.btn{display:block;width:100%;padding:18px 10px;border-radius:14px;color:#031323;background:linear-gradient(90deg,#00cfff,#7aeeff);font-weight:900;font-size:13px;letter-spacing:.06em;text-decoration:none;box-shadow:0 0 22px #00d9ff30}.foot{font-size:9px;color:#668bad;letter-spacing:.16em}
+</style></head><body><main class="card"><div><div class="logo">☎</div><h1>ESIP</h1><div class="sub">COMUNICAÇÃO INTEGRADA</div><div class="label">CHAMADA RECEBIDA</div><div class="name">${safe(nome.value.trim() || 'LINHA 2')}</div><div class="msg">${safe(mensagem.value.trim() || 'Toque abaixo para abrir o ambiente ESIP.')}</div></div><div class="waves">${[17,29,43,24,52,35,45,21,32].map((h,i)=>`<i style="--h:${h}px;--d:-${i/10}s"></i>`).join('')}</div><a class="btn" href="${safe(url)}" target="_blank" rel="noopener">${safe(textoBotao.value.trim() || 'ATENDER CHAMADA')}</a><div class="foot">ESIP · CONEXÃO WEB</div></main></body></html>`;
+    const blob = new Blob([finalHtml], {type:'text/html;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'ESIP_chamada_configurada.html';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    status.textContent = 'HTML pronto gerado com o nome, a mensagem e o link preenchidos.';
+  });
+  updatePreview();
+})();
+</script>
+</body>
+</html>
