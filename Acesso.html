@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06152b">
+<title>ESIP LOCATION | Gerador de Tokens</title>
+
+<style>
+:root {
+  --bg:#030914;
+  --panel:#081a30;
+  --panel2:#0b2340;
+  --blue:#19bfff;
+  --cyan:#73e2ff;
+  --text:#edf8ff;
+  --muted:#91abc5;
+  --line:#17466b;
+  --danger:#ff647c;
+  --green:#57f5bd;
+}
+* {box-sizing:border-box}
+body {
+  margin:0;
+  min-height:100vh;
+  color:var(--text);
+  background:
+    radial-gradient(ellipse at top,#10325a 0%,transparent 52%),
+    var(--bg);
+  font-family:Arial,Helvetica,sans-serif;
+}
+header {
+  padding:26px 16px 20px;
+  text-align:center;
+  border-bottom:1px solid var(--line);
+}
+.logo {
+  width:68px;height:68px;
+  margin:0 auto 12px;
+  display:grid;place-items:center;
+  border:2px solid var(--blue);
+  border-radius:20px;
+  color:var(--cyan);
+  font-size:29px;font-weight:bold;
+  box-shadow:0 0 24px #19bfff35,inset 0 0 18px #19bfff15;
+}
+h1 {
+  margin:0;
+  font-size:clamp(25px,5vw,37px);
+  letter-spacing:2px;
+  color:#fff;
+  text-shadow:0 0 18px #19bfff65;
+}
+.subtitle {
+  color:var(--cyan);
+  font-size:12px;
+  letter-spacing:3px;
+  margin-top:9px;
+}
+main {
+  max-width:1000px;
+  padding:18px 13px 45px;
+  margin:auto;
+}
+.card {
+  background:linear-gradient(145deg,#0b2038,#061323);
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 8px 28px #0003;
+}
+h2 {
+  font-size:16px;
+  letter-spacing:1px;
+  margin:0 0 17px;
+}
+label {
+  display:block;
+  color:var(--muted);
+  font-size:12px;
+  margin:12px 0 7px;
+}
+input,select {
+  width:100%;
+  padding:13px;
+  background:#030d1b;
+  color:var(--text);
+  border:1px solid #214a6b;
+  border-radius:9px;
+  font-size:15px;
+  outline:none;
+}
+input:focus,select:focus {
+  border-color:var(--blue);
+  box-shadow:0 0 10px #19bfff24;
+}
+.grid {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:0 12px;
+}
+button {
+  border:1px solid var(--blue);
+  background:#0a2947;
+  color:#fff;
+  border-radius:9px;
+  padding:12px 14px;
+  font-size:13px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:active {transform:scale(.98)}
+.primary {
+  background:linear-gradient(110deg,#0877ba,#12baf2);
+  color:#001426;
+  border:0;
+}
+.danger {
+  border-color:#853b52;
+  color:#ff9aab;
+  background:#281421;
+}
+.success {color:var(--green)}
+.actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:16px;
+}
+.actions button {flex:1}
+.stats {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:9px;
+  margin-bottom:16px;
+}
+.stat {
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#081a30;
+  padding:14px 7px;
+  text-align:center;
+}
+.stat strong {
+  display:block;
+  color:var(--cyan);
+  font-size:24px;
+}
+.stat span {
+  font-size:10px;
+  color:var(--muted);
+  letter-spacing:1px;
+}
+.notice {
+  padding:12px;
+  background:#07172a;
+  border-left:3px solid var(--blue);
+  color:#b8d9ef;
+  font-size:12px;
+  line-height:1.6;
+  border-radius:5px;
+  margin-bottom:15px;
+}
+.result {
+  border:1px solid #1673a0;
+  background:#041426;
+  border-radius:12px;
+  padding:15px;
+  margin-top:17px;
+  overflow-wrap:anywhere;
+}
+.token {
+  color:var(--cyan);
+  font-family:monospace;
+  font-size:13px;
+  line-height:1.8;
+  user-select:all;
+}
+.status {
+  display:inline-block;
+  border:1px solid #246c67;
+  color:var(--green);
+  border-radius:20px;
+  padding:5px 8px;
+  font-size:10px;
+}
+.status.revoked {
+  color:#ff9aab;
+  border-color:#853b52;
+}
+.list-item {
+  border:1px solid var(--line);
+  background:#07172a;
+  border-radius:12px;
+  padding:13px;
+  margin-top:10px;
+}
+.item-head {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+}
+.item-head strong {overflow-wrap:anywhere}
+.meta {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.8;
+  margin-top:8px;
+}
+.item-actions {
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+.item-actions button {padding:9px;font-size:11px}
+small,.muted {color:var(--muted)}
+footer {
+  text-align:center;
+  color:#66839e;
+  font-size:11px;
+  padding:10px 15px 25px;
+}
+@media(max-width:520px) {
+  .grid {grid-template-columns:1fr}
+  .card {padding:14px}
+  .stats {gap:6px}
+  .stat strong {font-size:20px}
+  .stat span {font-size:9px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="logo">E</div>
+  <h1>ESIP LOCATION</h1>
+  <div class="subtitle">REDE MUNDIAL P2P</div>
+  <p class="muted">GERADOR ADMINISTRATIVO DE PONTAS</p>
+</header>
+
+<main>
+  <div class="notice">
+    <strong>AMBIENTE ADMINISTRATIVO</strong><br>
+    Protótipo local para preparar e organizar credenciais
+    da rede ESIP LOCATION. Os dados permanecem neste
+    navegador, salvo quando você exporta um arquivo.
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <strong id="total">0</strong>
+      <span>PONTAS</span>
+    </div>
+    <div class="stat">
+      <strong id="active">0</strong>
+      <span>ATIVAS</span>
+    </div>
+    <div class="stat">
+      <strong id="revoked">0</strong>
+      <span>REVOGADAS</span>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>01 / CADASTRAR NOVA PONTA</h2>
+
+    <form id="form">
+      <label for="name">Nome da ponta</label>
+      <input id="name" maxlength="70"
+        placeholder="Ex.: Celular principal" required>
+
+      <div class="grid">
+        <div>
+          <label for="owner">Titular / responsável</label>
+          <input id="owner" maxlength="100"
+            placeholder="Nome do titular" required>
+        </div>
+        <div>
+          <label for="email">E-mail de referência (opcional)</label>
+          <input id="email" type="email" maxlength="150"
+            placeholder="titular@exemplo.com">
+        </div>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="type">Tipo de ponta</label>
+          <select id="type">
+            <option value="PESSOAL">Pessoal</option>
+            <option value="FAMILIAR">Familiar</option>
+            <option value="PROFISSIONAL">Profissional</option>
+            <option value="OPERACIONAL">Operacional</option>
+          </select>
+        </div>
+        <div>
+          <label for="permission">Permissão inicial</label>
+          <select id="permission">
+            <option value="AGUARDANDO">Aguardando autorização</option>
+            <option value="COMPARTILHAR">Pode compartilhar posição</option>
+            <option value="VISUALIZAR">Pode visualizar posição autorizada</option>
+            <option value="AMBAS">Compartilhar e visualizar</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="validity">Validade da credencial</label>
+      <select id="validity">
+        <option value="30">30 dias</option>
+        <option value="90">90 dias</option>
+        <option value="180">180 dias</option>
+        <option value="365">365 dias</option>
+        <option value="0">Sem vencimento definido</option>
+      </select>
+
+      <div class="actions">
+        <button class="primary" type="submit">
+          + GERAR CREDENCIAL
+        </button>
+        <button type="reset">LIMPAR CAMPOS</button>
+      </div>
+    </form>
+
+    <div id="generated" hidden></div>
+  </section>
+
+  <section class="card">
+    <h2>02 / GERENCIAR PONTAS</h2>
+
+    <label for="search">Pesquisar por nome, titular ou ID</label>
+    <input id="search" placeholder="Digite para pesquisar...">
+
+    <div class="actions">
+      <button id="export">EXPORTAR JSON</button>
+      <button id="csv">EXPORTAR CSV</button>
+      <button id="backup">COPIAR BACKUP</button>
+    </div>
+
+    <div id="list"></div>
+  </section>
+
+  <section class="card">
+    <h2>03 / INFORMAÇÕES DO SISTEMA</h2>
+    <div class="meta">
+      PRODUTO: ESIP LOCATION<br>
+      ARQUITETURA PREVISTA: P2P<br>
+      IDENTIFICADOR: UUID<br>
+      ARMAZENAMENTO DO PROTÓTIPO: LOCAL<br>
+      MOTOR P2P: MÓDULO SEPARADO<br>
+      VALIDAÇÃO ONLINE: A IMPLEMENTAR
+    </div>
+  </section>
+</main>
+
+<footer>
+  ESIP SISTEMAS · TECNOLOGIA AZUL-MARINHO NEON<br>
+  PROTÓTIPO ADMINISTRATIVO · VERSÃO 1.0
+</footer>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "esip_location_generator_v1";
+const $ = id => document.getElementById(id);
+
+let records = loadRecords();
+
+function loadRecords() {
+  try {
+    const value = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecords() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  render();
+}
+
+function makeId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+
+  return "PONTA-" + Array.from(
+    crypto.getRandomValues(new Uint8Array(16)),
+    b => b.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+function makeToken() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return "ESIP-LOC-" + Array.from(
+    bytes, b => b.toString(16).padStart(2, "0")
+  ).join("");
+}
+
+function expiryDate(days) {
+  if (!days) return null;
+  const date = new Date();
+  date.setDate(date.getDate() + Number(days));
+  return date.toISOString();
+}
+
+function formatDate(value) {
+  if (!value) return "Sem vencimento definido";
+  return new Date(value).toLocaleString("pt-BR");
+}
+
+function isExpired(record) {
+  return !!record.expiresAt &&
+    Date.now() >= new Date(record.expiresAt).getTime();
+}
+
+function isActive(record) {
+  return !record.revoked && !isExpired(record);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+$("form").addEventListener("submit", event => {
+  event.preventDefault();
+
+  if (!crypto.getRandomValues) {
+    alert("Este navegador não oferece geração segura de números aleatórios.");
+    return;
+  }
+
+  const record = {
+    id: makeId(),
+    name: $("name").value.trim(),
+    owner: $("owner").value.trim(),
+    email: $("email").value.trim(),
+    type: $("type").value,
+    permission: $("permission").value,
+    createdAt: new Date().toISOString(),
+    expiresAt: expiryDate($("validity").value),
+    revoked: false,
+    token: makeToken()
+  };
+
+  if (!record.name || !record.owner) {
+    alert("Informe o nome da ponta e o titular.");
+    return;
+  }
+
+  records.unshift(record);
+  saveRecords();
+
+  $("generated").hidden = false;
+  $("generated").innerHTML = `
+    <div class="result">
+      <div class="success"><strong>✓ CREDENCIAL PREPARADA</strong></div>
+      <p><strong>${escapeHTML(record.name)}</strong></p>
+      <div class="token">${escapeHTML(record.token)}</div>
+      <p class="meta">ID: ${escapeHTML(record.id)}<br>
+      Validade: ${escapeHTML(formatDate(record.expiresAt))}</p>
+      <div class="actions">
+        <button class="primary" id="copyNew">COPIAR TOKEN</button>
+      </div>
+      <small>
+        Protótipo local: esta credencial ainda não é validada
+        pelo motor P2P.
+      </small>
+    </div>`;
+
+  $("copyNew").addEventListener("click", () =>
+    copyText(record.token)
+  );
+
+  $("form").reset();
+  $("generated").scrollIntoView({behavior:"smooth", block:"nearest"});
+});
+
+async function copyText(value) {
+  try {
+    await navigator.clipboard.writeText(value);
+    alert("Copiado.");
+  } catch {
+    const area = document.createElement("textarea");
+    area.value = value;
+    document.body.appendChild(area);
+    area.select();
+    const ok = document.execCommand("copy");
+    area.remove();
+    alert(ok ? "Copiado." : "Não foi possível copiar. Selecione o texto manualmente.");
+  }
+}
+
+function revokeRecord(id) {
+  const record = records.find(item => item.id === id);
+  if (!record || record.revoked) return;
+
+  if (!confirm("Revogar esta credencial neste navegador?")) return;
+
+  record.revoked = true;
+  record.revokedAt = new Date().toISOString();
+  saveRecords();
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportJSON() {
+  downloadFile(
+    "ESIP_LOCATION_PONTAS.json",
+    JSON.stringify(records, null, 2),
+    "application/json;charset=utf-8"
+  );
+}
+
+function csvEscape(value) {
+  return '"' + String(value ?? "").replace(/"/g, '""') + '"';
+}
+
+function exportCSV() {
+  const fields = [
+    "id","name","owner","email","type","permission",
+    "createdAt","expiresAt","revoked"
+  ];
+
+  const lines = [
+    fields.join(";"),
+    ...records.map(record =>
+      fields.map(field => csvEscape(record[field])).join(";")
+    )
+  ];
+
+  downloadFile(
+    "ESIP_LOCATION_PONTAS.csv",
+    "\uFEFF" + lines.join("\r\n"),
+    "text/csv;charset=utf-8"
+  );
+}
+
+$("export").addEventListener("click", exportJSON);
+$("csv").addEventListener("click", exportCSV);
+
+$("backup").addEventListener("click", () =>
+  copyText(JSON.stringify(records, null, 2))
+);
+
+$("search").addEventListener("input", render);
+
+function render() {
+  $("total").textContent = records.length;
+  $("active").textContent = records.filter(isActive).length;
+  $("revoked").textContent = records.filter(r => r.revoked).length;
+
+  const query = $("search").value.toLowerCase().trim();
+
+  const filtered = records.filter(record =>
+    [record.id, record.name, record.owner, record.email]
+      .some(value => String(value || "").toLowerCase().includes(query))
+  );
+
+  if (!filtered.length) {
+    $("list").innerHTML = `
+      <p class="muted" style="text-align:center;padding:20px">
+        ${records.length ? "Nenhuma ponta encontrada." :
+          "Nenhuma ponta cadastrada ainda."}
+      </p>`;
+    return;
+  }
+
+  $("list").innerHTML = filtered.map(record => {
+    const active = isActive(record);
+    const status = record.revoked ? "REVOGADA" :
+      isExpired(record) ? "EXPIRADA" : "ATIVA (LOCAL)";
+
+    return `
+      <article class="list-item">
+        <div class="item-head">
+          <strong>${escapeHTML(record.name)}</strong>
+          <span class="status ${active ? "" : "revoked"}">
+            ${status}
+          </span>
+        </div>
+        <div class="meta">
+          Titular: ${escapeHTML(record.owner)}<br>
+          Tipo: ${escapeHTML(record.type)}<br>
+          Permissão: ${escapeHTML(record.permission)}<br>
+          Criada: ${escapeHTML(formatDate(record.createdAt))}<br>
+          Validade: ${escapeHTML(formatDate(record.expiresAt))}<br>
+          ID: ${escapeHTML(record.id)}
+        </div>
+        <div class="item-actions">
+          <button data-copy="${escapeHTML(record.id)}">COPIAR TOKEN</button>
+          <button data-json="${escapeHTML(record.id)}">EXPORTAR PONTA</button>
+          ${!record.revoked ?
+            `<button class="danger" data-revoke="${escapeHTML(record.id)}">
+              REVOGAR LOCALMENTE
+            </button>` : ""}
+        </div>
+      </article>`;
+  }).join("");
+
+  $("list").querySelectorAll("[data-copy]").forEach(button => {
+    button.addEventListener("click", () => {
+      const record = records.find(r => r.id === button.dataset.copy);
+      if (record) copyText(record.token);
+    });
+  });
+
+  $("list").querySelectorAll("[data-json]").forEach(button => {
+    button.addEventListener("click", () => {
+      const record = records.find(r => r.id === button.dataset.json);
+      if (record) downloadFile(
+        "ESIP_LOCATION_PONTA.json",
+        JSON.stringify(record, null, 2),
+        "application/json;charset=utf-8"
+      );
+    });
+  });
+
+  $("list").querySelectorAll("[data-revoke]").forEach(button => {
+    button.addEventListener("click", () =>
+      revokeRecord(button.dataset.revoke)
+    );
+  });
+}
+
+render();
+</script>
+</body>
+</html>
