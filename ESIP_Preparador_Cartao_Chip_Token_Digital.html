@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06152b">
+<title>ESIP | Preparador de Cartão Chip Token Digital</title>
+<style>
+:root{--bg:#030b18;--panel:#06152b;--panel2:#081d38;--cyan:#00e5ff;--blue:#087bff;--text:#eaf7ff;--muted:#9eb5cc;--line:#087da8;--glow:0 0 18px #00cfff55}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#0a2850 0,#030b18 58%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:22px 16px;border-bottom:1px solid var(--cyan);background:#041127eF;box-shadow:var(--glow)}
+.brand{max-width:1250px;margin:auto;display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+.brand-mark{font-size:38px;filter:drop-shadow(0 0 10px var(--cyan))}
+.brand h1{margin:0;color:var(--cyan);font-size:clamp(22px,4vw,34px);letter-spacing:1px;text-shadow:0 0 12px #00dfff88}
+.brand p{margin:4px 0 0;color:#c7e9ff;letter-spacing:2px;font-size:12px}
+main{max-width:1250px;margin:22px auto;padding:0 14px;display:grid;grid-template-columns:minmax(280px,390px) minmax(0,1fr);gap:16px}
+.panel{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#071a33ee,#030d20f5);box-shadow:var(--glow);padding:17px;min-width:0}
+h2{font-size:18px;color:var(--cyan);margin:0 0 5px}
+.sub{font-size:13px;color:var(--muted);margin:0 0 18px}
+label{display:block;color:#d8efff;font-size:13px;margin:13px 0 6px}
+input,select,textarea{width:100%;background:#020a18;border:1px solid #078ad0;border-radius:8px;color:white;padding:12px;font:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 2px #00dfff25}
+textarea{min-height:70px;resize:vertical}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.checks label{display:flex;align-items:center;gap:8px;margin:0;font-size:12px}
+.checks input{width:auto;accent-color:var(--cyan)}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:16px}
+button{cursor:pointer;border:1px solid var(--cyan);border-radius:10px;padding:12px 14px;background:linear-gradient(135deg,#0b4e9a,#062349);color:white;font-weight:750;letter-spacing:.2px;box-shadow:0 0 12px #00cfff22}
+button:hover{filter:brightness(1.18);box-shadow:0 0 18px #00dfff55}
+button.primary{background:linear-gradient(135deg,#00e5ff,#087bff);color:#031326}
+.right{display:grid;gap:16px;align-content:start}
+.preview-wrap{padding:10px;border:1px solid #087da8;border-radius:15px;background:#020a18}
+.token-card{position:relative;overflow:hidden;border:2px solid #00cfff;border-radius:23px;padding:22px;background:radial-gradient(ellipse at 50% 45%,#0c3263 0,#06172f 55%,#020917 100%);box-shadow:inset 0 0 22px #00aaff44,0 0 20px #008cff33;min-height:360px}
+.token-card:before{content:"";position:absolute;inset:0;opacity:.35;pointer-events:none;background-image:linear-gradient(120deg,transparent 0 48%,#00cfff24 49%,transparent 50%),linear-gradient(30deg,transparent 0 48%,#00cfff18 49%,transparent 50%);background-size:34px 34px}
+.card-content{position:relative;z-index:1}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.logo{font-size:30px;font-weight:900;letter-spacing:2px;color:var(--cyan);text-shadow:0 0 14px #00dfff99}
+.kicker{font-size:11px;letter-spacing:2px;color:#bdefff}
+.card-title{font-size:clamp(18px,3vw,26px);font-weight:850;margin-top:3px}
+.card-sub{color:var(--cyan);font-size:12px;letter-spacing:1px}
+.lock{font-size:55px;filter:drop-shadow(0 0 12px #00dfff)}
+.card-grid{display:grid;grid-template-columns:1fr 100px;gap:16px;align-items:center;margin-top:24px}
+.chip{width:82px;height:68px;border-radius:15px;background:linear-gradient(135deg,#fff0a4,#b98a21 45%,#f7d76c);border:2px solid #ffe48c;box-shadow:0 0 18px #ffd85a55;position:relative;margin-bottom:15px}
+.chip:before,.chip:after{content:"";position:absolute;background:#6f5015;opacity:.75}
+.chip:before{width:2px;height:100%;left:50%;top:0}
+.chip:after{height:2px;width:100%;left:0;top:50%}
+.qrbox{background:white;padding:7px;border-radius:10px;width:100px;min-height:100px;display:grid;place-items:center}
+.qrbox img{width:100%;height:auto;display:block}
+.qr-placeholder{font-size:12px;color:#06152b;text-align:center}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.detail small{display:block;color:var(--cyan);font-size:11px}
+.detail strong{display:block;overflow-wrap:anywhere;font-size:14px;margin-top:3px}
+.card-footer{text-align:center;color:var(--cyan);font-size:10px;letter-spacing:2px;margin-top:20px;border-top:1px solid #00cfff66;padding-top:12px}
+.status{color:#b6f7ff;font-size:12px;margin-top:10px}
+.linkrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.linkrow button{white-space:nowrap}
+.notice{color:var(--muted);font-size:12px;line-height:1.5;margin-top:10px}
+.hidden{display:none!important}
+@media(max-width:850px){main{grid-template-columns:1fr}.token-card{min-height:0}.card-grid{grid-template-columns:1fr 85px}.qrbox{width:85px;min-height:85px}}
+@media(max-width:480px){header{padding:16px 12px}main{padding:0 9px;margin:12px auto}.panel{padding:13px}.token-card{padding:15px}.details{grid-template-columns:1fr 1fr}.card-grid{gap:9px}.lock{font-size:42px}.checks{grid-template-columns:1fr}}
+@media print{body{background:white;color:#000}header,.editor,.controls,.link-panel,.sub{display:none!important}main{display:block;margin:0;padding:0}.panel{border:0;box-shadow:none;padding:0;background:white}.preview-wrap{border:0;padding:0}.token-card{print-color-adjust:exact;-webkit-print-color-adjust:exact;box-shadow:none;break-inside:avoid}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><div class="brand-mark">📡</div><div><h1>ESIP | CHIP TOKEN DIGITAL</h1><p>PREPARADOR DE CARTÃO · SUA CHAVE DE ACESSO PRIVADO</p></div></div>
+</header>
+<main>
+  <section class="panel editor">
+    <h2>⚙ DADOS DO CARTÃO</h2>
+    <p class="sub">Preencha os dados e veja o cartão atualizar automaticamente.</p>
+    <label for="client">Nome do cliente / empresa</label><input id="client" placeholder="Nome do cliente ou empresa" value="">
+    <label for="email">E-mail de identificação</label><input id="email" type="email" placeholder="email@exemplo.com">
+    <label for="accessType">Tipo de acesso</label><select id="accessType"><option>Individual</option><option>Empresa</option><option>Família</option><option>Equipe</option><option>Evento</option></select>
+    <label for="validity">Validade informativa</label><select id="validity"><option value="Permanente">Permanente</option><option>30 dias</option><option>90 dias</option><option>180 dias</option><option>1 ano</option><option>Personalizada</option></select>
+    <label for="motorLink">Link do motor ESIP</label><input id="motorLink" type="url" placeholder="https://seu-link-do-motor...">
+    <label for="tokenCode">Código/identificador do cartão (opcional)</label><input id="tokenCode" placeholder="Ex.: ESIP-7F3A-9C8D-4B21">
+    <label for="notes">Observações (opcional)</label><textarea id="notes" placeholder="Informação curta para o cliente"></textarea>
+    <div class="checks">
+      <label><input id="showQR" type="checkbox" checked> Incluir QR Code</label>
+      <label><input id="showToken" type="checkbox" checked> Mostrar identificador</label>
+      <label><input id="showValidity" type="checkbox" checked> Mostrar validade</label>
+      <label><input id="showEmail" type="checkbox" checked> Mostrar e-mail</label>
+      <label><input id="showNotes" type="checkbox" checked> Mostrar observações</label>
+      <label><input id="showLogo" type="checkbox" checked> Mostrar marca ESIP</label>
+    </div>
+    <div class="actions controls">
+      <button class="primary" id="generate">GERAR / ATUALIZAR CARTÃO</button>
+      <button id="copyLink">COPIAR LINK</button>
+      <button id="copyHTML">COPIAR HTML DO CARTÃO</button>
+      <button id="print">IMPRIMIR / SALVAR PDF</button>
+      <button id="clear">LIMPAR CAMPOS</button>
+    </div>
+    <p class="notice">Este preparador cria o cartão visual no próprio dispositivo. A validade exibida é informativa: o controle real de acesso depende da validação do token pelo motor ESIP.</p>
+  </section>
+  <section class="right">
+    <div class="panel">
+      <h2>◉ PRÉVIA DO CARTÃO CHIP TOKEN</h2><p class="sub">A prévia acompanha os campos preenchidos.</p>
+      <div class="preview-wrap"><article class="token-card" id="tokenCard">
+        <div class="card-content">
+          <div class="card-top">
+            <div><div class="logo" id="cardLogo">📡 ESIP</div><div class="kicker">CHIP TOKEN DIGITAL</div><div class="card-sub">ACESSO PRIVADO</div></div>
+            <div class="lock" aria-label="Cadeado">🔐</div>
+          </div>
+          <div class="card-grid">
+            <div><div class="chip" aria-hidden="true"></div><div class="kicker">IDENTIFICAÇÃO DO ACESSO</div></div>
+            <div class="qrbox" id="qrBox"><div class="qr-placeholder">QR Code aparecerá após inserir um link</div></div>
+          </div>
+          <div class="details">
+            <div class="detail"><small>CLIENTE / EMPRESA</small><strong id="outClient">—</strong></div>
+            <div class="detail" id="emailDetail"><small>E-MAIL</small><strong id="outEmail">—</strong></div>
+            <div class="detail" id="validityDetail"><small>VALIDADE INFORMativa</small><strong id="outValidity">Permanente</strong></div>
+            <div class="detail" id="tokenDetail"><small>IDENTIFICADOR</small><strong id="outToken">—</strong></div>
+          </div>
+          <div class="detail" id="notesDetail" style="margin-top:12px"><small>OBSERVAÇÕES</small><strong id="outNotes">—</strong></div>
+          <div class="card-footer">SUA CHAVE DE ACESSO À COMUNICAÇÃO ESIP</div>
+        </div>
+      </article></div>
+      <div class="status" id="status" role="status">Pronto para preparar o cartão.</div>
+    </div>
+    <div class="panel link-panel">
+      <h2>🔗 LINK E QR CODE DO CARTÃO</h2>
+      <p class="sub">Insira o endereço do motor; o QR Code será associado a esse link.</p>
+      <div class="linkrow"><input id="linkCopyField" type="url" placeholder="https://seu-link-do-motor..."><button id="copyLink2">COPIAR LINK</button></div>
+      <p class="notice">Para gerar o QR Code, este HTML usa um serviço externo de QR. O cartão e os campos funcionam localmente; a criação do QR exige internet. Se quiser manter o princípio “zero externo”, podemos integrar uma biblioteca local posteriormente.</p>
+      <div class="actions"><button id="openMotor">ABRIR MOTOR</button><button id="print2">IMPRIMIR / SALVAR PDF</button></div>
+    </div>
+  </section>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const ids = ['client','email','accessType','validity','motorLink','tokenCode','notes','showQR','showToken','showValidity','showEmail','showNotes','showLogo'];
+function safeUrl(value){
+  try { const u = new URL(value.trim()); return ['http:','https:'].includes(u.protocol) ? u.href : ''; }
+  catch { return ''; }
+}
+function makeQR(url){
+  const box=$('qrBox'); box.innerHTML='';
+  if(!$('showQR').checked){box.classList.add('hidden');return;}
+  box.classList.remove('hidden');
+  if(!url){box.innerHTML='<div class="qr-placeholder">Insira o link do motor para criar o QR Code</div>';return;}
+  const img=document.createElement('img');
+  img.alt='QR Code para abrir o motor ESIP';
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&data='+encodeURIComponent(url);
+  img.onerror=()=>{box.innerHTML='<div class="qr-placeholder">Não foi possível carregar o QR. Verifique a internet.</div>';};
+  box.appendChild(img);
+}
+function render(){
+  $('outClient').textContent=$('client').value.trim()||'—';
+  $('outEmail').textContent=$('email').value.trim()||'—';
+  $('outValidity').textContent=$('validity').value;
+  $('outToken').textContent=$('tokenCode').value.trim()||'—';
+  $('outNotes').textContent=$('notes').value.trim()||'—';
+  $('emailDetail').classList.toggle('hidden',!$('showEmail').checked);
+  $('validityDetail').classList.toggle('hidden',!$('showValidity').checked);
+  $('tokenDetail').classList.toggle('hidden',!$('showToken').checked);
+  $('notesDetail').classList.toggle('hidden',!$('showNotes').checked);
+  $('cardLogo').classList.toggle('hidden',!$('showLogo').checked);
+  const url=safeUrl($('motorLink').value);
+  $('linkCopyField').value=$('motorLink').value;
+  makeQR(url);
+}
+async function copyText(text){
+  if(!text){setStatus('Não há conteúdo para copiar.');return;}
+  try { await navigator.clipboard.writeText(text); setStatus('Copiado para a área de transferência.'); }
+  catch { const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();setStatus(ok?'Copiado para a área de transferência.':'Não foi possível copiar automaticamente.');}
+}
+function setStatus(message){$('status').textContent=message;}
+function cardHTML(){
+  const card=$('tokenCard').cloneNode(true);
+  const link=safeUrl($('motorLink').value);
+  if(link){
+    const a=document.createElement('a');a.href=link;a.target='_blank';a.rel='noopener noreferrer';a.style.cssText='display:block;color:inherit;text-decoration:none';a.appendChild(card.cloneNode(true));
+    return '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ESIP Chip Token Digital</title><body style="margin:0;background:#030b18;padding:20px;font-family:Arial,sans-serif">'+a.outerHTML+'</body></html>';
+  }
+  return '<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ESIP Chip Token Digital</title><body style="margin:0;background:#030b18;padding:20px;font-family:Arial,sans-serif">'+card.outerHTML+'</body></html>';
+}
+$('generate').addEventListener('click',()=>{render();setStatus('Cartão atualizado. Confira o link antes de compartilhar.');});
+$('copyLink').addEventListener('click',()=>copyText(safeUrl($('motorLink').value)));
+$('copyLink2').addEventListener('click',()=>copyText(safeUrl($('linkCopyField').value)));
+$('copyHTML').addEventListener('click',()=>copyText(cardHTML()));
+$('print').addEventListener('click',()=>window.print());
+$('print2').addEventListener('click',()=>window.print());
+$('openMotor').addEventListener('click',()=>{const u=safeUrl($('linkCopyField').value||$('motorLink').value);if(u)window.open(u,'_blank','noopener,noreferrer');else setStatus('Insira um link válido do motor ESIP.');});
+$('clear').addEventListener('click',()=>{ids.forEach(id=>{const el=$(id);if(el.type==='checkbox')el.checked=['showQR','showToken','showValidity','showEmail','showNotes','showLogo'].includes(id);else if(id==='validity')el.value='Permanente';else if(id==='accessType')el.value='Individual';else el.value='';});render();setStatus('Campos limpos.');});
+$('linkCopyField').addEventListener('input',()=>{$('motorLink').value=$('linkCopyField').value;render();});
+ids.forEach(id=>$(id).addEventListener('input',render));
+render();
+</script>
+</body>
+</html>
