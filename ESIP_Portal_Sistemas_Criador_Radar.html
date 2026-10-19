@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#061426">
+<title>ESIP-Sistemas | Tecnologia Inteligente</title>
+<meta name="description" content="Conheça a ESIP-Sistemas: comunicação privada, orçamentos inteligentes, alerta e pânico, controle de acesso, localização, criação de sites e soluções digitais.">
+<style>
+:root {
+  --bg:#04101f; --panel:#091c32; --panel2:#0c2440;
+  --cyan:#00e5ff; --blue:#168cff; --text:#edfaff;
+  --muted:#9bb8cc; --border:rgba(0,229,255,.24);
+  --shadow:0 0 28px rgba(0,180,255,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{min-height:100vh;font-family:Arial,Helvetica,sans-serif;color:var(--text);background:radial-gradient(ellipse at 50% 0%,#10345b 0%,transparent 46%),linear-gradient(180deg,#061426,#020914 85%);line-height:1.6}
+button,input{font:inherit}
+button,a{-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+.container{width:min(1160px,92%);margin:auto}
+
+/* CABEÇALHO */
+header{position:relative;overflow:hidden;border-bottom:1px solid var(--border);padding:20px 0 70px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:54px;height:54px;border:2px solid var(--cyan);border-radius:50%;display:grid;place-items:center;color:var(--cyan);font-size:27px;box-shadow:0 0 22px rgba(0,229,255,.24);flex-shrink:0}
+.brand-name{font-size:23px;font-weight:900;letter-spacing:1.3px}
+.brand-name span{color:var(--cyan)}
+.brand-subtitle{color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase}
+.status{border:1px solid var(--border);border-radius:30px;padding:8px 13px;color:var(--cyan);font-size:12px;letter-spacing:1px;white-space:nowrap}
+
+/* RADAR ESIP E RELÓGIO */
+.radar-panel{display:flex;align-items:center;gap:14px;padding:9px 13px;border:1px solid var(--border);border-radius:14px;background:rgba(4,16,31,.82);box-shadow:0 0 20px rgba(0,229,255,.08)}
+.radar{width:66px;height:66px;position:relative;flex-shrink:0;overflow:hidden;border:1px solid rgba(0,229,255,.7);border-radius:50%;background:radial-gradient(circle,transparent 18%,rgba(0,229,255,.08) 19%,transparent 21%),repeating-radial-gradient(circle,transparent 0 12px,rgba(0,229,255,.20) 13px 14px),linear-gradient(90deg,transparent 49%,rgba(0,229,255,.22) 50%,transparent 51%),linear-gradient(0deg,transparent 49%,rgba(0,229,255,.22) 50%,transparent 51%),#041426;box-shadow:inset 0 0 16px rgba(0,229,255,.14),0 0 16px rgba(0,229,255,.16)}
+.radar::before{content:"";position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg,transparent 285deg,rgba(0,229,255,.04) 305deg,rgba(0,229,255,.65) 350deg,transparent 360deg);animation:radarSweep 3s linear infinite}
+.radar::after{content:"";position:absolute;width:5px;height:5px;left:50%;top:50%;border-radius:50%;background:#fff;box-shadow:0 0 8px 3px var(--cyan);transform:translate(-50%,-50%)}
+.radar-dot{position:absolute;z-index:1;left:65%;top:32%;width:4px;height:4px;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px var(--cyan)}
+@keyframes radarSweep{to{transform:rotate(360deg)}}
+.radar-info{min-width:120px}
+.radar-label{color:var(--cyan);font-size:10px;font-weight:800;letter-spacing:1.5px}
+.radar-time{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:1px;line-height:1.5}
+.radar-date{color:var(--muted);font-size:11px;text-transform:capitalize}
+.hero{text-align:center;max-width:850px;margin:76px auto 0}
+.eyebrow{display:inline-block;color:var(--cyan);border:1px solid var(--border);background:rgba(0,229,255,.05);border-radius:30px;padding:7px 15px;font-size:12px;letter-spacing:2px;margin-bottom:20px}
+.hero h1{font-size:clamp(32px,6vw,61px);line-height:1.12;letter-spacing:-1.5px;margin-bottom:22px}
+.hero h1 span{color:var(--cyan);text-shadow:0 0 25px rgba(0,229,255,.24)}
+.hero p{max-width:700px;margin:auto;color:var(--muted);font-size:17px}
+.hero-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:13px;margin-top:30px}
+.btn{display:inline-flex;justify-content:center;align-items:center;min-height:46px;padding:12px 20px;border:1px solid var(--cyan);border-radius:9px;background:var(--cyan);color:#03111e;font-weight:800;cursor:pointer;transition:.2s ease}
+.btn:hover{transform:translateY(-2px);box-shadow:0 0 22px rgba(0,229,255,.24)}
+.btn-outline{background:transparent;color:var(--cyan)}
+
+/* CONTEÚDO */
+main{padding:58px 0 75px}
+.section-heading{text-align:center;margin-bottom:30px}
+.section-heading h2{font-size:clamp(25px,4vw,36px);margin-bottom:8px}
+.section-heading h2 span{color:var(--cyan)}
+.section-heading p{color:var(--muted);max-width:650px;margin:auto}
+.search-wrap{max-width:510px;margin:0 auto 32px}
+.search{width:100%;padding:14px 17px;border:1px solid var(--border);background:#06172a;color:var(--text);border-radius:10px;outline:none}
+.search:focus{border-color:var(--cyan);box-shadow:0 0 15px rgba(0,229,255,.10)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.product-card{display:flex;flex-direction:column;min-width:0;padding:25px;border:1px solid var(--border);border-radius:17px;background:linear-gradient(145deg,rgba(16,49,79,.78),rgba(5,18,33,.96));box-shadow:var(--shadow);transition:transform .22s,border-color .22s,box-shadow .22s}
+.product-card:hover{transform:translateY(-5px);border-color:var(--cyan);box-shadow:0 0 30px rgba(0,229,255,.12)}
+.product-card[hidden]{display:none}
+.product-icon{display:grid;place-items:center;width:57px;height:57px;margin-bottom:19px;border:1px solid var(--border);border-radius:14px;background:rgba(0,229,255,.07);color:var(--cyan);font-size:28px}
+.product-card h3{font-size:20px;margin-bottom:10px}
+.product-card p{color:var(--muted);font-size:14px;flex-grow:1}
+.card-status{display:inline-block;align-self:flex-start;margin:18px 0;padding:5px 9px;border:1px solid rgba(0,229,255,.2);border-radius:20px;color:var(--cyan);font-size:10px;letter-spacing:.8px;text-transform:uppercase}
+.card-button{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:8px;color:var(--cyan);background:rgba(0,229,255,.045);cursor:pointer;font-weight:700;transition:.2s}
+.card-button:hover{color:#00111d;background:var(--cyan)}
+.empty{display:none;color:var(--muted);text-align:center;padding:30px}
+.info-panel{margin-top:58px;padding:32px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(120deg,#0a2340,#071426);text-align:center}
+.info-panel h2{font-size:clamp(23px,4vw,31px);margin-bottom:12px}
+.info-panel h2 span{color:var(--cyan)}
+.info-panel p{max-width:780px;color:var(--muted);margin:0 auto}
+
+/* MODAL */
+.modal{display:none;position:fixed;z-index:1000;inset:0;padding:18px;background:rgba(0,5,13,.84);align-items:center;justify-content:center;overflow-y:auto}
+.modal.open{display:flex}
+.modal-content{position:relative;width:min(520px,100%);padding:30px;border:1px solid var(--cyan);border-radius:16px;background:linear-gradient(150deg,#102b49,#04101f 80%);box-shadow:0 0 40px rgba(0,229,255,.14);margin:auto}
+.close{position:absolute;top:10px;right:13px;width:38px;height:38px;border:1px solid var(--border);border-radius:50%;background:transparent;color:var(--cyan);font-size:23px;cursor:pointer}
+.modal-icon{font-size:35px;margin-bottom:10px}
+.modal-content h2{margin:0 35px 13px 0;color:var(--cyan)}
+.modal-content p{color:var(--muted);margin-bottom:16px}
+.modal-note{padding:13px;border-radius:9px;background:rgba(0,229,255,.055);border:1px solid var(--border);color:var(--text);font-size:13px;margin:16px 0}
+.modal-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
+.modal-actions .btn{flex:1}
+.modal-actions [hidden]{display:none!important}
+footer{border-top:1px solid var(--border);padding:28px 0;text-align:center;color:var(--muted);font-size:12px}
+footer strong{color:var(--cyan)}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){
+ header{padding-bottom:48px}.topbar{align-items:flex-start}
+ .status{font-size:10px}.radar-panel{padding:7px 10px;gap:10px}
+ .radar{width:52px;height:52px}.radar-time{font-size:16px}.radar-date{font-size:10px}.radar-info{min-width:105px}
+ .hero{margin-top:53px}.hero p{font-size:15px}main{padding-top:42px}
+ .grid{grid-template-columns:1fr;gap:14px}.product-card{padding:21px}
+ .info-panel{padding:23px 18px}.modal-content{padding:25px 20px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}.radar::before{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="container">
+    <nav class="topbar" aria-label="Navegação principal">
+      <a class="brand" href="#inicio" aria-label="ESIP-Sistemas, início">
+        <div class="logo" aria-hidden="true">⌁</div>
+        <div>
+          <div class="brand-name">ESIP<span>-SISTEMAS</span></div>
+          <div class="brand-subtitle">Tecnologia e soluções digitais</div>
+        </div>
+      </a>
+
+      <div class="radar-panel" aria-label="Radar visual e relógio ESIP">
+        <div class="radar" aria-hidden="true"><span class="radar-dot"></span></div>
+        <div class="radar-info">
+          <div class="radar-label">RADAR ESIP</div>
+          <div class="radar-time" id="radarTime">--:--:--</div>
+          <div class="radar-date" id="radarDate">Carregando data...</div>
+        </div>
+      </div>
+      <div class="status">● PORTAL ESIP</div>
+    </nav>
+
+    <section class="hero" id="inicio">
+      <div class="eyebrow">INOVAÇÃO • CONECTIVIDADE • INTELIGÊNCIA</div>
+      <h1>Tecnologia criada para<br><span>ir mais longe.</span></h1>
+      <p>Conheça o ecossistema ESIP-Sistemas: soluções digitais independentes para comunicação privada, automação, segurança, acesso, criação de sites e gestão de serviços.</p>
+      <div class="hero-actions">
+        <a href="#produtos" class="btn">CONHECER SOLUÇÕES</a>
+        <a href="#sobre" class="btn btn-outline">CONHECER A ESIP</a>
+      </div>
+    </section>
+  </div>
+</header>
+
+<main class="container" id="produtos">
+  <section class="section-heading">
+    <h2>Nossas <span>soluções</span></h2>
+    <p>Cada produto tem sua própria finalidade. Explore os cartões para conhecer as propostas e acessar os sistemas publicados.</p>
+  </section>
+
+  <div class="search-wrap">
+    <input id="search" class="search" type="search" placeholder="Pesquisar solução ESIP..." aria-label="Pesquisar produtos ESIP" autocomplete="off">
+  </div>
+
+  <section class="grid" id="productGrid" aria-label="Produtos ESIP">
+    <article class="product-card" data-search="inteligencia automacao decisões processos">
+      <div class="product-icon" aria-hidden="true">✧</div>
+      <h3>ESIP Inteligência</h3>
+      <p>Uma linha de soluções para simplificar tarefas, organizar informações e desenvolver processos digitais inteligentes.</p>
+      <span class="card-status">Projeto de solução</span>
+      <button class="card-button" data-product="inteligencia">EXPLORAR SOLUÇÃO ↗</button>
+    </article>
+
+    <article class="product-card" data-search="orcamentos orçamento serviços clientes preços">
+      <div class="product-icon" aria-hidden="true">▤</div>
+      <h3>ESIP Orçamentos</h3>
+      <p>Uma proposta de atendimento digital para apresentar serviços, calcular valores e facilitar solicitações de orçamento.</p>
+      <span class="card-status">Projeto independente</span>
+      <button class="card-button" data-product="orcamentos">EXPLORAR SOLUÇÃO ↗</button>
+    </article>
+
+    <article class="product-card" data-search="comunicacao comunicação privada chip token digital voz mensagens">
+      <div class="product-icon" aria-hidden="true">⌁</div>
+      <h3>ESIP Comunicação</h3>
+      <p>Solução de comunicação privada com recursos como voz, mensagens e outros recursos disponíveis no motor publicado.</p>
+      <span class="card-status">Motor independente</span>
+      <button class="card-button" data-product="comunicacao">CONHECER COMUNICAÇÃO ↗</button>
+    </article>
+
+    <article class="product-card" data-search="alerta panico pânico emergencia emergência botão">
+      <div class="product-icon" aria-hidden="true">◉</div>
+      <h3>ESIP Alerta e Pânico</h3>
+      <p>Linha dedicada a alertas rápidos e acionamentos de emergência, conforme os recursos implementados no sistema específico.</p>
+      <span class="card-status">Motor independente</span>
+      <button class="card-button" data-product="alerta">CONHECER SISTEMA ↗</button>
+    </article>
+
+    <article class="product-card" data-search="controle acesso qr codigo identificação">
+      <div class="product-icon" aria-hidden="true">▦</div>
+      <h3>ESIP Controle de Acesso</h3>
+      <p>Proposta de controle de entrada e identificação digital utilizando QR Code e identificadores únicos.</p>
+      <span class="card-status">Motor independente</span>
+      <button class="card-button" data-product="acesso">CONHECER SISTEMA ↗</button>
+    </article>
+
+    <article class="product-card" data-search="localizacao localização mapa acompanhamento">
+      <div class="product-icon" aria-hidden="true">◎</div>
+      <h3>ESIP Localização</h3>
+      <p>Projeto voltado a informações de localização e visualização geográfica, com recursos definidos conforme a aplicação.</p>
+      <span class="card-status">Projeto em desenvolvimento</span>
+      <button class="card-button" data-product="localizacao">EXPLORAR PROJETO ↗</button>
+    </article>
+
+    <article class="product-card" data-search="chip token digital identidade rede telecomunicacao telecomunicação dispositivo">
+      <div class="product-icon" aria-hidden="true">⬡</div>
+      <h3>ESIP Chip Token Digital</h3>
+      <p>Conceito de identidade digital para acesso a uma rede privada ESIP, com possibilidades de integração a dispositivos.</p>
+      <span class="card-status">Conceito de produto</span>
+      <button class="card-button" data-product="token">CONHECER O CONCEITO ↗</button>
+    </article>
+
+    <!-- NOVO PRODUTO ESIP -->
+    <article class="product-card" data-search="criador criador de sites sites profissionais páginas web github publicação token licença construtor">
+      <div class="product-icon" aria-hidden="true">▣</div>
+      <h3>ESIP-Criador de Sites</h3>
+      <p>Crie sites profissionais para apresentar empresas, divulgar serviços e publicar páginas por meio de um link online.</p>
+      <span class="card-status">Criador de sites</span>
+      <button class="card-button" data-product="criadorSites">CRIAR MEU SITE ↗</button>
+    </article>
+  </section>
+
+  <p class="empty" id="emptyMessage">Nenhuma solução encontrada. Tente outra palavra.</p>
+
+  <section class="info-panel" id="sobre">
+    <h2>Um ecossistema. <span>Soluções independentes.</span></h2>
+    <p>A ESIP-Sistemas desenvolve propostas digitais com objetivos específicos. Cada motor pode evoluir separadamente e ser conectado a outros produtos somente quando houver uma integração planejada, testada e autorizada. Assim, a evolução de um sistema não exige modificar os demais.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <strong>ESIP-SISTEMAS</strong>
+    <p>Tecnologia em desenvolvimento contínuo.</p>
+    <p>© <span id="year"></span> ESIP-Sistemas. Todos os direitos reservados.</p>
+  </div>
+</footer>
+
+<div class="modal" id="productModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-content">
+    <button class="close" id="closeModal" aria-label="Fechar janela">×</button>
+    <div class="modal-icon" id="modalIcon" aria-hidden="true">✧</div>
+    <h2 id="modalTitle">Produto ESIP</h2>
+    <p id="modalDescription"></p>
+    <div class="modal-note" id="modalNote"></div>
+    <div class="modal-actions">
+      <a class="btn" id="openProduct" href="#" hidden>ABRIR SISTEMA ↗</a>
+      <button class="btn btn-outline" id="closeModalSecondary" type="button">VOLTAR AO PORTAL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/*
+ * CONFIGURAÇÃO DOS LINKS PUBLICADOS
+ * Insira somente URLs oficiais dos motores publicados.
+ * O endereço do Criador de Sites fica vazio até ser configurado.
+ */
+const SYSTEM_URLS = {
+  inteligencia: "",
+  orcamentos: "",
+  comunicacao: "",
+  alerta: "",
+  acesso: "",
+  localizacao: "",
+  token: "",
+  criadorSites: ""
+};
+
+const PRODUCTS = {
+  inteligencia: {
+    icon: "✧",
+    title: "ESIP Inteligência",
+    description: "Uma linha para desenvolver soluções digitais que organizam informações, automatizam tarefas e ajudam a estruturar processos. A aplicação de inteligência artificial dependerá do caso de uso e da integração técnica necessária.",
+    note: "Próximo passo: definir uma tarefa concreta para automatizar e validar um protótipo leve."
+  },
+  orcamentos: {
+    icon: "▤",
+    title: "ESIP Orçamentos",
+    description: "Um sistema independente para apresentar serviços, receber informações do cliente e calcular orçamentos com base em uma tabela de preços configurada.",
+    note: "Pode ser adaptado para higienização de estofados ou outros segmentos de serviços."
+  },
+  comunicacao: {
+    icon: "⌁",
+    title: "ESIP Comunicação",
+    description: "Solução de comunicação privada ESIP, com recursos que dependem da versão publicada do motor. O portal apenas direciona para o sistema: não modifica seu código nem suas funções.",
+    note: "O Chip Token Digital faz parte do posicionamento do produto ESIP. Os recursos e requisitos devem ser confirmados na versão em uso."
+  },
+  alerta: {
+    icon: "◉",
+    title: "ESIP Alerta e Pânico",
+    description: "Sistema independente dedicado ao acionamento de alertas. Sua utilização em situações reais exige testes de funcionamento, conectividade, entrega de avisos e procedimentos de contingência.",
+    note: "O portal não envia alertas de emergência. Esse recurso pertence exclusivamente ao motor específico."
+  },
+  acesso: {
+    icon: "▦",
+    title: "ESIP Controle de Acesso",
+    description: "Solução independente de identificação e controle de acesso com QR Code e identificadores únicos, de acordo com as funções implementadas no motor.",
+    note: "As regras de autorização, validade e revogação precisam ser configuradas e verificadas no próprio sistema."
+  },
+  localizacao: {
+    icon: "◎",
+    title: "ESIP Localização",
+    description: "Projeto para desenvolver recursos de localização e acompanhamento geográfico. O funcionamento depende das permissões do dispositivo, da conectividade e da implementação adotada.",
+    note: "A localização deve ser utilizada com consentimento e controles adequados de privacidade."
+  },
+  token: {
+    icon: "⬡",
+    title: "ESIP Chip Token Digital",
+    description: "Conceito de identidade digital associado ao acesso a uma rede privada ESIP. A ideia de um dispositivo físico é uma etapa distinta, que exige projeto eletrônico, compatibilidade e testes.",
+    note: "O conceito de token digital e um eventual dispositivo físico são etapas diferentes do desenvolvimento."
+  },
+  criadorSites: {
+    icon: "▣",
+    title: "ESIP-Criador de Sites",
+    description: "Uma ferramenta ESIP para profissionais e empresas criarem suas próprias páginas de apresentação e divulgarem seus serviços por meio de um link online.",
+    note: "O acesso poderá ser liberado pelo modelo de licença ou Chip Token Digital ESIP. Para abrir o criador, configure o endereço oficial da versão publicada. O cartão do portal não valida nem libera licenças por conta própria."
+  }
+};
+
+const modal = document.getElementById("productModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalIcon = document.getElementById("modalIcon");
+const modalDescription = document.getElementById("modalDescription");
+const modalNote = document.getElementById("modalNote");
+const openProduct = document.getElementById("openProduct");
+const closeModal = document.getElementById("closeModal");
+const closeModalSecondary = document.getElementById("closeModalSecondary");
+const search = document.getElementById("search");
+const cards = Array.from(document.querySelectorAll(".product-card"));
+const emptyMessage = document.getElementById("emptyMessage");
+let lastFocusedElement = null;
+
+function showProduct(key) {
+  const product = PRODUCTS[key];
+  if (!product) return;
+
+  lastFocusedElement = document.activeElement;
+  modalIcon.textContent = product.icon;
+  modalTitle.textContent = product.title;
+  modalDescription.textContent = product.description;
+  modalNote.textContent = product.note;
+
+  const url = SYSTEM_URLS[key];
+  if (url && /^https?:\/\//i.test(url)) {
+    openProduct.href = url;
+    openProduct.hidden = false;
+    openProduct.target = "_blank";
+    openProduct.rel = "noopener noreferrer";
+  } else {
+    openProduct.hidden = true;
+    openProduct.removeAttribute("href");
+    openProduct.removeAttribute("target");
+    openProduct.removeAttribute("rel");
+  }
+
+  modal.classList.add("open");
+  document.body.style.overflow = "hidden";
+  closeModal.focus();
+}
+
+function hideModal() {
+  modal.classList.remove("open");
+  document.body.style.overflow = "";
+  if (lastFocusedElement) lastFocusedElement.focus();
+}
+
+document.querySelectorAll("[data-product]").forEach(button => {
+  button.addEventListener("click", () => showProduct(button.dataset.product));
+});
+
+closeModal.addEventListener("click", hideModal);
+closeModalSecondary.addEventListener("click", hideModal);
+modal.addEventListener("click", event => {
+  if (event.target === modal) hideModal();
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && modal.classList.contains("open")) hideModal();
+});
+
+search.addEventListener("input", () => {
+  const term = search.value.trim().toLocaleLowerCase("pt-BR");
+  let visible = 0;
+  cards.forEach(card => {
+    const content = (card.innerText + " " + card.dataset.search).toLocaleLowerCase("pt-BR");
+    const matches = content.includes(term);
+    card.hidden = !matches;
+    if (matches) visible++;
+  });
+  emptyMessage.style.display = visible ? "none" : "block";
+});
+
+/* RELÓGIO LOCAL DO DISPOSITIVO */
+const radarTime = document.getElementById("radarTime");
+const radarDate = document.getElementById("radarDate");
+const clockTimeFormatter = new Intl.DateTimeFormat("pt-BR", {
+  hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+});
+const clockDateFormatter = new Intl.DateTimeFormat("pt-BR", {
+  weekday: "long", day: "2-digit", month: "long", year: "numeric"
+});
+
+function updateESIPClock() {
+  const now = new Date();
+  radarTime.textContent = clockTimeFormatter.format(now);
+  radarDate.textContent = clockDateFormatter.format(now);
+}
+updateESIPClock();
+setInterval(updateESIPClock, 1000);
+
+document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
