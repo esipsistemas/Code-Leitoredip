@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06152b">
+<title>ESIP | Criador de Sites Profissionais</title>
+<style>
+:root{--bg:#020817;--panel:#0b1730;--panel2:#0e2040;--line:#17436a;--cyan:#00eaff;--blue:#1769ff;--text:#f3f8ff;--muted:#a5b7d2;--ok:#43f0b2;--danger:#ff8e9a}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at top,#10284b 0%,var(--bg) 56%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+.wrap{width:min(1120px,100%);margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:12px}.logoMark{width:46px;height:46px;border:1px solid var(--cyan);border-radius:14px;display:grid;place-items:center;color:var(--cyan);font-weight:900;box-shadow:0 0 22px #00eaff22;font-size:18px}.brand strong{display:block;letter-spacing:1.8px}.brand small{color:var(--muted)}.pill{border:1px solid #176b86;color:var(--cyan);padding:8px 12px;border-radius:99px;font-size:11px;letter-spacing:1px}
+.hero{padding:24px 0 28px}.eyebrow{color:var(--cyan);font-size:12px;letter-spacing:2px;font-weight:800}.hero h1{font-size:clamp(30px,5vw,48px);line-height:1.04;margin:12px 0}.hero p{color:var(--muted);max-width:700px;line-height:1.7;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,.85fr);gap:20px;align-items:start}.panel{background:linear-gradient(160deg,#0d1b35f5,#071126f5);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 16px 50px #0004}.panel h2{font-size:18px;margin:0 0 5px}.sub{font-size:12px;color:var(--muted);line-height:1.55;margin:0 0 20px}.section{color:var(--cyan);font-size:11px;font-weight:800;letter-spacing:1.5px;margin:22px 0 12px;text-transform:uppercase}.section:first-of-type{margin-top:0}.field{margin:0 0 14px}label{display:block;font-size:12px;color:#c4d4e9;font-weight:650;margin-bottom:7px}input,textarea,select{width:100%;border:1px solid #24436b;border-radius:10px;background:#050d1d;color:white;padding:12px 13px;font:inherit;font-size:14px;outline:none}input:focus,textarea:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #00eaff15}textarea{min-height:86px;resize:vertical}input[type=color]{height:44px;padding:5px}input[type=file]{font-size:12px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.btn{width:100%;border:1px solid var(--cyan);border-radius:11px;padding:14px 16px;background:linear-gradient(100deg,#1259d8,#087bba);color:white;font-size:14px;font-weight:800;cursor:pointer;transition:.2s;margin-top:8px}.btn:hover{filter:brightness(1.16);transform:translateY(-1px)}.btn.secondary{background:#0a1730;border-color:#315478}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}.status{margin-top:12px;padding:12px;border:1px solid #24436b;border-radius:10px;background:#050d1d;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}.status.good{color:var(--ok);border-color:#1b7b65}.status.bad{color:var(--danger);border-color:#8b3546}.hint{font-size:11px;color:var(--muted);line-height:1.55;margin-top:7px}.previewHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.previewFrame{background:#fff;color:#13223b;border-radius:16px;overflow:hidden;min-height:520px}.previewHero{padding:26px 20px 23px;background:linear-gradient(135deg,#071a35,#123d6a);color:white;min-height:210px}.avatar{width:66px;height:66px;border-radius:18px;border:1px solid #ffffff80;background:#ffffff18;display:grid;place-items:center;font-size:25px;font-weight:800;overflow:hidden;margin-bottom:14px}.avatar img{width:100%;height:100%;object-fit:cover}.previewHero h3{font-size:25px;margin:0 0 5px;overflow-wrap:anywhere}.previewHero .job{color:#9defff;font-size:13px;font-weight:700}.previewHero p{font-size:12px;color:#d7e5f8;line-height:1.65}.previewContent{padding:20px}.previewContent h4{margin:0 0 10px;color:#0c2343}.serviceList{display:grid;gap:8px}.service{padding:10px 12px;border:1px solid #e1eaf4;border-radius:9px;font-size:12px;color:#203652}.contactBtns{display:grid;gap:8px;margin-top:18px}.contactBtn{display:block;text-align:center;padding:12px;border-radius:9px;background:#0d3f76;color:white;text-decoration:none;font-size:12px;font-weight:800}.contactBtn.alt{background:#eef5fc;color:#153557;border:1px solid #d6e5f3}.foot{font-size:10px;color:#71849c;text-align:center;margin-top:16px;line-height:1.6}.how{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}.step{border:1px solid #183b60;border-radius:14px;padding:15px;background:#07142a}.step b{display:block;color:var(--cyan);font-size:12px;margin-bottom:6px}.step span{color:var(--muted);font-size:11px;line-height:1.55}.warning{border-left:3px solid #f5bb58;padding:11px 13px;background:#f5bb580d;color:#d7c6a2;font-size:11px;line-height:1.6;margin-top:15px}
+.funnel{display:none;margin-top:20px;background:linear-gradient(145deg,#0d1b35,#071126);border:1px solid #176b86;border-radius:20px;padding:22px;box-shadow:0 0 28px #00eaff12}.funnel h2{margin:0 0 8px;color:var(--cyan);font-size:22px}.funnel p{color:var(--muted);font-size:13px;line-height:1.65}.funnelSteps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.funnelStep{border:1px solid #1c4168;border-radius:12px;padding:13px;background:#07142a}.funnelStep b{display:block;color:var(--cyan);font-size:12px;margin-bottom:6px}.funnelStep span{font-size:11px;color:var(--muted);line-height:1.5}.funnelActions{display:grid;grid-template-columns:1fr 1fr;gap:12px}.funnelNote{font-size:11px!important;border-left:3px solid #f5bb58;padding:10px 12px;background:#f5bb580d}@media(max-width:800px){.funnelSteps,.funnelActions{grid-template-columns:1fr}}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.previewFrame{min-height:0}.top{align-items:flex-start}.how{grid-template-columns:1fr}.wrap{padding:15px}.panel{padding:17px}}@media(max-width:420px){.grid2{grid-template-columns:1fr}.pill{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="brand"><div class="logoMark">ES</div><div><strong>ESIP SISTEMAS</strong><small> Criador de Sites Profissionais</small></div></div>
+  <div class="pill">FERRAMENTA DIGITAL</div>
+</header>
+<section class="hero">
+  <div class="eyebrow">SUA PRESENÇA PROFISSIONAL NA INTERNET</div>
+  <h1>Crie sua vitrine digital.<br><span style="color:var(--cyan)">Divulgue seu trabalho.</span></h1>
+  <p>Monte uma página profissional pelo celular ou computador. Personalize sua apresentação, confira a prévia e gere um arquivo HTML independente, pronto para publicar.</p>
+</section>
+<div class="layout">
+<section class="panel">
+  <h2>Área de criação</h2>
+  <p class="sub">Preencha os dados da sua atividade. Os campos são usados para montar a página e ficam neste navegador enquanto você trabalha.</p>
+  <div class="section">01 · Liberação de acesso</div>
+  <div class="field"><label for="token">Chip Token Digital / licença ESIP</label><textarea id="token" placeholder="Cole aqui o token de licença fornecido pela ESIP"></textarea><div class="hint">Validação compatível com o formato do Gerador Geral ESIP. A assinatura e a validade são verificadas antes de liberar o editor.</div></div>
+  <button class="btn" id="validateBtn" type="button">🔐 VALIDAR TOKEN E LIBERAR EDITOR</button>
+  <div id="licenseStatus" class="status" role="status" aria-live="polite">Aguardando validação da licença.</div>
+  <div id="editor" style="display:none">
+    <div class="section">02 · Identidade profissional</div>
+    <div class="field"><label for="name">Nome profissional ou empresa *</label><input id="name" maxlength="100" placeholder="Ex.: Ana Souza"></div>
+    <div class="grid2"><div class="field"><label for="profession">Profissão / atividade *</label><input id="profession" maxlength="100" placeholder="Ex.: Eletricista"></div><div class="field"><label for="city">Cidade / região</label><input id="city" maxlength="100" placeholder="Ex.: Anápolis - GO"></div></div>
+    <div class="field"><label for="about">Apresentação</label><textarea id="about" maxlength="900" placeholder="Conte brevemente quem você é e como ajuda seus clientes."></textarea></div>
+    <div class="field"><label for="logo">Logotipo ou foto (opcional)</label><input id="logo" type="file" accept="image/png,image/jpeg,image/webp"><div class="hint">A imagem será incorporada ao HTML gerado, sem precisar de um serviço externo.</div></div>
+    <div class="section">03 · Serviços e contato</div>
+    <div class="field"><label for="services">Serviços (um por linha) *</label><textarea id="services" maxlength="1200" placeholder="Instalação e manutenção&#10;Atendimento residencial&#10;Orçamento sem compromisso"></textarea></div>
+    <div class="grid2"><div class="field"><label for="phone">WhatsApp / telefone (com DDD)</label><input id="phone" inputmode="tel" maxlength="25" placeholder="Ex.: 5562999999999"></div><div class="field"><label for="email">E-mail profissional</label><input id="email" type="email" maxlength="254" placeholder="contato@empresa.com"></div></div>
+    <div class="grid2"><div class="field"><label for="instagram">Instagram (usuário ou URL)</label><input id="instagram" maxlength="180" placeholder="@seunegocio"></div><div class="field"><label for="website">Outro link (opcional)</label><input id="website" maxlength="300" placeholder="https://..."></div></div>
+    <div class="section">04 · Aparência</div>
+    <div class="grid2"><div class="field"><label for="accent">Cor de destaque</label><input id="accent" type="color" value="#00d9f5"></div><div class="field"><label for="style">Estilo visual</label><select id="style"><option value="dark">Azul tecnológico</option><option value="light">Claro profissional</option></select></div></div>
+    <button class="btn" id="downloadBtn" type="button">✨ GERAR E BAIXAR MEU SITE HTML</button>
+    <button class="btn secondary" id="resetBtn" type="button">LIMPAR FORMULÁRIO</button>
+    <div id="downloadStatus" class="status" role="status" aria-live="polite">Depois de gerar, publique o HTML em uma hospedagem estática para obter um link público.</div>
+  </div>
+</section>
+<aside class="panel">
+  <div class="previewHead"><div><h2>Prévia do seu site</h2><p class="sub" style="margin:4px 0 0">Acompanhe a aparência enquanto preenche.</p></div><span class="pill">PRÉVIA</span></div>
+  <div class="previewFrame">
+    <div class="previewHero" id="prevHero">
+      <div class="avatar" id="prevAvatar">ES</div>
+      <h3 id="prevName">Seu nome profissional</h3><div class="job" id="prevProfession">Sua profissão ou atividade</div>
+      <p id="prevAbout">Sua apresentação aparecerá aqui. Explique o que você faz e como pode ajudar seus clientes.</p>
+    </div>
+    <div class="previewContent"><h4>Serviços</h4><div id="prevServices" class="serviceList"><div class="service">Seus serviços aparecerão aqui</div></div><div class="contactBtns" id="prevContacts"><span class="contactBtn">Entre em contato</span><span class="contactBtn alt">Seus links profissionais</span></div><div class="foot">Página criada com ESIP Criador de Sites</div></div>
+  </div>
+  <button class="btn" id="publishOnlineBtn" type="button">🚀 PUBLICAR ONLINE</button>
+  <div class="hint">Gostou da prévia? Avance para a contratação da publicação do seu site.</div>
+  <div class="warning"><b>Importante sobre o link:</b> este criador gera o arquivo do site. Para ter um endereço público no GitHub Pages, o arquivo precisa ser publicado em um repositório autorizado. O HTML, sozinho, não cria nem publica um repositório automaticamente.</div>
+</aside>
+</div>
+<section class="funnel" id="salesFunnel" aria-live="polite">
+  <h2>Seu site está quase pronto para ganhar a internet.</h2>
+  <p>Conclua a etapa comercial da ESIP. Faça o pagamento pelo link oficial do Mercado Pago e depois envie os dados necessários por e-mail. A publicação será concluída após a conferência do pagamento e o atendimento da ESIP.</p>
+  <div class="funnelSteps">
+    <div class="funnelStep"><b>01 · CONTRATAÇÃO</b><span>Confira a oferta e siga para o pagamento seguro.</span></div>
+    <div class="funnelStep"><b>02 · CONFIRMAÇÃO</b><span>A ESIP recebe sua notificação de pagamento e confere a contratação.</span></div>
+    <div class="funnelStep"><b>03 · PUBLICAÇÃO</b><span>Envie os dados por e-mail e receba as orientações para publicar seu site.</span></div>
+  </div>
+  <div class="funnelActions">
+    <button class="btn" id="paymentBtn" type="button">💳 CONTRATAR E PAGAR</button>
+    <button class="btn secondary" id="emailBtn" type="button">✉️ CONTINUAR POR E-MAIL</button>
+  </div>
+  <div id="funnelStatus" class="status" role="status">Os links de pagamento e atendimento serão configurados pela ESIP quando estiverem definidos.</div>
+  <p class="funnelNote"><b>Transparência:</b> o botão de pagamento só abrirá o checkout quando o link do Mercado Pago for configurado. A confirmação depende da notificação real do pagamento; voltar para esta página não confirma uma compra.</p>
+</section>
+<div class="how">
+  <div class="step"><b>1. VALIDE</b><span>Use a licença ESIP correspondente ao formato do gerador existente.</span></div>
+  <div class="step"><b>2. PERSONALIZE</b><span>Preencha seus dados e veja a prévia da sua vitrine digital.</span></div>
+  <div class="step"><b>3. CONTRATE A PUBLICAÇÃO</b><span>Use o botão PUBLICAR ONLINE para seguir ao pagamento e ao atendimento da ESIP.</span></div>
+</div>
+<div class="foot" style="padding:22px 0">ESIP SISTEMAS · Criador de Sites Profissionais · Interface adaptada para celular e computador</div>
+</div>
+<script>
+"use strict";
+const SEMENTE_SECRETA_SISTEMA = "ESIP_SISTEMAS_TACTICAL_RADIO_KEY_2026";
+const SALT = "ESIP_STATIC_SALT_SALT";
+// CONFIGURAÇÃO COMERCIAL: cole aqui seus links quando quiser ativar o funil.
+// Não coloque senhas, chaves privadas ou tokens secretos nestas constantes.
+const LINK_PAGAMENTO_MERCADO_PAGO = ""; // Ex.: https://mpago.la/seu-link
+const EMAIL_ATENDIMENTO_ESIP = ""; // Ex.: atendimento@seudominio.com.br
+let licensed = false, logoData = "";
+const $ = id => document.getElementById(id);
+function b64urlToBytes(s){
+  let v=String(s).replace(/-/g,"+").replace(/_/g,"/");
+  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(v)) throw new Error("O token contém caracteres inválidos na codificação.");
+  while(v.length%4)v+="=";
+  const bin=atob(v),a=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);
+  return a;
+}
+async function deriveKey(){
+  if(!crypto.subtle)throw new Error("Abra esta página em HTTPS ou em um navegador com Web Crypto.");
+  const enc=new TextEncoder();
+  const material=await crypto.subtle.importKey("raw",enc.encode(SEMENTE_SECRETA_SISTEMA),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:enc.encode(SALT),iterations:100000,hash:"SHA-256"},material,{name:"HMAC",hash:"SHA-256",length:256},false,["verify"]);
+}
+async function validateToken(){
+ const status=$("licenseStatus"),token=$("token").value.trim();
+ licensed=false;$("editor").style.display="none";$("validateBtn").disabled=true;status.className="status";status.textContent="Validando assinatura...";
+ try{
+  if(!token)throw new Error("Cole o token de licença antes de validar.");
+  const parts=token.split(".");
+  if(parts.length!==2||!parts[0]||!parts[1])throw new Error("Formato de token inválido. Esperado: payload.assinatura.");
+  const key=await deriveKey(),payloadBytes=b64urlToBytes(parts[0]),sig=b64urlToBytes(parts[1]);
+  const valid=await crypto.subtle.verify("HMAC",key,sig,payloadBytes);
+  if(!valid)throw new Error("Assinatura inválida. Confira se o token foi copiado integralmente do Gerador Geral ESIP.");
+  let data;
+  try{data=JSON.parse(new TextDecoder().decode(payloadBytes));}catch(_){throw new Error("A assinatura foi conferida, mas os dados do token não puderam ser interpretados.");}
+  if(!data||!Number.isFinite(Number(data.exp))||!data.ch||!data.nome||!data.email)
+    throw new Error("O token não contém os campos necessários (exp, ch, nome e email) ou tem validade inválida.");
+  // CORREÇÃO: expressão regular normal para validar o e-mail do payload.
+  if(!/^\S+@\S+\.\S+$/.test(String(data.email).trim()))
+    throw new Error("O token não contém um e-mail válido.");
+  if(Date.now()>Number(data.exp))throw new Error("Esta licença venceu. Solicite a renovação.");
+  licensed=true;$("editor").style.display="block";status.className="status good";
+  status.textContent="✓ Licença validada localmente para "+String(data.nome)+". Rede: "+String(data.ch)+". Validade: "+new Date(Number(data.exp)).toLocaleDateString("pt-BR")+". O editor está liberado neste navegador.";
+  updatePreview();
+ }catch(e){status.className="status bad";status.textContent="✕ "+(e&&e.message?e.message:"Não foi possível validar o token.");}
+ finally{$("validateBtn").disabled=false;}
+}
+$("validateBtn").addEventListener("click",validateToken);
+const fields=["name","profession","city","about","services","phone","email","instagram","website","accent","style"];
+fields.forEach(id=>$(id).addEventListener("input",updatePreview));
+$("logo").addEventListener("change",()=>{const f=$("logo").files&&$("logo").files[0];if(!f){logoData="";updatePreview();return}if(!/^image\/(png|jpeg|webp)$/.test(f.type)){alert("Escolha uma imagem PNG, JPEG ou WebP.");$("logo").value="";return}if(f.size>3*1024*1024){alert("A imagem deve ter até 3 MB.");$("logo").value="";return}const r=new FileReader();r.onload=()=>{logoData=String(r.result);updatePreview()};r.readAsDataURL(f)});
+function escapeHTML(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function safeUrl(v){let s=String(v||"").trim();if(!s)return"";if(!/^https?:\/\//i.test(s))s="https://"+s;try{const u=new URL(s);return (u.protocol==="https:"||u.protocol==="http:")?u.href:""}catch(_){return""}}
+function phoneDigits(){return $("phone").value.replace(/\D/g,"")}
+function instagramUrl(){let s=$("instagram").value.trim();if(!s)return"";if(!s.includes("/")&&!s.includes("."))s="https://instagram.com/"+s.replace(/^@/,"");return safeUrl(s)}
+function updatePreview(){
+ const name=$("name").value.trim()||"Seu nome profissional",job=$("profession").value.trim()||"Sua profissão ou atividade",about=$("about").value.trim()||"Sua apresentação aparecerá aqui. Explique o que você faz e como pode ajudar seus clientes.";
+ $("prevName").textContent=name;$("prevProfession").textContent=job;$("prevAbout").textContent=about;
+ $("prevAvatar").innerHTML=logoData?'<img alt="Imagem profissional" src="'+logoData+'">':escapeHTML((name.match(/\b\w/g)||["E","S"]).slice(0,2).join("").toUpperCase());
+ const accent=$("accent").value,style=$("style").value;
+ $("prevHero").style.background=style==="light"?"linear-gradient(135deg,#eaf4ff,#d7eaff)":"linear-gradient(135deg,#071a35,#123d6a)";
+ $("prevHero").style.color=style==="light"?"#122744":"white";$("prevProfession").style.color=style==="light"?accent:"#9defff";$("prevAbout").style.color=style==="light"?"#38516f":"#d7e5f8";
+ const services=$("services").value.split(/\n/).map(s=>s.trim()).filter(Boolean).slice(0,30);$("prevServices").innerHTML=services.length?services.map(s=>'<div class="service" style="border-left:3px solid '+accent+'">'+escapeHTML(s)+'</div>').join(""):'<div class="service">Seus serviços aparecerão aqui</div>';
+ let links=[];const phone=phoneDigits();if(phone.length>=10)links.push('<a class="contactBtn" style="background:'+accent+';color:#06152b" href="https://wa.me/'+phone+'" target="_blank" rel="noopener">Falar pelo WhatsApp</a>');const email=$("email").value.trim();if(email&&email.includes("@"))links.push('<a class="contactBtn alt" href="mailto:'+escapeHTML(email)+'">Enviar e-mail</a>');const ig=instagramUrl();if(ig)links.push('<a class="contactBtn alt" href="'+escapeHTML(ig)+'" target="_blank" rel="noopener">Instagram</a>');const web=safeUrl($("website").value);if(web)links.push('<a class="contactBtn alt" href="'+escapeHTML(web)+'" target="_blank" rel="noopener">Acessar link profissional</a>');links.push('<a class="contactBtn alt" href="https://esipsistemas.github.io/" target="_blank" rel="noopener">Conheça a ESIP Sistemas</a>');if($("city").value.trim())links.push('<div class="foot">Atendimento: '+escapeHTML($("city").value.trim())+'</div>');$("prevContacts").innerHTML=links.join("")||'<span class="contactBtn">Adicione seus contatos</span>';
+}
+function generatedSite(){
+ const name=$("name").value.trim(),profession=$("profession").value.trim(),city=$("city").value.trim(),about=$("about").value.trim(),services=$("services").value.split(/\n/).map(s=>s.trim()).filter(Boolean).slice(0,30),phone=phoneDigits(),email=$("email").value.trim(),ig=instagramUrl(),web=safeUrl($("website").value),accent=$("accent").value,light=$("style").value==="light";
+ if(!name||!profession||!services.length)throw new Error("Preencha nome, profissão e pelo menos um serviço.");
+ if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error("Confira o endereço de e-mail.");
+ const bg=light?"#f2f7fc":"#06152b",card=light?"#ffffff":"#0b1b35",text=light?"#122744":"#f3f8ff",muted=light?"#526780":"#b1c3dc";
+ const contact=[];
+ if(phone.length>=10)contact.push(`<a class="btn" href="https://wa.me/${phone}" target="_blank" rel="noopener">Falar pelo WhatsApp</a>`);
+ if(email)contact.push(`<a class="btn alt" href="mailto:${escapeHTML(email)}">Enviar e-mail</a>`);
+ if(ig)contact.push(`<a class="btn alt" href="${escapeHTML(ig)}" target="_blank" rel="noopener">Instagram</a>`);
+ if(web)contact.push(`<a class="btn alt" href="${escapeHTML(web)}" target="_blank" rel="noopener">Meu link profissional</a>`);
+ contact.push(`<a class="btn alt esip-brand" href="https://esipsistemas.github.io/" target="_blank" rel="noopener">Conheça a ESIP Sistemas</a>`);
+ const avatar=logoData?`<img class="avatar" src="${logoData}" alt="Imagem de ${escapeHTML(name)}">`:`<div class="avatar initials">${escapeHTML((name.match(/\b\w/g)||["E","S"]).slice(0,2).join("").toUpperCase())}</div>`;
+ return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="${bg}"><meta name="description" content="${escapeHTML((about||profession).slice(0,155))}"><title>${escapeHTML(name)} | ${escapeHTML(profession)}</title>
+<style>*{box-sizing:border-box}body{margin:0;background:${bg};color:${text};font-family:Arial,Helvetica,sans-serif;line-height:1.6}.wrap{width:min(850px,100% - 28px);margin:28px auto}.hero{background:linear-gradient(135deg,#071a35,${accent});border-radius:24px;padding:30px;color:#fff;box-shadow:0 18px 50px #0002}.avatar{width:86px;height:86px;object-fit:cover;border-radius:22px;border:1px solid #ffffff88;margin-bottom:12px}.initials{display:grid;place-items:center;background:#ffffff20;font-size:27px;font-weight:bold}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.85}.hero h1{font-size:clamp(30px,6vw,48px);line-height:1.1;margin:8px 0}.job{font-weight:bold;color:#e1fbff}.about{max-width:650px;color:#f0f7ff}.section{background:${card};border:1px solid ${light?"#dce7f1":"#1c3c60"};border-radius:18px;padding:23px;margin-top:16px}.section h2{margin:0 0 14px;font-size:20px}.services{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}.service{padding:13px;border:1px solid ${light?"#e1eaf3":"#23476b"};border-left:3px solid ${accent};border-radius:10px}.contacts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.btn{display:block;text-align:center;text-decoration:none;background:${accent};color:#06152b;font-weight:bold;padding:13px;border-radius:10px}.btn.alt{background:transparent;color:${text};border:1px solid ${light?"#cbd9e7":"#315578"}}.btn.esip-brand{border-color:${accent};box-shadow:0 0 14px ${accent}30;font-weight:800}.city{color:${muted};font-size:13px}.footer{text-align:center;color:${muted};font-size:11px;padding:20px 0}@media(max-width:500px){.wrap{margin:14px auto}.hero,.section{padding:20px}.contacts{grid-template-columns:1fr}}</style></head>
+<body><main class="wrap"><header class="hero">${avatar}<div class="eyebrow">Apresentação profissional</div><h1>${escapeHTML(name)}</h1><div class="job">${escapeHTML(profession)}</div>${about?`<p class="about">${escapeHTML(about).replace(/\n/g,"<br>")}</p>`:""}${city?`<div class="city">📍 ${escapeHTML(city)}</div>`:""}</header>
+<section class="section"><h2>Serviços</h2><div class="services">${services.map(s=>`<div class="service">${escapeHTML(s)}</div>`).join("")}</div></section>
+${contact.length?`<section class="section"><h2>Entre em contato</h2><div class="contacts">${contact.join("")}</div></section>`:""}
+<div class="footer">Página profissional criada com ESIP Criador de Sites</div></main></body></html>`;
+}
+$("downloadBtn").addEventListener("click",()=>{
+ const st=$("downloadStatus");try{if(!licensed)throw new Error("Valide a licença antes de gerar o site.");const html=generatedSite();const blob=new Blob([html],{type:"text/html;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=("site-"+($("name").value.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"profissional")+".html");document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);st.className="status good";st.textContent="✓ Arquivo HTML gerado e baixado. Para ter um link público, publique esse arquivo no GitHub Pages ou em outra hospedagem estática. A geração local não publica automaticamente no GitHub."}catch(e){st.className="status bad";st.textContent="✕ "+e.message}
+});
+$("resetBtn").addEventListener("click",()=>{if(!confirm("Limpar os dados preenchidos?"))return;["name","profession","city","about","services","phone","email","instagram","website"].forEach(id=>$(id).value="");$("accent").value="#00d9f5";$("style").value="dark";$("logo").value="";logoData="";updatePreview();$("downloadStatus").className="status";$("downloadStatus").textContent="Formulário limpo."});
+$("publishOnlineBtn").addEventListener("click",()=>{
+ const funnel=$("salesFunnel");
+ funnel.style.display="block";
+ funnel.scrollIntoView({behavior:"smooth",block:"start"});
+ const st=$("funnelStatus");
+ if(!licensed){st.className="status bad";st.textContent="Valide primeiro seu Chip Token Digital para continuar.";return;}
+ st.className="status";
+ st.textContent="Próxima etapa: pagamento e atendimento. A ESIP confirmará o pagamento antes de concluir a publicação.";
+});
+$("paymentBtn").addEventListener("click",()=>{
+ const st=$("funnelStatus");
+ if(!licensed){st.className="status bad";st.textContent="Valide primeiro seu Chip Token Digital.";return;}
+ if(!LINK_PAGAMENTO_MERCADO_PAGO.trim()){
+   st.className="status";
+   st.textContent="Link do Mercado Pago ainda não configurado. Quando estiver pronto, cole o link na constante LINK_PAGAMENTO_MERCADO_PAGO no início do JavaScript deste arquivo.";
+   return;
+ }
+ try{const u=new URL(LINK_PAGAMENTO_MERCADO_PAGO);if(u.protocol!=="https:")throw new Error();window.open(u.href,"_blank","noopener,noreferrer");st.className="status good";st.textContent="Checkout aberto em outra aba. Após pagar, aguarde a confirmação da ESIP por notificação.";}catch(_){st.className="status bad";st.textContent="O link do Mercado Pago configurado não parece válido. Use o endereço HTTPS completo.";}
+});
+$("emailBtn").addEventListener("click",()=>{
+ const st=$("funnelStatus");
+ if(!licensed){st.className="status bad";st.textContent="Valide primeiro seu Chip Token Digital.";return;}
+ if(!EMAIL_ATENDIMENTO_ESIP.trim()){
+   st.className="status";
+   st.textContent="E-mail de atendimento ainda não configurado. Quando quiser, preencha a constante EMAIL_ATENDIMENTO_ESIP no início do JavaScript.";
+   return;
+ }
+ const subject=encodeURIComponent("ESIP — solicitação de publicação de site");
+ const body=encodeURIComponent(`Olá, ESIP!
+
+Quero dar continuidade à publicação do meu site.
+Nome/empresa: ${$("name").value.trim()||"Não informado"}
+Profissão: ${$("profession").value.trim()||"Não informado"}
+Cidade: ${$("city").value.trim()||"Não informada"}
+E-mail informado no perfil: ${$("email").value.trim()||"Não informado"}
+
+Anexarei o arquivo HTML gerado e os dados necessários.
+
+Obrigado.`);
+ window.location.href="mailto:"+encodeURIComponent(EMAIL_ATENDIMENTO_ESIP.trim())+"?subject="+subject+"&body="+body;
+});
+updatePreview();
+</script>
+</body></html>
