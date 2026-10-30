@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07152e">
+  <meta name="description" content="Conheça o ESIP Kit Digital 3 em 1: ferramentas digitais para controle de acesso com QR ID Único, central de emergência e comunicação operacional em uma única assinatura mensal.">
+  <meta name="keywords" content="kit de ferramentas digitais para segurança privada, controle de acesso QR Code, QR ID Único, central de emergência, comunicação digital, ESIP Sistemas">
+  <title>ESIP Kit Digital 3 em 1 | Controle de Acesso, Emergência e Comunicação</title>
+  <style>
+    :root {
+      --bg: #061126;
+      --bg2: #091a36;
+      --panel: rgba(13, 32, 64, .86);
+      --line: rgba(66, 183, 255, .34);
+      --cyan: #55d8ff;
+      --blue: #398bff;
+      --text: #f3f8ff;
+      --muted: #b6c7df;
+      --green: #72f5c2;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 15% 0%, rgba(26, 105, 210, .24), transparent 38%),
+        radial-gradient(ellipse at 100% 30%, rgba(0, 208, 255, .10), transparent 35%),
+        linear-gradient(180deg, #061126 0%, #08172f 52%, #040c1c 100%);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: inherit; }
+    .container { width: min(1120px, 92%); margin: 0 auto; }
+    header {
+      position: relative;
+      padding: 22px 0;
+      border-bottom: 1px solid rgba(85,216,255,.15);
+    }
+    .nav { display:flex; justify-content:space-between; align-items:center; gap:18px; }
+    .brand { font-weight: 900; letter-spacing: 2px; font-size: 1.2rem; }
+    .brand span { color: var(--cyan); }
+    .nav-note { color: var(--muted); font-size: .9rem; }
+    .hero { padding: 78px 0 58px; text-align: center; }
+    .eyebrow {
+      display: inline-block; border: 1px solid var(--line); color: var(--cyan);
+      border-radius: 999px; padding: 7px 15px; font-size: .82rem; letter-spacing: 1.5px;
+      text-transform: uppercase; background: rgba(20, 70, 130, .22);
+    }
+    h1 { font-size: clamp(2.3rem, 6vw, 4.5rem); line-height: 1.06; margin: 22px auto 18px; max-width: 900px; }
+    h1 strong { color: var(--cyan); text-shadow: 0 0 24px rgba(85,216,255,.22); }
+    .lead { max-width: 760px; margin: 0 auto; color: var(--muted); font-size: clamp(1.03rem, 2vw, 1.25rem); }
+    .hero-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:13px; margin-top:30px; }
+    .btn {
+      display:inline-flex; justify-content:center; align-items:center; gap:8px; padding:14px 23px;
+      min-height:50px; border-radius:12px; text-decoration:none; font-weight:800; transition:.2s ease;
+      border:1px solid transparent;
+    }
+    .btn-primary { color:#041126; background:linear-gradient(135deg, var(--cyan), #78aaff); box-shadow:0 0 25px rgba(59,160,255,.2); }
+    .btn-secondary { border-color:var(--line); background:rgba(10,27,55,.65); color:var(--text); }
+    .btn:hover { transform:translateY(-2px); filter:brightness(1.08); }
+    .trust-line { color:#91a9c8; font-size:.86rem; margin-top:18px; }
+    .section { padding: 48px 0; }
+    .section-heading { text-align:center; margin:0 auto 30px; max-width:760px; }
+    .section-heading h2 { font-size:clamp(1.7rem, 4vw, 2.5rem); line-height:1.2; margin:0 0 12px; }
+    .section-heading p { color:var(--muted); margin:0; }
+    .tools { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; }
+    .card {
+      position:relative; overflow:hidden; padding:27px; border:1px solid var(--line); border-radius:20px;
+      background:linear-gradient(160deg, rgba(15,38,76,.94), rgba(7,20,43,.94));
+      box-shadow:0 12px 38px rgba(0,0,0,.16);
+    }
+    .card:before { content:""; position:absolute; top:0; left:0; width:100%; height:2px; background:linear-gradient(90deg, transparent, var(--cyan), transparent); }
+    .icon { width:56px; height:56px; display:grid; place-items:center; border-radius:16px; font-size:1.7rem; background:rgba(54,145,255,.13); border:1px solid rgba(85,216,255,.25); margin-bottom:18px; }
+    .card h3 { margin:0 0 9px; font-size:1.2rem; }
+    .card p { color:var(--muted); margin:0; }
+    .tag { display:inline-block; margin-top:18px; font-size:.78rem; color:var(--cyan); letter-spacing:.7px; text-transform:uppercase; }
+    .bundle {
+      margin-top:24px; border:1px solid rgba(114,245,194,.34); border-radius:20px; padding:27px;
+      background:linear-gradient(120deg, rgba(20,83,99,.25), rgba(10,29,60,.82));
+      display:flex; align-items:center; justify-content:space-between; gap:24px;
+    }
+    .bundle h3 { margin:0 0 6px; font-size:1.35rem; }
+    .bundle p { margin:0; color:var(--muted); }
+    .bundle-badge { white-space:nowrap; color:var(--green); border:1px solid rgba(114,245,194,.4); padding:10px 14px; border-radius:10px; font-weight:800; }
+    .benefits { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; }
+    .benefit { padding:18px; border-left:2px solid var(--cyan); background:rgba(13,32,64,.52); border-radius:0 12px 12px 0; }
+    .benefit strong { display:block; margin-bottom:5px; }
+    .benefit span { color:var(--muted); font-size:.94rem; }
+    .offer { padding:36px; text-align:center; border:1px solid rgba(85,216,255,.42); border-radius:24px; background:radial-gradient(ellipse at top, rgba(36,115,199,.2), transparent 70%), rgba(8,24,49,.9); box-shadow:0 0 45px rgba(25,112,205,.10); }
+    .offer h2 { font-size:clamp(1.8rem, 4vw, 2.7rem); margin:0 0 10px; }
+    .offer .sub { color:var(--muted); max-width:700px; margin:0 auto 22px; }
+    .monthly { color:var(--cyan); font-size:1.1rem; font-weight:800; margin-bottom:20px; }
+    .smallprint { max-width:780px; margin:18px auto 0; font-size:.82rem; color:#8ea4c2; }
+    .faq { max-width:820px; margin:0 auto; }
+    details { padding:17px 0; border-bottom:1px solid rgba(85,216,255,.17); }
+    summary { cursor:pointer; font-weight:700; }
+    details p { color:var(--muted); margin-bottom:0; }
+    footer { margin-top:40px; padding:28px 0; border-top:1px solid rgba(85,216,255,.15); color:#8ea4c2; font-size:.86rem; text-align:center; }
+    @media (max-width: 800px) {
+      .tools, .benefits { grid-template-columns:1fr; }
+      .hero { padding-top:56px; }
+      .bundle { flex-direction:column; align-items:flex-start; }
+      .bundle-badge { white-space:normal; }
+      .offer { padding:26px 18px; }
+      .nav-note { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">ESIP <span>SISTEMAS</span></div>
+      <div class="nav-note">Tecnologia digital para sua operação</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="eyebrow">Caixa de ferramentas digitais</div>
+        <h1>ESIP KIT DIGITAL <strong>3 EM 1</strong></h1>
+        <p class="lead">Três ferramentas digitais em uma única assinatura mensal: controle de acesso com QR ID Único, central de emergência e comunicação digital.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="mailto:esip-telecomunicacaoveloz@outlook.com.br?subject=Interesse%20no%20ESIP%20Kit%20Digital%203%20em%201&body=Ol%C3%A1%2C%20quero%20conhecer%20o%20ESIP%20Kit%20Digital%203%20em%201.%20Por%20favor%2C%20envie%20o%20pre%C3%A7o%20mensal%20e%20as%20condi%C3%A7%C3%B5es%20de%20contrata%C3%A7%C3%A3o.">Quero conhecer o kit</a>
+          <a class="btn btn-secondary" href="#ferramentas">Conhecer as ferramentas ↓</a>
+        </div>
+        <div class="trust-line">Um pacote comercial • Três ferramentas • Uma mensalidade</div>
+      </div>
+    </section>
+
+    <section class="section" id="ferramentas">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Três ferramentas. Um único kit.</h2>
+          <p>Conheça os módulos que compõem a caixa de ferramentas digitais ESIP.</p>
+        </div>
+        <div class="tools">
+          <article class="card">
+            <div class="icon" aria-hidden="true">🔐</div>
+            <h3>Controle de Acesso</h3>
+            <p><strong>QR ID Único</strong><br>Ferramenta para apoiar a identificação e a organização do acesso em portarias, eventos e operações.</p>
+            <span class="tag">Identificação digital</span>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">🚨</div>
+            <h3>Central de Emergência</h3>
+            <p>Recursos digitais para auxiliar no envio e recebimento de alertas e na coordenação de informações sobre ocorrências.</p>
+            <span class="tag">Apoio operacional</span>
+          </article>
+          <article class="card">
+            <div class="icon" aria-hidden="true">📡</div>
+            <h3>Central de Comunicação</h3>
+            <p>Ferramentas para facilitar a comunicação digital entre participantes e dispositivos conectados, conforme os recursos disponíveis.</p>
+            <span class="tag">Comunicação digital</span>
+          </article>
+        </div>
+        <div class="bundle">
+          <div>
+            <h3>Uma assinatura para o pacote completo</h3>
+            <p>As três ferramentas são oferecidas juntas, em uma única contratação mensal — não como três assinaturas separadas.</p>
+          </div>
+          <div class="bundle-badge">KIT 3 EM 1</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Para quem é o ESIP Kit Digital?</h2>
+          <p>Uma proposta para profissionais e organizações que procuram ferramentas digitais de apoio à operação.</p>
+        </div>
+        <div class="benefits">
+          <div class="benefit"><strong>Gestores de segurança</strong><span>Recursos digitais de apoio à organização operacional.</span></div>
+          <div class="benefit"><strong>Portarias e eventos</strong><span>Ferramentas para identificação e controle de acesso.</span></div>
+          <div class="benefit"><strong>Empresas e equipes</strong><span>Recursos para comunicação e coordenação de ocorrências.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contratar">
+      <div class="container">
+        <div class="offer">
+          <div class="eyebrow">Assinatura mensal</div>
+          <h2>Tenha as três ferramentas no mesmo kit</h2>
+          <p class="sub">Contrate o ESIP KIT DIGITAL 3 EM 1 e conheça as condições de acesso, utilização e suporte disponíveis para o pacote completo.</p>
+          <div class="monthly">Uma mensalidade pelo conjunto das três ferramentas</div>
+          <a class="btn btn-primary" href="mailto:esip-telecomunicacaoveloz@outlook.com.br?subject=Contrata%C3%A7%C3%A3o%20ESIP%20Kit%20Digital%203%20em%201&body=Ol%C3%A1%2C%20tenho%20interesse%20em%20contratar%20o%20ESIP%20Kit%20Digital%203%20em%201.%20Por%20favor%2C%20informe%20o%20valor%20mensal%2C%20as%20condi%C3%A7%C3%B5es%20e%20como%20come%C3%A7ar.">Solicitar preço e contratação</a>
+          <p class="smallprint">O valor mensal e as condições de contratação devem ser confirmados antes da assinatura. Os recursos disponíveis podem variar conforme a ferramenta, a configuração do dispositivo e a conexão com a internet. As ferramentas de emergência são recursos de apoio e não substituem os serviços públicos de emergência.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Perguntas frequentes</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Estou contratando uma ferramenta ou as três?</summary>
+            <p>O ESIP Kit Digital 3 em 1 é apresentado como um único pacote mensal que reúne controle de acesso, central de emergência e central de comunicação.</p>
+          </details>
+          <details>
+            <summary>Quanto custa a assinatura?</summary>
+            <p>Entre em contato para receber o preço mensal vigente e as condições de contratação do pacote completo.</p>
+          </details>
+          <details>
+            <summary>O kit funciona em qualquer aparelho e sem internet?</summary>
+            <p>O funcionamento depende dos requisitos de cada ferramenta, do navegador, das permissões do aparelho e da conexão disponível. Confirme as condições de uso antes de contratar.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <strong>ESIP SISTEMAS</strong><br>
+      ESIP Kit Digital 3 em 1 — Controle de Acesso • Emergência • Comunicação<br>
+      © <span id="year"></span> ESIP Sistemas. Todos os direitos reservados.
+    </div>
+  </footer>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
