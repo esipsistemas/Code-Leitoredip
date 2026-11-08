@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#020617">
+<title>ESIP FACE SECURITY | Leitor de Portaria V4</title>
+<style>
+:root{--bg:#020617;--panel:#0b1428;--line:#164e75;--cyan:#00eaff;--text:#f8fafc;--muted:#94a3b8;--green:#22c55e;--red:#fb7185;--amber:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% 0,#102b4b 0,#020617 52%);color:var(--text);font-family:Segoe UI,Arial,sans-serif;min-height:100vh;padding:14px}.app{max-width:1180px;margin:auto}header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding:8px 2px 16px;margin-bottom:16px}.brand{font-weight:900;letter-spacing:1.4px;color:var(--cyan);font-size:clamp(18px,3vw,25px);text-shadow:0 0 14px #00eaff55}.sub{color:var(--muted);font-size:11px;margin-top:5px}.pill{border:1px solid #854d0e;color:var(--amber);border-radius:30px;padding:8px 12px;font-size:10px;font-weight:800}.layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(290px,.8fr);gap:14px}.panel{background:linear-gradient(145deg,#0e1b32,#071124);border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:0 10px 35px #0006;margin-bottom:13px}h2{font-size:13px;letter-spacing:.7px;margin:0 0 12px;color:var(--cyan)}h3{font-size:12px;color:#dbeafe;margin:14px 0 8px}.camera{position:relative;background:#000;border:1px solid #087e9a;border-radius:11px;overflow:hidden;aspect-ratio:16/9;display:grid;place-items:center}video{width:100%;height:100%;object-fit:cover;display:none;transform:scaleX(-1)}.placeholder{text-align:center;color:#64748b;padding:20px}.placeholder .symbol{font-size:44px;display:block;margin-bottom:8px}.camera-tag{position:absolute;left:10px;top:10px;background:#020617d9;border:1px solid #0e7490;color:var(--cyan);padding:6px 8px;border-radius:6px;font-size:9px;font-weight:800}.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}button{border:1px solid var(--cyan);background:#12365a;color:white;padding:11px;border-radius:8px;font-weight:800;cursor:pointer;font-size:12px}button:hover{background:#075985}button.secondary{border-color:#334155;background:#111c31}button.danger{border-color:#9f1239;background:#3f1024}button:disabled{opacity:.42;cursor:not-allowed}.field{margin-top:10px}label{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}input,textarea{width:100%;background:#020817;color:white;border:1px solid #1e40af;border-radius:8px;padding:10px;font:12px Segoe UI,Arial,sans-serif}textarea{resize:vertical;min-height:72px;font-family:monospace;overflow-wrap:anywhere}.notice{font-size:10px;color:var(--muted);line-height:1.5;margin-top:10px}.status-card{border:1px solid #1e3a5f;background:#071124;border-radius:9px;padding:11px;margin-bottom:9px}.status-head{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:11px;font-weight:800}.dot{width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;margin-right:5px}.state{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.45}.result{border:1px solid #334155;background:#071124;border-radius:11px;padding:14px;text-align:center}.result-title{font-size:17px;font-weight:900;margin:7px 0}.result-copy{font-size:10px;color:var(--muted);line-height:1.5}.log{max-height:150px;overflow:auto;font-size:10px;color:#cbd5e1}.log div{padding:7px 2px;border-bottom:1px solid #1e293b}.people{font-size:10px;color:#cbd5e1;max-height:150px;overflow:auto}.person{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #1e293b}.person button{padding:6px 8px;font-size:10px}.hidden{display:none!important}.footer{margin-top:12px;color:#64748b;text-align:center;font-size:9px;line-height:1.5}@media(max-width:800px){.layout{grid-template-columns:1fr}}@media(max-width:430px){body{padding:9px}.panel{padding:11px}.actions{grid-template-columns:1fr}}
+</style></head>
+<body><div class="app">
+<header><div><div class="brand">📡 ESIP FACE SECURITY</div><div class="sub">ESTAÇÃO DE PORTARIA · BIOMETRIA LOCAL + TOKEN ESIP</div></div><div class="pill">V4 · PERFIL INDIVIDUAL</div></header>
+<div class="layout"><main>
+<section class="panel"><h2>01 · CÂMERA DA PORTARIA</h2><div class="camera"><video id="video" autoplay playsinline muted></video><div class="placeholder" id="placeholder"><span class="symbol">◉</span><b>CÂMERA DESATIVADA</b><div class="sub">Inicie a câmera para cadastrar ou verificar</div></div><div class="camera-tag">PROCESSAMENTO NO DISPOSITIVO</div></div><div class="actions"><button id="start">▶ INICIAR CÂMERA</button><button id="switch" class="secondary" disabled>⇄ TROCAR CÂMERA</button><button id="stop" class="danger" disabled>■ ENCERRAR CÂMERA</button><button id="verifyFace" disabled>◎ VERIFICAR IDENTIDADE</button></div><div class="notice" id="engineStatus">Motor facial ainda não carregado. A biblioteca é armazenada localmente; os modelos são carregados da internet na primeira execução. O uso offline dos modelos ainda precisa ser validado neste aparelho.</div></section>
+<section class="panel"><h2>02 · AUTORIZAÇÃO ESIP</h2><div class="field"><label for="license">TOKEN DE LICENÇA — cole o token emitido pelo gerador ESIP</label><textarea id="license" rows="3" placeholder="Cole o token completo: payload.assinatura"></textarea></div><button id="validateToken">🔐 VALIDAR TOKEN ESIP</button><div class="notice">Compatibilidade com o gerador fornecido: PBKDF2-SHA256, 100.000 iterações e HMAC-SHA256. A assinatura atual usa uma semente embutida no gerador; isso permite compatibilidade, mas não constitui segurança inviolável.</div></section>
+<section class="panel"><h2>03 · CADASTRO BIOMÉTRICO (ADMINISTRADOR)</h2><div id="adminSetup"><div class="field"><label for="adminPass">Crie uma senha administrativa local (mínimo 8 caracteres)</label><input id="adminPass" type="password" autocomplete="new-password"></div><button id="createAdmin">CRIAR PROTEÇÃO ADMINISTRATIVA</button></div><div id="adminLogin" class="hidden"><div class="field"><label for="adminLoginPass">Senha administrativa</label><input id="adminLoginPass" type="password" autocomplete="current-password"></div><button id="unlockAdmin">ENTRAR NO CADASTRO</button></div><div id="adminArea" class="hidden"><div class="field"><label for="personName">Nome completo da pessoa</label><input id="personName" maxlength="100" placeholder="Nome para identificação"></div>
+<div class="field"><label for="personProfile">PERFIL DE ACESSO INDIVIDUAL</label>
+<select id="personProfile" style="width:100%;background:#020817;color:white;border:1px solid #1e40af;border-radius:8px;padding:10px">
+<option value="MORADOR">MORADOR</option><option value="FUNCIONARIO">FUNCIONÁRIO</option><option value="VISITANTE">VISITANTE</option><option value="PRESTADOR">PRESTADOR DE SERVIÇO</option>
+</select></div>
+<div class="field"><label for="personAreas">LOCAL / SETOR AUTORIZADO</label><input id="personAreas" maxlength="120" placeholder="Ex.: Bloco A, recepção, setor administrativo"></div>
+<div class="field"><label for="personValidUntil">AUTORIZAÇÃO VÁLIDA ATÉ (opcional)</label><input id="personValidUntil" type="date"></div>
+<div class="field"><label><input id="personActive" type="checkbox" checked style="width:auto;margin-right:6px">Cadastro ativo e autorizado pelo responsável</label></div><div class="field"><label><input id="consent" type="checkbox" style="width:auto;margin-right:6px">A pessoa foi informada e autorizou expressamente o cadastro e uso do dado biométrico para controle de acesso.</label></div><button id="enroll" disabled>＋ CADASTRAR ROSTO (3 CAPTURAS)</button><div class="notice">O cadastro guarda o descritor biométrico criptografado, o perfil, o setor e a validade individual neste navegador. Não guarda fotografia. O administrador deve conferir os dados e obter a autorização aplicável antes do cadastro.</div><h3>PESSOAS CADASTRADAS</h3><div id="people" class="people">Nenhum cadastro carregado.</div><button id="lockAdmin" class="secondary">BLOQUEAR ÁREA ADMINISTRATIVA</button></div></section>
+</main><aside>
+<section class="panel"><h2>04 · CAMADAS DE SEGURANÇA</h2><div class="status-card"><div class="status-head"><span>CAMADA 1 · IDENTIDADE FACIAL</span><span><i class="dot" id="dot1"></i><span id="label1">PENDENTE</span></span></div><div class="state" id="state1">Aguardando motor facial, cadastro e prova de presença.</div></div><div class="status-card"><div class="status-head"><span>CAMADA 2 · AUTORIZAÇÃO</span><span><i class="dot" id="dot2"></i><span id="label2">PENDENTE</span></span></div><div class="state" id="state2">Aguardando validação do token ESIP.</div></div><div class="result"><div style="font-size:28px" id="resultIcon">🔒</div><div class="result-title" id="resultTitle">ACESSO BLOQUEADO</div><div class="result-copy" id="resultCopy">Token ESIP + identidade + perfil individual ativo e dentro da validade precisam ser aprovados. Esta página não aciona fechaduras ou catracas.</div><button id="downloadReport" class="secondary" disabled style="width:100%;margin-top:12px">↓ BAIXAR COMPROVANTE EM PDF</button><div class="notice">O PDF é um comprovante interno da verificação realizada. Não contém fotografia nem descritor biométrico.</div></div></section>
+<section class="panel"><h2>05 · EVENTOS DA PORTARIA</h2><div class="log" id="log"><div>Sistema iniciado. Aguardando operador.</div></div></section>
+<section class="panel"><h2>06 · PRIVACIDADE E LIMITES</h2><div class="notice">Os descritores biométricos são dados pessoais sensíveis. Proteja o aparelho, limite o acesso e defina base legal, finalidade, retenção e procedimento de exclusão conforme a LGPD. Cadastros antigos da V3 aparecem sem perfil e precisam ser recadastrados para autorização. A piscada é uma prova de presença básica, não antifraude forte. Token + biometria não substituem conferência humana nem testes de segurança. Com licença vencida, os cadastros permanecem armazenados para consulta, mas novos cadastros, exclusões, reconhecimento e aprovação ficam bloqueados até renovar e validar o token.</div></section>
+</aside></div><div class="footer">ESIP SISTEMAS · BIOMETRIA PROCESSADA LOCALMENTE · SEM ENVIO DE FOTOS A SERVIDORES · NÃO CONECTA FECHADURAS, CANCELAS OU CATRACAS</div></div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);const video=$('video');let stream=null,facing='user',tokenValid=false,tokenExpiresAt=0,faceVerified=false,matchedPerson='',matchedAuthorization='',faceApiReady=false,adminUnlocked=false,sessionCryptoKey=null,db=null;
+const SECRET='ESIP_SISTEMAS_TACTICAL_RADIO_KEY_2026',SALT='ESIP_STATIC_SALT_SALT',MODEL_BASE='https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights',FACE_LIB='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js';
+function log(m){const d=document.createElement('div');d.textContent=new Date().toLocaleTimeString('pt-BR')+' · '+m;$('log').prepend(d)}
+function layer(n,ok,label,detail){$('dot'+n).style.background=ok?'#22c55e':'#fb7185';$('label'+n).textContent=label;$('state'+n).textContent=detail}
+function licenseIsValid(){return tokenValid&&Number.isFinite(tokenExpiresAt)&&Date.now()<=tokenExpiresAt}
+function refreshPermissions(){
+ const valid=licenseIsValid();
+ if(!valid){tokenValid=false;faceVerified=false;matchedPerson='';matchedAuthorization='';}
+ $('createAdmin').disabled=!valid;
+ $('enroll').disabled=!(valid&&adminUnlocked&&faceApiReady);
+ $('verifyFace').disabled=!(valid&&faceApiReady);
+ document.querySelectorAll('.person button').forEach(b=>{b.disabled=!valid});
+ decision();
+}
+function requireValidLicense(action){
+ if(!licenseIsValid()){
+  tokenValid=false;tokenExpiresAt=0;faceVerified=false;matchedPerson='';matchedAuthorization='';
+  refreshPermissions();
+  throw Error('Licença ESIP inválida ou vencida. '+action+' bloqueado. Renove a licença e valide novamente o token.');
+ }
+}
+function decision(){const ok=licenseIsValid()&&faceVerified;$('resultTitle').textContent=ok?'VERIFICAÇÕES APROVADAS':'ACESSO BLOQUEADO';$('resultTitle').style.color=ok?'#22c55e':'#fb7185';$('resultIcon').textContent=ok?'✅':'🔒';$('resultCopy').textContent=ok?'Identidade de '+matchedPerson+' reconhecida · '+matchedAuthorization+' · token válido. Nenhum dispositivo físico é acionado por esta página.':(!tokenValid?'É necessário validar um token ESIP válido. ':'Token válido, mas a identidade facial ainda não foi aprovada. ')+'O acesso permanece bloqueado.';const report=$('downloadReport');if(report)report.disabled=!ok;}
+function b64bytes(s){if(!/^[A-Za-z0-9_-]+$/.test(s))throw Error('Token contém caracteres inválidos.');let b=s.replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';const x=atob(b),a=new Uint8Array(x.length);for(let i=0;i<x.length;i++)a[i]=x.charCodeAt(i);return a}
+async function signingKey(){if(!crypto.subtle)throw Error('Web Crypto exige HTTPS ou localhost.');const e=new TextEncoder(),m=await crypto.subtle.importKey('raw',e.encode(SECRET),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt:e.encode(SALT),iterations:100000,hash:'SHA-256'},m,{name:'HMAC',hash:'SHA-256',length:256},false,['verify'])}
+async function validateToken(){tokenValid=false;tokenExpiresAt=0;faceVerified=false;matchedPerson='';matchedAuthorization='';refreshPermissions();layer(2,false,'VALIDANDO','Conferindo assinatura e vencimento...');decision();try{const p=$('license').value.trim().split('.');if(p.length!==2)throw Error('Formato inválido: esperado payload.assinatura.');const bytes=b64bytes(p[0]),sig=b64bytes(p[1]),ok=await crypto.subtle.verify('HMAC',await signingKey(),sig,bytes);if(!ok)throw Error('Assinatura inválida.');const d=JSON.parse(new TextDecoder().decode(bytes));if(!d.ch||!d.nome||!d.email||!Number.isFinite(Number(d.exp)))throw Error('Token sem campos obrigatórios.');if(Number(d.exp)<Date.now())throw Error('Licença vencida em '+new Date(Number(d.exp)).toLocaleString('pt-BR'));if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.email)))throw Error('E-mail inválido no token.');tokenValid=true;tokenExpiresAt=Number(d.exp);layer(2,true,'TOKEN VÁLIDO','Titular: '+d.nome+' · '+d.email+' · Rede: '+d.ch+' · Vencimento: '+new Date(Number(d.exp)).toLocaleDateString('pt-BR'));log('Token válido: '+d.nome+' / rede '+d.ch)}catch(e){tokenValid=false;tokenExpiresAt=0;layer(2,false,'TOKEN RECUSADO',e.message);log('Token recusado: '+e.message)}refreshPermissions();decision()}
+// Cache local: biblioteca JS e arquivos de pesos são guardados no IndexedDB após o primeiro download.
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('ESIP_FACE_CACHE_V3',1);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('assets'))d.createObjectStore('assets',{keyPath:'url'});if(!d.objectStoreNames.contains('biometrics'))d.createObjectStore('biometrics',{keyPath:'id'})};r.onsuccess=()=>{db=r.result;res(db)};r.onerror=()=>rej(r.error)})}
+function assetGet(url){return new Promise((res,rej)=>{const r=db.transaction('assets').objectStore('assets').get(url);r.onsuccess=()=>res(r.result||null);r.onerror=()=>rej(r.error)})}
+function assetPut(url,body,type){return new Promise((res,rej)=>{const tx=db.transaction('assets','readwrite');tx.objectStore('assets').put({url,body,type});tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+const nativeFetch=window.fetch.bind(window);
+window.fetch=async function(input,init){const url=typeof input==='string'?input:input.url;if(db&&(/^https:\/\/cdn\.jsdelivr\.net\//.test(url))){try{const cached=await assetGet(url);if(cached)return new Response(cached.body,{status:200,headers:{'Content-Type':cached.type||'application/octet-stream'}})}catch(e){} }const response=await nativeFetch(input,init);if(db&&response.ok&&/^https:\/\/cdn\.jsdelivr\.net\//.test(url)){try{const clone=response.clone(),body=await clone.arrayBuffer();await assetPut(url,body,clone.headers.get('content-type')||'application/octet-stream')}catch(e){}}return response};
+async function loadFaceEngine(){await openDB();$('engineStatus').textContent='Carregando motor facial e modelos. Na primeira vez, mantenha a internet ativa...';let cached=await assetGet(FACE_LIB),source;if(cached)source=cached.body;else{const r=await nativeFetch(FACE_LIB);if(!r.ok)throw Error('Não foi possível baixar face-api.js.');source=await r.arrayBuffer();await assetPut(FACE_LIB,source,r.headers.get('content-type')||'text/javascript')}const blob=new Blob([source],{type:'text/javascript'}),url=URL.createObjectURL(blob);await new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=()=>rej(Error('Falha ao carregar a biblioteca facial.'));document.head.appendChild(s)});URL.revokeObjectURL(url);const nets=[faceapi.nets.tinyFaceDetector,faceapi.nets.faceLandmark68Net,faceapi.nets.faceRecognitionNet];await Promise.all(nets.map(n=>n.loadFromUri(MODEL_BASE)));faceApiReady=true;$('engineStatus').textContent='✅ Motor facial carregado. Biblioteca armazenada localmente; modelos carregados nesta sessão. Não há garantia de funcionamento offline após limpar o cache.';refreshPermissions();log('Motor facial e modelos carregados.');}
+async function deriveAES(pass,salt){const material=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveKey']);return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:200000,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+function getMeta(){return JSON.parse(localStorage.getItem('esip_face_admin_meta_v3')||'null')}
+async function createAdmin(){requireValidLicense('A criação da proteção administrativa');const p=$('adminPass').value;if(p.length<8){alert('Use uma senha com pelo menos 8 caracteres.');return}const salt=crypto.getRandomValues(new Uint8Array(16));sessionCryptoKey=await deriveAES(p,salt);const verifier=await encryptValue('ESIP_FACE_ADMIN_V3_OK',sessionCryptoKey);localStorage.setItem('esip_face_admin_meta_v3',JSON.stringify({salt:Array.from(salt)}));localStorage.setItem('esip_face_admin_check_v3',JSON.stringify(verifier));adminUnlocked=true;$('adminSetup').classList.add('hidden');$('adminArea').classList.remove('hidden');refreshPermissions();await renderPeople();log('Proteção administrativa local criada.');}
+async function unlockAdmin(){const p=$('adminLoginPass').value,m=getMeta();try{sessionCryptoKey=await deriveAES(p,new Uint8Array(m.salt));const verifier=JSON.parse(localStorage.getItem('esip_face_admin_check_v3')||'null');if(!verifier||await decryptValue(verifier,sessionCryptoKey)!=='ESIP_FACE_ADMIN_V3_OK')throw Error('Senha incorreta');
+adminUnlocked=true;$('adminLogin').classList.add('hidden');$('adminArea').classList.remove('hidden');refreshPermissions();await renderPeople();log('Área administrativa desbloqueada.')}catch(e){alert('Não foi possível desbloquear. Confira a senha.')}}
+async function encryptValue(value,key){const iv=crypto.getRandomValues(new Uint8Array(12)),plain=new TextEncoder().encode(JSON.stringify(value)),cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,plain);return{iv:Array.from(iv),cipher:Array.from(new Uint8Array(cipher))}}
+async function decryptValue(record,key){const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:new Uint8Array(record.iv)},key,new Uint8Array(record.cipher));return JSON.parse(new TextDecoder().decode(plain))}
+function bioAll(){return new Promise((res,rej)=>{const r=db.transaction('biometrics').objectStore('biometrics').getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+function bioPut(v){return new Promise((res,rej)=>{const tx=db.transaction('biometrics','readwrite');tx.objectStore('biometrics').put(v);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+function bioDelete(id){return new Promise((res,rej)=>{const tx=db.transaction('biometrics','readwrite');tx.objectStore('biometrics').delete(id);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error)})}
+async function renderPeople(){
+ const el=$('people');if(!adminUnlocked){el.textContent='Área administrativa bloqueada.';return}
+ const rows=await bioAll();el.innerHTML='';
+ if(!rows.length){el.textContent='Nenhuma pessoa cadastrada.';return}
+ for(const row of rows){
+  try{
+   const p=await decryptValue(row,sessionCryptoKey),line=document.createElement('div');line.className='person';
+   const info=document.createElement('span');
+   const legacy=!p.profile;
+   const expiry=p.validUntil?' · até '+new Date(p.validUntil+'T23:59:59').toLocaleDateString('pt-BR'):'';
+   info.textContent=p.name+' · '+(legacy?'PERFIL NÃO DEFINIDO':p.profile)+' · '+(p.active?'ATIVO':'SUSPENSO')+expiry+(p.areas?' · '+p.areas:'');
+   const b=document.createElement('button');b.className='danger';b.textContent='EXCLUIR';
+   b.onclick=async()=>{try{requireValidLicense('A exclusão de cadastro');}catch(e){alert(e.message);return}if(confirm('Excluir o cadastro biométrico de '+p.name+'?')){await bioDelete(row.id);await renderPeople();log('Cadastro excluído: '+p.name)}};
+   b.disabled=!licenseIsValid();line.append(info,b);el.append(line);
+  }catch(e){el.textContent='Falha ao abrir os cadastros. Senha administrativa incorreta ou dados danificados.';break}
+ }
+}
+async function detect(){if(!faceApiReady||!stream||video.readyState<2)throw Error('Motor facial e câmera precisam estar prontos.');return faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:.55})).withFaceLandmarks().withFaceDescriptor()}
+async function enroll(){requireValidLicense('O cadastro biométrico');if(!adminUnlocked||!sessionCryptoKey)throw Error('Desbloqueie a área administrativa.');const name=$('personName').value.trim();if(!name)throw Error('Informe o nome da pessoa.');if(!$('consent').checked)throw Error('Confirme o consentimento expresso antes do cadastro.');if(!stream)throw Error('Inicie a câmera e posicione a pessoa.');$('enroll').disabled=true;try{const desc=[];for(let i=0;i<3;i++){await new Promise(r=>setTimeout(r,700));const result=await detect();if(!result)throw Error('Rosto não detectado na captura '+(i+1)+'. Ajuste iluminação e enquadramento.');desc.push(Array.from(result.descriptor))}const avg=desc[0].map((_,i)=>desc.reduce((s,d)=>s+d[i],0)/desc.length);const id=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random();const validUntil=$('personValidUntil').value;
+const profile=$('personProfile').value;
+const areas=$('personAreas').value.trim();
+const active=$('personActive').checked;
+const encrypted=await encryptValue({name,descriptor:avg,profile,areas,active,validUntil:validUntil||'',created:new Date().toISOString()},sessionCryptoKey);await bioPut({id,...encrypted});await renderPeople();$('personName').value='';$('personAreas').value='';$('personValidUntil').value='';$('personProfile').value='MORADOR';$('personActive').checked=true;$('consent').checked=false;log('Cadastro biométrico e perfil individual salvos: '+name+' · '+profile);alert('Cadastro concluído para '+name+'. As imagens não foram armazenadas.')}catch(e){log('Falha no cadastro: '+e.message);alert(e.message)}finally{$('enroll').disabled=!faceApiReady}}
+function eyeEAR(points){const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);return(dist(points[1],points[5])+dist(points[2],points[4]))/(2*dist(points[0],points[3]))}
+async function blinkChallenge(){const prompt=$('state1');prompt.textContent='Prova de presença: pisque uma vez olhando para a câmera.';let closed=false,openedAfter=false,start=Date.now();while(Date.now()-start<9000){if(!stream)throw Error('Câmera encerrada.');const r=await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:.55})).withFaceLandmarks();if(r){const lm=r.landmarks,le=eyeEAR(lm.getLeftEye()),re=eyeEAR(lm.getRightEye()),ear=(le+re)/2;if(ear<.20)closed=true;if(closed&&ear>.25){openedAfter=true;break}}await new Promise(r=>setTimeout(r,180))}if(!openedAfter)throw Error('Piscada não confirmada. Tente novamente, sem óculos escuros e com boa iluminação.');}
+async function verifyFace(){
+  requireValidLicense('O reconhecimento facial');
+ faceVerified=false;matchedPerson='';matchedAuthorization='';decision();
+ if(!faceApiReady)throw Error('Motor facial não está pronto.');
+ if(!sessionCryptoKey)throw Error('O administrador precisa desbloquear a base biométrica neste aparelho antes da verificação.');
+ if(!stream)throw Error('Inicie a câmera.');
+ const found=await detect();if(!found)throw Error('Nenhum rosto detectado.');
+ const rows=await bioAll();let best=null,bestDistance=Infinity;
+ for(const row of rows){
+  let p;try{p=await decryptValue(row,sessionCryptoKey)}catch(e){continue}
+  const dist=faceapi.euclideanDistance(found.descriptor,new Float32Array(p.descriptor));
+  if(dist<bestDistance){bestDistance=dist;best={name:p.name,profile:p.profile||'',areas:p.areas||'',active:p.active===true,validUntil:p.validUntil||''}}
+ }
+ if(!best||bestDistance>.48)throw Error('Rosto não corresponde a um cadastro biométrico. Distância: '+(bestDistance===Infinity?'—':bestDistance.toFixed(3)));
+ if(!best.profile)throw Error('Pessoa localizada, mas o cadastro é legado e não possui perfil individual. O administrador deve recadastrar a pessoa na V4.');
+ if(!best.active)throw Error('Cadastro individual suspenso. Acesso não autorizado.');
+ if(best.validUntil){
+  const end=new Date(best.validUntil+'T23:59:59');
+  if(Number.isNaN(end.getTime())||Date.now()>end.getTime())throw Error('Autorização individual vencida em '+new Date(best.validUntil+'T00:00:00').toLocaleDateString('pt-BR')+'.');
+ }
+ await blinkChallenge();
+ faceVerified=true;matchedPerson=best.name;
+ matchedAuthorization=best.profile+(best.areas?' · '+best.areas:'')+(best.validUntil?' · validade até '+new Date(best.validUntil+'T00:00:00').toLocaleDateString('pt-BR'):'');
+ layer(1,true,'IDENTIDADE + PERFIL APROVADOS',best.name+' · '+matchedAuthorization+' · distância '+bestDistance.toFixed(3)+' · piscada detectada.');
+ log('Identidade e perfil individual aprovados: '+best.name+' · '+best.profile);
+ decision();
+}
+
+let jsPdfLoading=null;
+async function loadJsPdf(){
+ if(window.jspdf?.jsPDF)return window.jspdf.jsPDF;
+ if(jsPdfLoading)return jsPdfLoading;
+ jsPdfLoading=(async()=>{
+  const url='https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js';
+  const response=await window.fetch(url);
+  if(!response.ok)throw Error('Não foi possível carregar o gerador de PDF. Verifique a conexão com a internet e tente novamente.');
+  const source=await response.text();
+  const blobUrl=URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
+  try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=blobUrl;script.onload=resolve;script.onerror=()=>reject(Error('Falha ao iniciar o gerador de PDF.'));document.head.appendChild(script)});}
+  finally{URL.revokeObjectURL(blobUrl);}
+  if(!window.jspdf?.jsPDF)throw Error('Biblioteca de PDF não ficou disponível.');
+  return window.jspdf.jsPDF;
+ })();
+ try{return await jsPdfLoading;}finally{jsPdfLoading=null;}
+}
+async function downloadVerificationPDF(){
+ requireValidLicense('A emissão do comprovante');
+ if(!faceVerified||!matchedPerson)throw Error('Faça uma verificação facial aprovada antes de emitir o PDF.');
+ const btn=$('downloadReport');btn.disabled=true;btn.textContent='GERANDO PDF...';
+ try{
+  const JsPDF=await loadJsPdf();
+  const doc=new JsPDF({unit:'mm',format:'a4'});
+  const now=new Date();
+  const date=now.toLocaleDateString('pt-BR');
+  const time=now.toLocaleTimeString('pt-BR');
+  const margin=18, pageWidth=doc.internal.pageSize.getWidth();
+  doc.setFillColor(2,15,35);doc.rect(0,0,pageWidth,38,'F');
+  doc.setTextColor(0,225,245);doc.setFont('helvetica','bold');doc.setFontSize(17);
+  doc.text('ESIP FACE SECURITY',margin,17);
+  doc.setTextColor(255,255,255);doc.setFontSize(9);
+  doc.text('COMPROVANTE INTERNO DE VERIFICAÇÃO',margin,26);
+  doc.setTextColor(25,35,50);doc.setFontSize(12);
+  doc.text('RESULTADO: VERIFICAÇÕES APROVADAS',margin,52);
+  doc.setDrawColor(20,150,120);doc.line(margin,57,pageWidth-margin,57);
+  const rows=[
+   ['Pessoa reconhecida',matchedPerson],
+   ['Perfil / setor / autorização',matchedAuthorization],
+   ['Data da verificação',date],
+   ['Horário da verificação',time],
+   ['Identidade facial','Correspondência aprovada'],
+   ['Prova de presença','Piscada detectada'],
+   ['Token ESIP','Válido no momento da emissão'],
+   ['Vencimento da licença',tokenExpiresAt?new Date(tokenExpiresAt).toLocaleString('pt-BR'):'Não informado'],
+   ['Resultado final','APROVADO — conforme cadastro local e licença validada']
+  ];
+  let y=68;
+  doc.setFontSize(10);
+  for(const [label,value] of rows){
+   doc.setFont('helvetica','bold');doc.setTextColor(55,65,81);
+   doc.text(label+':',margin,y);
+   doc.setFont('helvetica','normal');doc.setTextColor(20,30,45);
+   const lines=doc.splitTextToSize(String(value),pageWidth-(margin*2)-48);
+   doc.text(lines,margin+48,y);
+   y+=Math.max(8,lines.length*5+2);
+  }
+  y+=7;doc.setDrawColor(180,190,205);doc.line(margin,y,pageWidth-margin,y);y+=8;
+  doc.setFontSize(8);doc.setTextColor(90,100,115);
+  const disclaimer='Documento interno gerado pelo ESIP FACE SECURITY neste navegador. Não é documento oficial de identidade nem garantia isolada de identidade. A verificação não aciona fechaduras, cancelas ou catracas. Nenhuma fotografia ou descritor biométrico é incluído neste PDF.';
+  doc.text(doc.splitTextToSize(disclaimer,pageWidth-(margin*2)),margin,y);
+  const safeName=matchedPerson.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,40)||'pessoa';
+  doc.save('ESIP_Comprovante_'+safeName+'_'+now.toISOString().slice(0,10)+'.pdf');
+  log('Comprovante PDF emitido para '+matchedPerson+'.');
+ }finally{btn.textContent='↓ BAIXAR COMPROVANTE EM PDF';decision();}
+}
+
+async function startCamera(){try{if(!navigator.mediaDevices?.getUserMedia)throw Error('Câmera exige HTTPS ou localhost.');stopCamera(false);stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:1280},height:{ideal:720}}});video.srcObject=stream;video.style.display='block';$('placeholder').style.display='none';$('start').disabled=true;$('switch').disabled=false;$('stop').disabled=false;log('Câmera iniciada.')}catch(e){alert(e.message);log('Câmera: '+e.message)}}
+function stopCamera(write=true){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null;video.style.display='none';$('placeholder').style.display='block';$('start').disabled=false;$('switch').disabled=true;$('stop').disabled=true;faceVerified=false;matchedPerson='';matchedAuthorization='';layer(1,false,'PENDENTE','Câmera encerrada; uma nova verificação facial será necessária.');decision();if(write)log('Câmera encerrada.')}
+$('downloadReport').onclick=()=>downloadVerificationPDF().catch(e=>{alert(e.message);log('Falha ao gerar comprovante PDF: '+e.message);decision()});$('start').onclick=startCamera;$('switch').onclick=()=>{facing=facing==='user'?'environment':'user';startCamera()};$('stop').onclick=()=>stopCamera();$('validateToken').onclick=validateToken;$('verifyFace').onclick=()=>verifyFace().catch(e=>{faceVerified=false;layer(1,false,'IDENTIDADE NÃO APROVADA',e.message);log('Verificação facial recusada: '+e.message);decision();alert(e.message)});$('createAdmin').onclick=()=>createAdmin().catch(e=>alert(e.message));$('unlockAdmin').onclick=()=>unlockAdmin().catch(e=>alert('Senha incorreta ou falha ao abrir cadastro.'));$('enroll').onclick=()=>enroll();$('lockAdmin').onclick=()=>{adminUnlocked=false;$('adminArea').classList.add('hidden');$('adminLogin').classList.remove('hidden');$('adminLoginPass').value='';$('people').textContent='Área administrativa bloqueada.';log('Área administrativa bloqueada.')};
+(async()=>{try{await openDB();const meta=getMeta();if(meta){$('adminSetup').classList.add('hidden');$('adminLogin').classList.remove('hidden')}await loadFaceEngine()}catch(e){$('engineStatus').textContent='❌ Motor não carregado: '+e.message+'. Verifique a internet na primeira execução e abra esta página por HTTPS.';layer(1,false,'MOTOR INDISPONÍVEL',e.message);log('Falha ao carregar motor facial: '+e.message)}})();
+refreshPermissions();setInterval(refreshPermissions,15000);window.addEventListener('beforeunload',()=>{if(stream)stream.getTracks().forEach(t=>t.stop())});
+</script></body></html>
