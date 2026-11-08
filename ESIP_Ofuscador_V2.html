@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESIP-Sistemas | Ofuscador V2</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:#071126;color:#f8fafc;font-family:Segoe UI,Tahoma,sans-serif}
+.container{max-width:900px;margin:24px auto;padding:26px;background:#101d38;border:1px solid #1e40af;border-radius:16px;box-shadow:0 12px 36px #0008}
+header{text-align:center;padding-bottom:20px;border-bottom:1px solid #1e40af}
+.logo{font-size:27px;font-weight:800;letter-spacing:1px;color:#00f5ff;text-shadow:0 0 12px #00f5ff66}
+h1{font-size:20px;font-weight:500;margin:10px 0 0}
+.info,.warning{padding:14px;border-radius:9px;font-size:13px;line-height:1.55;margin:18px 0}
+.info{background:#142f68;border-left:4px solid #00f5ff}
+.warning{background:#3b2b12;border-left:4px solid #fbbf24;color:#fff2cf}
+label{display:block;margin:20px 0 7px;font-weight:700;color:#cbd5e1}
+textarea{display:block;width:100%;min-height:210px;padding:13px;background:#050b18;border:1px solid #29477e;border-radius:9px;color:#f8fafc;font:13px/1.5 Consolas,monospace;resize:vertical}
+textarea:focus{outline:2px solid #00cfe8;border-color:transparent}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+button{border:0;border-radius:8px;padding:12px 16px;font-weight:800;cursor:pointer}
+.primary{background:#00e5f2;color:#071126;flex:1}
+.secondary{background:#243653;color:white;border:1px solid #45618b}
+button:hover{filter:brightness(1.12)}
+.status{min-height:20px;margin-top:12px;color:#67e8f9;font-size:13px}
+.small{font-size:12px;color:#94a3b8;line-height:1.5;margin-top:8px}
+@media(max-width:600px){body{padding:10px}.container{padding:17px;margin:8px auto}.actions button{width:100%}}
+</style>
+</head>
+<body>
+<main class="container">
+<header>
+<div class="logo">📡 ESIP-Sistemas</div>
+<h1>Ofuscador Autônomo V2</h1>
+</header>
+
+<div class="info">
+<strong>Processamento local:</strong> o HTML é preparado neste navegador. Não há envio para servidores, Firebase, cadastro ou biblioteca externa. O resultado é um arquivo HTML independente para publicar no GitHub Pages.
+</div>
+<div class="warning">
+<strong>Limite de segurança:</strong> esta ferramenta dificulta a leitura casual usando fragmentação, codificação e identificadores aleatórios. Não é criptografia forte: como o navegador precisa reconstruir a página, alguém determinado ainda pode recuperar o conteúdo. Não coloque senhas, chaves privadas ou segredos no HTML.
+</div>
+
+<label for="inputHtml">1. Código original (HTML completo)</label>
+<textarea id="inputHtml" spellcheck="false" placeholder="Cole aqui o conteúdo completo do index.html que deseja ofuscar."></textarea>
+<div class="actions">
+<button class="primary" id="generateBtn" type="button">✨ GERAR CÓDIGO V2</button>
+<button class="secondary" id="clearBtn" type="button">Limpar campos</button>
+</div>
+
+<label for="outputHtml">2. Resultado ofuscado (HTML autônomo)</label>
+<textarea id="outputHtml" spellcheck="false" readonly placeholder="O resultado será gerado aqui..."></textarea>
+<div class="actions">
+<button class="primary" id="copyBtn" type="button">📋 COPIAR RESULTADO</button>
+<button class="secondary" id="downloadBtn" type="button">⬇ BAIXAR index-ofuscado.html</button>
+</div>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+<p class="small">Dica: guarde sempre uma cópia do HTML original. Teste o arquivo gerado localmente antes de substituir o index.html publicado.</p>
+</main>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+
+function randomBytes(length) {
+    const bytes = new Uint8Array(length);
+    if (window.crypto && crypto.getRandomValues) {
+        crypto.getRandomValues(bytes);
+    } else {
+        for (let i = 0; i < length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.from(bytes);
+}
+
+function randomName() {
+    const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const bytes = randomBytes(12);
+    let name = "_";
+    for (const byte of bytes) name += alphabet[byte % alphabet.length];
+    return name;
+}
+
+function bytesToBase64(bytes) {
+    let binary = "";
+    const step = 0x8000;
+    for (let i = 0; i < bytes.length; i += step) {
+        binary += String.fromCharCode(...bytes.slice(i, i + step));
+    }
+    return btoa(binary);
+}
+
+function buildProtectedHtml(source) {
+    const encoder = new TextEncoder();
+    const originalBytes = encoder.encode(source);
+    const key = randomBytes(32);
+    const salt = randomBytes(16);
+
+    // XOR com fluxo derivado de chave/salt: ofuscação, não criptografia forte.
+    const encrypted = originalBytes.map((byte, i) =>
+        byte ^ key[i % key.length] ^ salt[i % salt.length]
+    );
+
+    // Fragmenta o payload em blocos e embaralha a ordem de armazenamento.
+    const chunkSize = 900;
+    const chunks = [];
+    for (let i = 0; i < encrypted.length; i += chunkSize) {
+        chunks.push(bytesToBase64(encrypted.slice(i, i + chunkSize)));
+    }
+    const order = chunks.map((_, i) => i);
+    for (let i = order.length - 1; i > 0; i--) {
+        const j = randomBytes(1)[0] % (i + 1);
+        [order[i], order[j]] = [order[j], order[i]];
+    }
+    const shuffled = order.map(index => chunks[index]);
+
+    const names = {
+        data: randomName(), key: randomName(), salt: randomName(),
+        order: randomName(), decode: randomName(), bytes: randomName(),
+        joined: randomName(), out: randomName(), i: randomName(),
+        bin: randomName(), part: randomName(), doc: randomName()
+    };
+
+    const payload = JSON.stringify(shuffled);
+    const keyText = JSON.stringify(key);
+    const saltText = JSON.stringify(salt);
+    const orderText = JSON.stringify(order);
+
+    return `<!doctype html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ESIP-Sistemas</title></head>
+<body>
+<script>
+(function(){
+"use strict";
+var ${names.data}=${payload};
+var ${names.key}=${keyText};
+var ${names.salt}=${saltText};
+var ${names.order}=${orderText};
+function ${names.decode}(s){
+ var b=atob(s), a=new Uint8Array(b.length);
+ for(var ${names.i}=0;${names.i}<b.length;${names.i}++)a[${names.i}]=b.charCodeAt(${names.i});
+ return a;
+}
+try{
+ var ${names.bytes}=[];
+ for(var ${names.i}=0;${names.i}<${names.order}.length;${names.i}++){
+  var ${names.part}=${names.decode}(${names.data}[${names.order}[${names.i}]]);
+  for(var ${names.bin}=0;${names.bin}<${names.part}.length;${names.bin}++){
+   var p=${names.bytes}.length;
+   ${names.bytes}.push(${names.part}[${names.bin}]^${names.key}[p%${names.key}.length]^${names.salt}[p%${names.salt}.length]);
+  }
+ }
+ var ${names.out}=new TextDecoder("utf-8").decode(new Uint8Array(${names.bytes}));
+ document.open();
+ document.write(${names.out});
+ document.close();
+}catch(e){
+ document.body.textContent="ESIP: falha ao reconstruir a aplicação. Verifique se o arquivo foi copiado integralmente.";
+}
+})();
+<\/script>
+</body>
+</html>`;
+}
+
+$("generateBtn").addEventListener("click", () => {
+    const source = $("inputHtml").value;
+    if (!source.trim()) {
+        $("status").textContent = "Cole o HTML original antes de gerar.";
+        $("inputHtml").focus();
+        return;
+    }
+    try {
+        $("outputHtml").value = buildProtectedHtml(source);
+        $("status").textContent = "V2 gerada. " + new TextEncoder().encode(source).length +
+            " bytes originais; " + $("outputHtml").value.length + " caracteres no resultado.";
+    } catch (error) {
+        $("status").textContent = "Não foi possível gerar: " + error.message;
+    }
+});
+
+$("copyBtn").addEventListener("click", async () => {
+    const value = $("outputHtml").value;
+    if (!value) {
+        $("status").textContent = "Gere o código antes de copiar.";
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(value);
+        $("status").textContent = "Código copiado.";
+    } catch (error) {
+        $("outputHtml").focus();
+        $("outputHtml").select();
+        const ok = document.execCommand("copy");
+        $("status").textContent = ok
+            ? "Código copiado."
+            : "A cópia automática falhou. Selecione o resultado e copie manualmente.";
+    }
+});
+
+$("downloadBtn").addEventListener("click", () => {
+    const value = $("outputHtml").value;
+    if (!value) {
+        $("status").textContent = "Gere o código antes de baixar.";
+        return;
+    }
+    const blob = new Blob([value], {type:"text/html;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "index-ofuscado.html";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    $("status").textContent = "Download solicitado: index-ofuscado.html";
+});
+
+$("clearBtn").addEventListener("click", () => {
+    $("inputHtml").value = "";
+    $("outputHtml").value = "";
+    $("status").textContent = "Campos limpos.";
+});
+</script>
+</body>
+</html>
