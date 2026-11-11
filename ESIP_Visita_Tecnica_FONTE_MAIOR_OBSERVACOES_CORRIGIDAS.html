@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#07152e">
+<title>ESIP | Registro de Visita Técnica</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+:root{
+  --navy:#06142b;
+  --navy2:#0b2142;
+  --blue:#159bff;
+  --cyan:#54d8ff;
+  --text:#eaf5ff;
+  --muted:#9db4d1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;width:100%;overflow-x:hidden}
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(ellipse at top,#123765 0%,transparent 55%),
+    linear-gradient(145deg,#030914,#071a35 55%,#030914);
+  padding:22px 14px 36px;
+}
+.app{width:100%;max-width:620px;margin:0 auto}
+.brand{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  margin:0 auto 20px;text-align:left
+}
+.brand-mark{
+  width:48px;height:48px;flex:0 0 48px;border:1px solid var(--cyan);
+  border-radius:14px;display:grid;place-items:center;color:var(--cyan);
+  font-size:23px;font-weight:800;text-shadow:0 0 12px var(--blue);
+  box-shadow:0 0 18px #159bff55,inset 0 0 14px #159bff22
+}
+.brand-name{font-size:22px;font-weight:800;letter-spacing:3px;color:#fff}
+.brand-sub{font-size:10px;letter-spacing:2px;color:var(--cyan);margin-top:4px}
+h1{font-size:19px;text-align:center;margin:0 0 18px;color:#fff}
+.panel{
+  width:100%;padding:18px;border:1px solid #168fe866;border-radius:18px;
+  background:linear-gradient(155deg,#0d2342ee,#07152eee);
+  box-shadow:0 12px 35px #0008,0 0 22px #087bd522
+}
+.field{width:100%;margin:0 0 12px;text-align:left}
+.field label{display:block;margin:0 0 6px 2px;color:#a9dfff;font-size:14px;font-weight:700}
+input,textarea{
+  display:block;width:100%;max-width:100%;min-width:0;margin:0;
+  padding:13px 14px;border-radius:10px;border:1px solid #28517b;
+  background:#061329;color:#fff;font:inherit;font-size:17px;
+  outline:none;box-shadow:inset 0 1px 5px #0005
+}
+input:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 2px #159bff30,0 0 12px #159bff33}
+input::placeholder,textarea::placeholder{color:#7892b1}
+input[type=file]{font-size:15px;padding:10px}
+textarea{min-height:128px;resize:vertical;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap;word-break:break-word}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+button{
+  width:100%;min-width:0;margin:0;padding:14px 10px;border-radius:11px;
+  border:1px solid #36baff88;font-weight:800;font-size:15px;letter-spacing:.4px;
+  color:#fff;background:linear-gradient(135deg,#123d70,#087dc5);
+  box-shadow:0 4px 15px #008cff25;cursor:pointer
+}
+button:active{transform:scale(.98)}
+#start{background:linear-gradient(135deg,#075b66,#078eaa)}
+#end{background:linear-gradient(135deg,#6d2638,#b12e4b)}
+#pdf{grid-column:1/-1;background:linear-gradient(135deg,#0752a0,#087fc9)}
+.note{text-align:center;color:var(--muted);font-size:13px;line-height:1.5;margin:14px 4px 0}
+#status{margin-top:12px;text-align:center;color:var(--cyan);font-size:14px;min-height:16px}
+#relatorio{display:none;width:100%;overflow:visible}
+
+/* Relatório compacto: largura útil A4 e elementos que não quebram */
+.relatorio{
+  position:relative;width:190mm;max-width:190mm;margin:0 auto;
+  padding:6mm;background:#fff;color:#142033;
+  font-family:Arial,Helvetica,sans-serif;font-size:9px;
+  line-height:1.2;overflow:visible;overflow-wrap:anywhere
+}
+.relatorio *{box-sizing:border-box;max-width:100%}
+.relatorio .topo{display:flex;align-items:center;gap:9px;min-width:0}
+.relatorio .logo{width:48px;height:48px;object-fit:contain;flex:0 0 48px}
+.relatorio .topo h2{font-size:16px;margin:0 0 3px;overflow-wrap:anywhere}
+.relatorio .topo p{margin:0;color:#31506f;font-weight:bold;letter-spacing:.6px;font-size:8px}
+.relatorio hr{border:0;border-top:1.5px solid #168fe8;margin:7px 0}
+.relatorio .grid{display:flex;gap:6px;margin:5px 0;width:100%;break-inside:avoid;page-break-inside:avoid}
+.relatorio .grid>div{flex:1 1 0;min-width:0;background:#edf3f8;padding:6px;border-radius:5px;overflow-wrap:anywhere}
+.relatorio .box{background:#edf3f8;padding:7px;border-radius:5px;margin:6px 0;overflow-wrap:anywhere;word-break:break-word;break-inside:avoid;page-break-inside:avoid}
+.relatorio h3{font-size:10px;color:#0b477e;margin:7px 0 4px;break-after:avoid;page-break-after:avoid}
+/* Fotografias em duas colunas, sem deformar nem cortar a imagem */
+.relatorio .fotos{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  width:100%;
+  align-items:center;
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+.relatorio .foto-item{
+  min-width:0;
+  height:38mm;
+  padding:3px;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  align-items:center;
+  justify-content:center;
+  background:#edf3f8;
+  border:1px solid #d4dde6;
+  border-radius:5px;
+  overflow:hidden;
+  break-inside:avoid;
+  page-break-inside:avoid;
+}
+.relatorio .foto-item small{
+  display:block;
+  width:100%;
+  color:#31506f;
+  font-size:7px;
+  font-weight:800;
+  text-align:center;
+  letter-spacing:.5px;
+}
+.relatorio .foto-item img{
+  display:block;
+  width:100%;
+  height:calc(38mm - 16px);
+  min-width:0;
+  object-fit:contain;
+  object-position:center;
+  background:#e8edf2;
+  border-radius:3px;
+}
+.relatorio #qrs{display:flex;justify-content:center;align-items:center;margin:4px auto}
+.relatorio #qrs img,.relatorio #qrs canvas{width:65px!important;height:65px!important}
+.relatorio .carimbo{position:absolute;top:42%;left:25%;transform:rotate(-20deg);font-size:20px;color:#159bff24;border:2px solid #159bff24;padding:6px;font-weight:800;pointer-events:none}
+.relatorio a{color:#075da5;overflow-wrap:anywhere}
+.relatorio .hash{font-family:monospace;word-break:break-all}
+@media(max-width:480px){
+  body{padding:16px 10px 28px}
+  .panel{padding:14px;border-radius:15px}
+  .brand-name{font-size:20px}
+  .actions{grid-template-columns:1fr}
+  #pdf{grid-column:auto}
+  button{padding:14px}
+}
+/* Evita que o conteúdo digitado ou links longos provoquem rolagem lateral */
+input,textarea,.field,.panel{overflow-wrap:anywhere}
+</style>
+</head>
+
+<body>
+<main class="app">
+  <header class="brand">
+    <div class="brand-mark">E</div>
+    <div>
+      <div class="brand-name">ESIP</div>
+      <div class="brand-sub">ENGENHARIA • TECNOLOGIA • SEGURANÇA</div>
+    </div>
+  </header>
+
+  <h1>REGISTRO DE VISITA TÉCNICA</h1>
+
+  <section class="panel">
+    <div class="field">
+      <label for="empresa">EMPRESA</label>
+      <input id="empresa" placeholder="Nome da empresa" autocomplete="organization">
+    </div>
+    <div class="field">
+      <label for="cliente">CLIENTE / LOCAL</label>
+      <input id="cliente" placeholder="Nome do cliente ou local">
+    </div>
+    <div class="field">
+      <label for="tecnico">RESPONSÁVEL TÉCNICO</label>
+      <input id="tecnico" placeholder="Nome do responsável">
+    </div>
+    <div class="field">
+      <label for="video">LINK DO VÍDEO (OPCIONAL)</label>
+      <input id="video" type="url" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label for="logoInput">LOGO DA EMPRESA (OPCIONAL)</label>
+      <input type="file" id="logoInput" accept="image/*">
+    </div>
+    <div class="field">
+      <label for="obs">OBSERVAÇÕES</label>
+      <textarea id="obs" placeholder="Digite as informações da visita..."></textarea>
+    </div>
+
+    <div class="actions">
+      <button id="start" type="button">INICIAR VISITA</button>
+      <button id="end" type="button">FINALIZAR VISITA</button>
+      <button id="pdf" type="button">GERAR RELATÓRIO PDF</button>
+    </div>
+    <div id="status" role="status"></div>
+    <p class="note">Permita câmera e localização. O GPS exige acesso por HTTPS e autorização do navegador. As fotos ficam salvas neste dispositivo.</p>
+  </section>
+</main>
+
+<input type="file" id="camera" hidden accept="image/*" capture="environment">
+<div id="relatorio"></div>
+
+<script>
+"use strict";
+let logoBase64 = "";
+const $ = id => document.getElementById(id);
+const empresa=$("empresa"), cliente=$("cliente"), tecnico=$("tecnico"), video=$("video"), obs=$("obs");
+const logoInput=$("logoInput"), camera=$("camera"), start=$("start"), end=$("end"), pdf=$("pdf"), relatorio=$("relatorio");
+const DB_NAME="ESIP_VISITAS_DB", STORE="registros";
+function status(msg){$("status").textContent=msg;}
+
+// IndexedDB guarda fotos sem ocupar o pequeno espaço do localStorage.
+function abrirDB(){return new Promise((resolve,reject)=>{
+  if(!("indexedDB" in window)) return reject(new Error("Este navegador não oferece armazenamento seguro de fotos."));
+  const req=indexedDB.open(DB_NAME,1);
+  req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains(STORE))db.createObjectStore(STORE,{keyPath:"chave"});};
+  req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error||new Error("Falha ao abrir armazenamento."));
+});}
+async function guardar(chave,valor){const db=await abrirDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,"readwrite");tx.objectStore(STORE).put({chave,valor});
+  tx.oncomplete=()=>{db.close();resolve(true);};tx.onerror=()=>{db.close();reject(tx.error||new Error("Falha ao gravar registro."));};tx.onabort=()=>{db.close();reject(tx.error||new Error("Gravação cancelada."));};
+});}
+async function buscar(chave){const db=await abrirDB();return new Promise((resolve,reject)=>{
+  const tx=db.transaction(STORE,"readonly"),req=tx.objectStore(STORE).get(chave);
+  req.onsuccess=()=>{const v=req.result?req.result.valor:null;db.close();resolve(v);};req.onerror=()=>{db.close();reject(req.error);};
+});}
+
+logoInput.onchange=e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{logoBase64=ev.target.result;status("Logo carregada.");};r.onerror=()=>alert("Não foi possível ler a logo.");r.readAsDataURL(f);};
+
+async function getLocation(){
+  if(!navigator.geolocation) return {ok:false,motivo:"GPS não disponível neste navegador."};
+  if(!window.isSecureContext) return {ok:false,motivo:"GPS exige página HTTPS. Abra o sistema pelo endereço seguro (https://)."};
+  const tentativa=(options)=>new Promise(resolve=>navigator.geolocation.getCurrentPosition(
+    p=>resolve({ok:true,lat:p.coords.latitude,lng:p.coords.longitude,precisao:p.coords.accuracy}),
+    e=>resolve({ok:false,codigo:e.code,motivo:e.code===1?"Permissão de localização negada. Autorize o GPS nas configurações do navegador.":e.code===2?"Sinal de localização indisponível. Verifique o GPS do aparelho.":"O GPS demorou para responder."}),options));
+  let r=await tentativa({enableHighAccuracy:true,timeout:15000,maximumAge:0});
+  if(!r.ok) r=await tentativa({enableHighAccuracy:false,timeout:10000,maximumAge:60000});
+  return r;
+}
+function comprimir(base64){return new Promise((resolve,reject)=>{
+  const img=new Image();img.onload=()=>{try{const c=document.createElement("canvas"),ctx=c.getContext("2d");const max=1400,scale=Math.min(1,max/Math.max(img.width,img.height));c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));ctx.drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",0.82));}catch(e){reject(new Error("Falha ao preparar a fotografia."));}};
+  img.onerror=()=>reject(new Error("Não foi possível processar a foto."));img.src=base64;
+});}
+function tirarFoto(){return new Promise((resolve,reject)=>{
+  camera.value="";let concluido=false;
+  camera.onchange=async()=>{if(concluido)return;concluido=true;const f=camera.files&&camera.files[0];if(!f)return reject(new Error("Nenhuma fotografia foi selecionada."));
+    if(!f.type.startsWith("image/"))return reject(new Error("O arquivo selecionado não é uma imagem."));
+    const r=new FileReader();r.onload=async ev=>{try{resolve(await comprimir(ev.target.result));}catch(err){reject(err);}};r.onerror=()=>reject(new Error("Erro ao ler a fotografia."));r.readAsDataURL(f);
+  };
+  camera.click();
+});}
+function gerarHash(d){const base=JSON.stringify(d)+navigator.userAgent;let hash=0;for(let i=0;i<base.length;i++){hash=((hash<<5)-hash)+base.charCodeAt(i);hash|=0;}return "CHK-"+Math.abs(hash);}
+function coordenada(lat,lng){return lat!==null&&lat!==undefined&&lng!==null&&lng!==undefined&&lat!==""&&lng!==""&&Number.isFinite(Number(lat))&&Number.isFinite(Number(lng));}
+function mapaLink(lat,lng){return coordenada(lat,lng)?`https://www.google.com/maps?q=${encodeURIComponent(lat+","+lng)}`:"";}
+
+start.onclick=async()=>{
+  start.disabled=true;
+  try{
+    status("Solicitando localização. Se o GPS falhar, a fotografia ainda poderá ser registrada...");
+    const loc=await getLocation();
+    if(!loc.ok) status("GPS: "+loc.motivo+" Agora registre a foto inicial.");
+    const foto=await tirarFoto();
+    const d={id:"REL-"+Date.now(),empresa:empresa.value.trim(),cliente:cliente.value.trim(),tecnico:tecnico.value.trim(),video:video.value.trim(),logo:logoBase64,
+      inicio:new Date().toLocaleString("pt-BR"),lat_inicio:loc.ok?loc.lat:null,lng_inicio:loc.ok?loc.lng:null,precisao_inicio:loc.ok?loc.precisao:null,
+      gps_inicio_status:loc.ok?"Localização registrada":loc.motivo,foto_inicio:foto,obs_inicio:obs.value.trim()};
+    await guardar("visita_em_andamento",d);
+    await guardar("visita_finalizada",null);
+    status(loc.ok?"Visita iniciada. GPS e fotografia armazenados neste dispositivo.":"Visita iniciada e fotografia armazenada. GPS não registrado: "+loc.motivo);
+    alert(loc.ok?"Visita iniciada com localização e fotografia.":"Fotografia inicial armazenada. Atenção: "+loc.motivo);
+  }catch(e){console.error(e);status("Falha ao iniciar visita.");alert(e.message||String(e));}
+  finally{start.disabled=false;}
+};
+
+end.onclick=async()=>{
+  end.disabled=true;
+  try{
+    const d=await buscar("visita_em_andamento");if(!d)throw new Error("Não há visita em andamento. Clique em INICIAR VISITA primeiro.");
+    status("Obtendo localização final. A fotografia será registrada mesmo se o GPS falhar...");
+    const loc=await getLocation();if(!loc.ok)status("GPS final: "+loc.motivo+" Registre a foto final.");
+    const foto=await tirarFoto();
+    d.fim=new Date().toLocaleString("pt-BR");d.lat_fim=loc.ok?loc.lat:null;d.lng_fim=loc.ok?loc.lng:null;d.precisao_fim=loc.ok?loc.precisao:null;
+    d.gps_fim_status=loc.ok?"Localização registrada":loc.motivo;d.foto_fim=foto;d.obs_fim=obs.value.trim();
+    await guardar("visita_finalizada",d);await guardar("visita_em_andamento",null);
+    status(loc.ok?"Visita finalizada. Fotos e duas localizações armazenadas.":"Visita finalizada e fotos armazenadas. GPS final não registrado: "+loc.motivo);
+    alert(loc.ok?"Visita finalizada com sucesso.":"Visita finalizada e fotos salvas. Atenção: "+loc.motivo);
+  }catch(e){console.error(e);status("Falha ao finalizar visita.");alert(e.message||String(e));}
+  finally{end.disabled=false;}
+};
+
+pdf.onclick=async()=>{
+  let d;
+  try{ d=await buscar("visita_finalizada"); }
+  catch(e){ alert("Não foi possível acessar os registros salvos: "+e.message); return; }
+
+  if(!d){ alert("Finalize a visita antes de gerar o PDF."); return; }
+  if(!d.foto_inicio || !d.foto_fim){
+    alert("O registro não contém as duas fotografias. Faça novamente a visita e capture as duas fotos.");
+    return;
+  }
+  if(!(window.jspdf && window.jspdf.jsPDF) || typeof QRCode==="undefined"){
+    alert("A biblioteca do PDF ou QR não carregou. Verifique a internet e recarregue a página.");
+    return;
+  }
+
+  pdf.disabled=true;
+  status("Montando relatório A4 com links clicáveis...");
+  try{
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF({unit:"mm",format:"a4",orientation:"portrait",compress:true});
+    const W=210, H=297, M=11, CW=W-M*2;
+    const navy=[6,20,43], blue=[10,105,170], cyan=[30,155,220];
+    const ink=[25,42,60], muted=[82,103,125], pale=[237,243,248], line=[195,211,225];
+    const safeText=v=>String(v??"").replace(/\s+/g," ").trim();
+    const validUrl=value=>{
+      if(!value) return "";
+      try{
+        const u=new URL(/^https?:\/\//i.test(value)?value:"https://"+value);
+        return (u.protocol==="https:"||u.protocol==="http:")?u.href:"";
+      }catch(e){return "";}
+    };
+    const box=(x,y,w,h,fill=pale,stroke=line)=>{
+      doc.setFillColor(...fill);doc.setDrawColor(...stroke);doc.setLineWidth(.25);
+      doc.roundedRect(x,y,w,h,2,2,"FD");
+    };
+    const label=(t,x,y)=>{
+      doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(...blue);
+      doc.text(String(t).toUpperCase(),x,y);
+    };
+    const text=(t,x,y,size=8,color=ink,style="normal")=>{
+      doc.setFont("helvetica",style);doc.setFontSize(size);doc.setTextColor(...color);
+      doc.text(String(t||"—"),x,y);
+    };
+    const wrap=(value,maxWidth,size=8)=>{
+      doc.setFont("helvetica","normal");doc.setFontSize(size);
+      return doc.splitTextToSize(String(value||"—"),maxWidth);
+    };
+    const fitImage=(data,x,y,w,h)=>{
+      return new Promise((resolve,reject)=>{
+        const im=new Image();
+        im.onload=()=>{
+          const r=Math.min(w/im.width,h/im.height);
+          const iw=im.width*r, ih=im.height*r;
+          doc.addImage(data,"JPEG",x+(w-iw)/2,y+(h-ih)/2,iw,ih,undefined,"FAST");
+          resolve();
+        };
+        im.onerror=()=>reject(new Error("Não foi possível inserir uma das fotografias no PDF."));
+        im.src=data;
+      });
+    };
+    const addField=(title,value,x,y,w,h)=>{
+      box(x,y,w,h);
+      label(title,x+3,y+5);
+      const lines=wrap(safeText(value)||"Não informado",w-6,8.8);
+      doc.setFont("helvetica","normal");doc.setFontSize(8.8);doc.setTextColor(...ink);
+      doc.text(lines.slice(0,2),x+3,y+11);
+    };
+    const hash=gerarHash(d);
+
+    // Cabeçalho institucional
+    doc.setFillColor(...navy);doc.roundedRect(M,9,CW,25,2,2,"F");
+    if(d.logo){
+      try{doc.addImage(d.logo, M+3,12,18,18,undefined,"FAST");}catch(e){}
+    }else{
+      doc.setDrawColor(84,216,255);doc.setLineWidth(.6);doc.roundedRect(M+3,12,18,18,2,2,"S");
+      doc.setFont("helvetica","bold");doc.setFontSize(17);doc.setTextColor(84,216,255);
+      doc.text("E",M+8.7,24.5);
+    }
+    doc.setFont("helvetica","bold");doc.setFontSize(16);doc.setTextColor(255,255,255);
+    doc.text(safeText(d.empresa)||"ESIP",M+25,19);
+    doc.setFont("helvetica","bold");doc.setFontSize(8.8);doc.setTextColor(84,216,255);
+    doc.text("RELATÓRIO TÉCNICO DE VISITA",M+25,25);
+    doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(225,239,250);
+    doc.text("ENGENHARIA  •  TECNOLOGIA  •  SEGURANÇA",M+25,30);
+
+    // Identificação e horários
+    const gap=3, col=(CW-gap*2)/3;
+    addField("Identificação",d.id,M,38,col,19);
+    addField("Cliente / local",d.cliente,M+col+gap,38,col,19);
+    addField("Responsável técnico",d.tecnico,M+(col+gap)*2,38,col,19);
+    addField("Início da visita",d.inicio,M,60,(CW-gap)/2,18);
+    addField("Finalização",d.fim,M+(CW+gap)/2,60,(CW-gap)/2,18);
+
+    // Observações
+    box(M,84,CW,34);
+    label("Observações da visita",M+3,90);
+    const obsText=[
+      d.obs_inicio?("INICIAL: "+safeText(d.obs_inicio)):"",
+      d.obs_fim?("FINAL: "+safeText(d.obs_fim)):""
+    ].filter(Boolean).join("   |   ")||"Nenhuma observação informada.";
+    // Quebra forçada dentro da largura útil: nenhuma linha pode ultrapassar a caixa.
+    const obsLines=wrap(obsText,CW-11,8.5).slice(0,5);
+    doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(...ink);
+    doc.text(obsLines,M+3,96,{maxWidth:CW-9,lineHeightFactor:1.25});
+
+    // Link de vídeo com anotação PDF clicável
+    box(M,123,CW,17);
+    label("Vídeo / evidência digital",M+3,129);
+    const videoUrl=validUrl(d.video);
+    if(videoUrl){
+      text("ABRIR VÍDEO — "+videoUrl.slice(0,105),M+3,135,7.2,blue,"bold");
+      doc.link(M+2,130,CW-4,8,{url:videoUrl});
+    }else{
+      text("Nenhum link de vídeo informado.",M+3,135,7.5,muted);
+    }
+
+    // Fotografias em dois quadros amplos
+    label("REGISTRO FOTOGRÁFICO",M,148);
+    const photoGap=4, photoW=(CW-photoGap)/2, photoY=152, photoH=66;
+    box(M,photoY,photoW,photoH,[248,250,252],line);
+    box(M+photoW+photoGap,photoY,photoW,photoH,[248,250,252],line);
+    doc.setFont("helvetica","bold");doc.setFontSize(7.8);doc.setTextColor(...blue);
+    doc.text("REGISTRO INICIAL",M+photoW/2,photoY+5,{align:"center"});
+    doc.text("REGISTRO FINAL",M+photoW+photoGap+photoW/2,photoY+5,{align:"center"});
+    await fitImage(d.foto_inicio,M+3,photoY+8,photoW-6,photoH-11);
+    await fitImage(d.foto_fim,M+photoW+photoGap+3,photoY+8,photoW-6,photoH-11);
+
+    // Localização com links PDF nativos
+    label("LOCALIZAÇÃO GPS",M,227);
+    const gpsY=231, gpsH=32;
+    box(M,gpsY,CW,gpsH);
+    const addGps=(title,lat,lng,precision,why,y)=>{
+      doc.setFont("helvetica","bold");doc.setFontSize(8);doc.setTextColor(...ink);
+      doc.text(title+":",M+3,y);
+      if(coordenada(lat,lng)){
+        const coords=Number(lat).toFixed(6)+", "+Number(lng).toFixed(6);
+        text(coords,M+22,y,8,ink);
+        const map=mapaLink(lat,lng);
+        text("ABRIR NO GOOGLE MAPS",M+105,y,7.6,blue,"bold");
+        doc.link(M+103,y-4,75,6,{url:map});
+        text("Precisão: "+(precision?Math.round(precision)+" m":"não informada"),M+22,y+4,7,muted);
+      }else{
+        text("Não registrada — "+safeText(why||"GPS indisponível"),M+22,y,6.8,muted);
+      }
+    };
+    addGps("INÍCIO",d.lat_inicio,d.lng_inicio,d.precisao_inicio,d.gps_inicio_status,238);
+    addGps("FINAL",d.lat_fim,d.lng_fim,d.precisao_fim,d.gps_fim_status,252);
+
+    // Validação e QR Code
+    label("VALIDAÇÃO DO REGISTRO",M,271);
+    const qr=document.createElement("div");
+    new QRCode(qr,{text:String(d.id)+" | "+hash,width:180,height:180,correctLevel:QRCode.CorrectLevel.M});
+    const qrCanvas=qr.querySelector("canvas");
+    const qrImg=qr.querySelector("img");
+    let qrData=qrCanvas?qrCanvas.toDataURL("image/png"):(qrImg?qrImg.src:"");
+    if(qrData) doc.addImage(qrData,"PNG",M,273,17,17);
+    box(M+21,273,CW-21,17);
+    label("CÓDIGO DE INTEGRIDADE",M+25,279);
+    text(hash,M+25,285,8.8,ink,"bold");
+    doc.setFont("helvetica","normal");doc.setFontSize(6.2);doc.setTextColor(...muted);
+    doc.text("Registro local • Documento emitido pelo sistema ESIP",W/2,294,{align:"center"});
+
+    // Metadados úteis e links continuam selecionáveis no PDF, não rasterizados.
+    doc.setProperties({
+      title:"Relatório Técnico ESIP "+String(d.id||""),
+      subject:"Registro de visita técnica com fotografias e localização",
+      author:"ESIP"
+    });
+    doc.save("ESIP_Relatorio_"+String(d.id||"visita")+".pdf");
+    status("PDF A4 gerado. Links do vídeo e dos mapas estão clicáveis.");
+  }catch(err){
+    console.error(err);
+    status("Falha ao gerar PDF.");
+    alert("Não foi possível gerar o PDF: "+(err.message||err));
+  }finally{
+    pdf.disabled=false;
+  }
+};
+</script>
+</body>
+</html>
