@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#071426">
+<title>ESIP ASSINA — Plataforma V3.0</title>
+<style>
+:root{--bg:#071426;--panel:#0d2038;--panel2:#102945;--line:#21486c;--blue:#39a7ff;--cyan:#64d8ff;--text:#edf6ff;--muted:#a9bfd4;--green:#25c78a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#12365b 0,#071426 42%,#040b14 100%);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{padding:22px 18px 16px;border-bottom:1px solid #1b4265;background:#071426dd;position:sticky;top:0;z-index:5;backdrop-filter:blur(12px)}
+.head{max-width:1180px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:12px}.mark{width:43px;height:43px;border:1px solid var(--blue);border-radius:13px;display:grid;place-items:center;color:var(--cyan);font-weight:900;box-shadow:0 0 18px #168ce955;font-size:20px}.brand h1{font-size:20px;letter-spacing:2px;margin:0}.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:2px}.status{font-size:11px;color:#8de7c2;border:1px solid #236b57;padding:6px 10px;border-radius:20px}
+main{max-width:1180px;margin:24px auto;padding:0 16px 45px}.intro{margin:0 0 20px}.intro h2{font-size:clamp(23px,4vw,32px);margin:0 0 5px}.intro p{margin:0;color:var(--muted)}
+.layout{display:grid;grid-template-columns:minmax(300px,410px) minmax(0,1fr);gap:18px;align-items:start}.panel{background:linear-gradient(160deg,#102945ee,#091a2eee);border:1px solid var(--line);border-radius:17px;padding:18px;box-shadow:0 15px 40px #0003}.panel h3{font-size:15px;margin:0 0 14px;color:#d9efff;letter-spacing:.4px}.section{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid #1d3c5a}.section:last-child{border:0;margin:0;padding:0}
+label{display:block;font-size:12px;color:#b9cee0;margin:0 0 6px}input,textarea,select{width:100%;border:1px solid #2a5277;background:#07182b;color:#f2f8ff;border-radius:9px;padding:11px 12px;font:inherit;outline:none}input:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #39a7ff20}input[type=file]{padding:8px;font-size:12px}input[type=color]{height:42px;padding:4px}textarea{min-height:130px;resize:vertical}.field{margin-bottom:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hint{font-size:11px;color:#8faac2;margin-top:6px}.btn{border:0;border-radius:10px;padding:11px 14px;font-weight:750;cursor:pointer;background:linear-gradient(100deg,#1688e8,#36baff);color:#031426;box-shadow:0 7px 20px #1688e833}.btn.secondary{background:#163451;color:#dcefff;border:1px solid #2b5b82;box-shadow:none}.btn.ghost{background:transparent;color:#b9d7ef;border:1px solid #2b5274;box-shadow:none}.btn:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:9px;flex-wrap:wrap}.actions .btn{flex:1}
+.preview-wrap{position:sticky;top:100px}.preview-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.preview-top h3{margin:0}.paper{background:#fff;color:#172333;min-height:720px;position:relative;padding:44px 48px 38px;overflow:hidden;border-radius:4px;box-shadow:0 20px 55px #0007}.paper-content{position:relative;z-index:1}.watermark{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:0;opacity:.075;transform:rotate(-28deg);font-size:40px;font-weight:900;text-align:center;color:#163b60;word-break:break-word}.doc-head{display:flex;align-items:center;gap:16px;border-bottom:2px solid #d9e4ed;padding-bottom:16px;margin-bottom:24px}.doc-logo{width:76px;height:76px;object-fit:contain;display:none}.doc-org{font-size:19px;font-weight:800;color:#123454}.doc-sub{font-size:12px;color:#62758a;letter-spacing:1.2px;text-transform:uppercase}.doc-title{text-align:center;font-size:22px;font-weight:800;margin:22px 0;color:#172f48}.doc-body{font-family:Arial,sans-serif;font-size:16px;line-height:1.7;white-space:pre-wrap;min-height:100px;overflow-wrap:anywhere}.meta{font:13px/1.55 Arial;color:#52677b;margin-top:20px;border-top:1px solid #dbe4ec;padding-top:11px}.signatures{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:30px;align-items:end}.sig-block{border-top:1px solid #68798a;padding-top:8px;font-size:13px;line-height:1.45;text-align:center;min-height:42px}.sig-image{max-width:100%;height:48px;object-fit:contain;display:block;margin:0 auto 2px;position:relative}.qr-area{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:24px;color:#617386;font:9px Arial}.qr-dummy{width:58px;height:58px;border:1px dashed #8da0b3;display:grid;place-items:center;text-align:center;font-size:8px;color:#63788c;padding:4px}.footer{font:10.5px/1.45 Arial;color:#718296;text-align:center;margin-top:25px}
+canvas{width:100%;height:150px;background:#fff;border-radius:9px;border:1px solid #b9c8d5;touch-action:none;display:block}.canvas-tools{display:flex;justify-content:space-between;align-items:center;margin:7px 0 0;color:var(--muted);font-size:11px}.notice{background:#332811;border:1px solid #735a25;color:#f6dfa4;border-radius:10px;padding:11px 12px;font-size:11px;margin-top:14px}.success{background:#0c3029;border:1px solid #236b57;color:#a5f0d1;border-radius:10px;padding:10px;font-size:12px;display:none;margin-top:10px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.preview-wrap{position:static}.paper{min-height:650px;padding:30px 24px}.head{align-items:flex-start}.status{display:none}}
+@media print{body{background:#fff!important;color:#000!important}.no-print,header,.intro,.panel,.preview-top{display:none!important}main{margin:0;padding:0;max-width:none}.layout{display:block}.preview-wrap{position:static}.paper{box-shadow:none;border-radius:0;width:100%;height:auto;min-height:0;padding:5mm 6mm;overflow:visible;page-break-after:auto;break-inside:auto}.watermark{opacity:.075}.doc-body{min-height:0;font-size:11.5px;line-height:1.42}.doc-title{font-size:16px;margin:12px 0}.doc-head{margin-bottom:12px;padding-bottom:9px}.signatures{margin-top:18px;gap:18px}.auth-row{margin-top:12px}.footer{margin-top:12px}.photo-print{margin-top:8px;gap:6px}@page{size:A4;margin:8mm}}
+
+.photo-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:10px}
+.photo-thumb{position:relative;background:#07182b;border:1px solid #2a5277;border-radius:9px;padding:6px;min-width:0}
+.photo-thumb img{width:100%;height:110px;object-fit:contain;background:#fff;border-radius:6px}
+.photo-thumb button{width:100%;margin-top:5px;padding:6px;border:1px solid #795050;background:#3b2028;color:#ffe5e5;border-radius:7px}
+.photo-print{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.photo-print img{width:100%;max-height:250px;object-fit:contain;border:1px solid #d5dde5;padding:3px}
+#qrCode{width:82px;height:82px;min-width:82px;background:#fff;color:#172333;border:1px solid #8da0b3;display:grid;place-items:center;padding:3px;overflow:hidden}
+#qrCode img{width:100%;height:100%;object-fit:contain}
+@media print{.photo-print{break-inside:auto}.photo-print img{max-height:125px;break-inside:avoid;page-break-inside:avoid}.signatures,.qr-area,.doc-head{break-inside:avoid;page-break-inside:avoid}}
+\n
+.auth-row{display:grid;grid-template-columns:120px minmax(0,1fr) 82px;justify-content:initial;align-items:center;gap:12px;margin-top:22px;padding-top:14px;border-top:1px solid #dbe4ec;break-inside:avoid;page-break-inside:avoid}
+.auth-seal{width:132px;min-width:132px;height:132px;border:3px double #176aa4;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:#14527f;background:radial-gradient(circle,#fff 52%,#eaf6ff 53%,#fff 72%);box-shadow:inset 0 0 0 4px #d8edff;position:relative}
+.auth-seal:before{content:"";position:absolute;inset:7px;border:1px solid #4d9bd0;border-radius:50%}
+.seal-brand{font:900 13px Arial;letter-spacing:1px}.seal-check{font:900 27px Arial;line-height:1.1;color:#1685c9}.seal-caption{font:700 8px/1.25 Arial;letter-spacing:.5px;max-width:100px}.seal-code{font:700 8px monospace;margin-top:4px;max-width:108px;overflow-wrap:anywhere}
+.auth-details{flex:1;min-width:0;font:12px/1.55 Arial;color:#52677b}.auth-details strong{color:#173d5d}.hash-print{overflow-wrap:anywhere;word-break:break-word;font:10px/1.45 monospace}
+@media(max-width:520px){.auth-row{grid-template-columns:108px minmax(0,1fr);gap:7px}.auth-row #qrCode{grid-column:1 / -1;justify-self:end}.auth-seal{width:108px;min-width:108px;height:108px}.seal-brand{font-size:10px}.seal-check{font-size:22px}}
+@media print{.auth-row,.auth-seal,.signatures>div{break-inside:avoid;page-break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}.sig-image{height:44px;margin:0 auto 2px}.sig-block{min-height:34px;padding-top:6px}.auth-row{grid-template-columns:112px minmax(0,1fr) 76px;gap:9px}#qrCode{width:76px;height:76px;min-width:76px}.auth-seal{width:112px;min-width:112px;height:112px}}
+
+
+/* Ajuste de legibilidade ESIP ASSINA */
+@media print{
+  .doc-body{font-size:13px;line-height:1.5}
+  .meta{font-size:11.5px;line-height:1.5}
+  .sig-block{font-size:11.5px;line-height:1.4}
+  .auth-details{font-size:10.5px;line-height:1.45}
+  .hash-print{font-size:9px;line-height:1.4}
+  .seal-caption{font-size:7.5px}
+  .seal-code{font-size:7.5px}
+  .footer{font-size:9.5px;line-height:1.4}
+}
+
+/* V2.8 — selo de integridade redesenhado, sem alterar a validação */
+.auth-seal{
+  border:4px double #145b91;
+  background:radial-gradient(circle at center,#ffffff 0 46%,#eaf5ff 47% 53%,#ffffff 54% 69%,#dcefff 70% 73%,#ffffff 74%);
+  box-shadow:inset 0 0 0 3px #d5eaff, inset 0 0 14px #5ca9df55, 0 1px 4px #123b5a22;
+}
+.auth-seal:before{inset:8px;border:1.5px solid #3989c2}
+.auth-seal:after{content:"REGISTRO LOCAL";position:absolute;bottom:15px;font:700 7px Arial;letter-spacing:1px;color:#39749e}
+.seal-brand{font-size:14px;letter-spacing:1.1px;color:#103f68}
+.seal-check{font-size:30px;color:#087fc2;text-shadow:0 1px 0 #fff}
+.seal-caption{font-size:8.5px;line-height:1.3;max-width:104px;letter-spacing:.65px}
+.seal-code{font-size:8.5px;line-height:1.2;max-width:108px;margin-top:3px}
+.auth-details{font-size:12.5px;line-height:1.6}
+.hash-print{font-size:10.5px;line-height:1.5}
+@media(max-width:520px){
+  .auth-seal:after{font-size:6px;bottom:11px}
+  .seal-brand{font-size:10px}
+  .seal-check{font-size:22px}
+  .seal-caption{font-size:7.5px}
+  .seal-code{font-size:7px}
+}
+@media print{
+  .auth-row{grid-template-columns:124px minmax(0,1fr) 76px;gap:8px}
+  .auth-seal{width:122px;min-width:122px;height:122px}
+  .auth-seal:before{inset:7px}
+  .auth-seal:after{bottom:13px;font-size:6.5px}
+  .seal-brand{font-size:12px}
+  .seal-check{font-size:26px}
+  .seal-caption{font-size:8px;line-height:1.25;max-width:96px}
+  .seal-code{font-size:7.5px;max-width:100px}
+  .auth-details{font-size:11.5px;line-height:1.5}
+  .hash-print{font-size:9.5px;line-height:1.45}
+}
+
+
+/* V2.9 — padronização tipográfica Arial no documento e no PDF */
+.paper,
+.paper *:not(.watermark) {
+  font-family: Arial, Helvetica, sans-serif;
+}
+.doc-body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+.doc-title {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+.doc-org { font-family: Arial, Helvetica, sans-serif; }
+.meta { font: 13px/1.5 Arial, Helvetica, sans-serif; }
+.sig-block { font: 13px/1.45 Arial, Helvetica, sans-serif; }
+.auth-details { font: 12px/1.55 Arial, Helvetica, sans-serif; }
+.hash-print { font: 10px/1.45 Arial, Helvetica, sans-serif; overflow-wrap:anywhere; }
+.footer { font: 10px/1.45 Arial, Helvetica, sans-serif; }
+
+@media print {
+  .doc-body { font: 12pt/1.5 Arial, Helvetica, sans-serif; }
+  .doc-title { font: 700 14pt/1.3 Arial, Helvetica, sans-serif; }
+  .doc-org { font: 700 13pt/1.3 Arial, Helvetica, sans-serif; }
+  .doc-sub { font: 10pt/1.3 Arial, Helvetica, sans-serif; }
+  .meta { font: 10pt/1.5 Arial, Helvetica, sans-serif; }
+  .sig-block { font: 10.5pt/1.4 Arial, Helvetica, sans-serif; }
+  .auth-details { font: 9.5pt/1.45 Arial, Helvetica, sans-serif; }
+  .hash-print { font: 8.5pt/1.4 Arial, Helvetica, sans-serif; }
+  .seal-brand { font-family: Arial, Helvetica, sans-serif; }
+  .seal-caption { font-family: Arial, Helvetica, sans-serif; }
+  .seal-code { font-family: Arial, Helvetica, sans-serif; }
+  .footer { font: 8.5pt/1.4 Arial, Helvetica, sans-serif; }
+}
+
+</style>
+</head>
+<body>
+<header class="no-print"><div class="head"><div class="brand"><div class="mark">E</div><div><h1>ESIP ASSINA</h1><small>GERADORA DE DOCUMENTOS</small></div></div><div class="status">● V3.2 · LINK LEVE DE ASSINATURA</div></div></header>
+<main>
+<div class="intro no-print"><h2>Documentos profissionais, sem papel.</h2><p>Prepare o documento, envie o envelope ao signatário e receba o PDF assinado — sem armazenar contratos na ESIP.</p></div>
+<div class="layout">
+<section class="panel no-print">
+  <div class="section" style="background:#0b2944;border:1px solid #2875a8;border-radius:12px;padding:13px">
+    <h3>FLUXO DE ENVIO — SEM ARMAZENAMENTO</h3>
+    <p style="font-size:12px;color:#c4d9eb;margin:0 0 10px">O remetente prepara o texto e gera um único link. O destinatário abre no celular, confere, assina e baixa o PDF. O link leva somente os dados textuais compactados; fotos e logotipo não entram no link para evitar endereços gigantes. A ESIP não armazena o documento.</p>
+    <div class="actions"><button class="btn" id="makeEnvelopeBtn" type="button">GERAR LINK DE ASSINATURA</button><button class="btn secondary" id="copyLinkBtn" type="button" disabled>COPIAR LINK</button></div>
+    <div class="hint" id="envelopeStatus" role="status" aria-live="polite">Preencha o documento e gere o link. Para manter o endereço leve, fotografias e logotipo ficam fora do link.</div>
+  </div>
+  <div class="section">
+    <h3>01 · Identidade do escritório</h3>
+    <div class="field"><label for="office">Nome do escritório / empresa</label><input id="office" placeholder="Ex.: Escritório Silva Advocacia"></div>
+    <div class="field"><label for="logo">Logotipo (imagem)</label><input id="logo" type="file" accept="image/*"><div class="hint">A imagem é utilizada somente nesta sessão do navegador.</div></div>
+    <div class="field"><label for="watermark">Texto da marca d'água</label><input id="watermark" placeholder="Nome do escritório"></div>
+  </div>
+  <div class="section">
+    <h3>02 · Dados do documento</h3>
+    <div class="field"><label for="title">Título</label><input id="title" value="INSTRUMENTO PARTICULAR"></div>
+    <div class="field"><label for="docType">Tipo de documento</label><select id="docType"><option>Contrato</option><option>Procuração</option><option>Declaração</option><option>Autorização</option><option>Termo de responsabilidade</option><option>Outro documento particular</option></select></div>
+    <div class="field"><label for="bodyText">Conteúdo do documento</label><textarea id="bodyText" placeholder="Digite ou cole aqui o conteúdo do documento..."></textarea></div>
+    <div class="two">
+      <div class="field"><label for="signer1">Nome do signatário 1</label><input id="signer1" placeholder="Nome completo"></div>
+      <div class="field"><label for="signer2">Nome do signatário 2 (opcional)</label><input id="signer2" placeholder="Nome completo"></div>
+    </div>
+  </div>
+  <div class="section">
+    <h3>03 · Fotografias e anexos</h3>
+    <div class="field">
+      <label for="cameraInput">Fotografar documento pelo celular</label>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment">
+      <div class="hint">Abre a câmera traseira em celulares compatíveis. Também permite escolher uma imagem da galeria.</div>
+    </div>
+    <div class="field">
+      <label for="extraFiles">Anexar outras imagens</label>
+      <input id="extraFiles" type="file" accept="image/*" multiple>
+    </div>
+    <div id="photoGallery" class="photo-gallery"></div>
+  </div>
+  <div class="section">
+    <h3>04 · Assinaturas manuscritas</h3>
+    <label>Assinatura do primeiro signatário — use o dedo ou mouse</label>
+    <canvas id="signature" width="900" height="260"></canvas>
+    <div class="canvas-tools"><span>Assinatura 1</span><button class="btn ghost" id="clearSig" type="button">Limpar assinatura 1</button></div>
+    <div class="field" style="margin-top:14px"><label>Assinatura do segundo signatário (quando informado)</label>
+    <canvas id="signature2" width="900" height="260"></canvas>
+    <div class="canvas-tools"><span>Assinatura 2</span><button class="btn ghost" id="clearSig2" type="button">Limpar assinatura 2</button></div></div>
+    <div class="field" style="margin-top:12px"><label for="signerDate">Data e hora de preparação</label><input id="signerDate" readonly></div>
+  </div>
+  <div class="section">
+    <h3>05 · Consentimento e emissão</h3>
+    <div class="field">
+      <label style="display:flex;gap:9px;align-items:flex-start">
+        <input id="consent" type="checkbox" style="width:auto;margin-top:3px">
+        <span>Declaro que revisei o conteúdo e que a assinatura registrada corresponde à minha manifestação de vontade.</span>
+      </label>
+      <div class="hint">O aceite é registrado localmente nesta sessão. Não equivale, sozinho, à verificação da identidade dos signatários. Se informar um segundo signatário, registre também a assinatura dele.</div>
+    </div>
+    <div class="field">
+      <label>Código de integridade (SHA-256)</label>
+      <input id="hashValue" readonly placeholder="Será calculado ao preparar a validação">
+      <div class="hint">O código permite comparar uma cópia posteriormente. Não prova, por si só, quem assinou nem cria um registro público.</div>
+    </div>
+    <div class="actions">
+      <button class="btn secondary" id="validateBtn" type="button">PREPARAR VALIDAÇÃO + SELO</button>
+      <button class="btn" id="printBtn" type="button">GERAR / SALVAR PDF</button><button class="btn secondary" id="refreshBtn" type="button">ATUALIZAR PRÉVIA</button></div>
+    <div class="success" id="success">Prévia atualizada. Para salvar, escolha “Salvar como PDF” na janela de impressão.</div>
+    <div class="section" style="margin-top:15px;padding-top:14px;border-top:1px solid #1d3c5a">
+      <h3>06 · Conferir arquivo de validação</h3>
+      <div class="field"><label for="verifyFile">Selecionar o arquivo JSON de evidências</label><input id="verifyFile" type="file" accept="application/json,.json"><div class="hint">Selecione o arquivo -validacao.json gerado pelo ESIP ASSINA. A conferência recalcula o SHA-256 no próprio navegador.</div></div>
+      <div id="verifyResult" class="success" role="status" aria-live="polite"></div>
+    </div>
+    <div class="notice"><strong>Envio por link:</strong> o endereço contém o texto do documento compactado. Fotografias e logotipo não são transmitidos; se forem indispensáveis, precisam ser apresentados separadamente no próprio documento ou por outro meio. A ESIP não recebe nem armazena o conteúdo. O destinatário deve guardar o PDF final e o JSON de evidências.
+<br><br><strong>Limites importantes:</strong> esta versão registra assinatura desenhada, aceite, fotografias e hash SHA-256 local. O QR apresenta o código e o hash; a conferência é feita selecionando o JSON nesta própria ferramenta. Não há cadastro público online, autenticação de identidade, carimbo de tempo confiável, certificado digital ou trilha de auditoria independente. Para contratos de maior risco, use mecanismos adicionais de identificação e evidência.</div>
+  </div>
+</section>
+<section class="preview-wrap">
+  <div class="preview-top no-print"><h3>Prévia do documento</h3><span style="font-size:11px;color:var(--muted)">Formato A4 aproximado</span></div>
+  <article class="paper" id="paper">
+    <div class="watermark" id="wmPreview">NOME DO ESCRITÓRIO</div>
+    <div class="paper-content">
+      <div class="doc-head"><img class="doc-logo" id="logoPreview" alt="Logotipo do escritório"><div><div class="doc-org" id="officePreview">NOME DO ESCRITÓRIO</div><div class="doc-sub">Documento particular</div></div></div>
+      <div class="doc-title" id="titlePreview">INSTRUMENTO PARTICULAR</div>
+      <div class="doc-body" id="bodyPreview">O conteúdo do documento aparecerá aqui.
+
+Digite o texto no painel ao lado para visualizar a composição.</div>
+      <div class="meta"><strong>Tipo:</strong> <span id="typePreview">Contrato</span><br><strong>Data de emissão:</strong> <span id="datePreview"></span></div>
+      <div class="signatures">
+        <div><img class="sig-image" id="sigPreview" alt="" style="display:none"><div class="sig-block"><strong id="signer1Preview">Assinante 1</strong><br>Assinatura manuscrita</div></div>
+        <div><img class="sig-image" id="sig2Preview" alt="" style="display:none"><div class="sig-block"><strong id="signer2Preview">Não informado</strong><br><span id="secondSignerStatus">Segundo signatário opcional</span></div></div>
+      </div>
+      <div class="auth-row">
+        <div class="auth-seal">
+          <div class="seal-brand">ESIP ASSINA</div><div class="seal-check">✓</div>
+          <div class="seal-caption" id="sealCaption">INTEGRIDADE AINDA NÃO CALCULADA</div>
+          <div class="seal-code" id="sealCode">SEM CÓDIGO</div>
+        </div>
+        <div class="auth-details">
+          <strong>IDENTIFICAÇÃO E INTEGRIDADE</strong><br>
+          Código: <span id="validationCode">Aguardando preparação</span><br>
+          Situação: <span id="validationStatus">Registro local não preparado</span><br>
+          SHA-256:<br><span class="hash-print" id="hashPreview">Será calculado ao preparar a validação</span>
+          <div style="margin-top:5px">Selo visual de registro local. A consulta pública e a confirmação de identidade dependem de serviços adicionais.</div>
+        </div>
+        <div id="qrCode" class="qr-dummy">QR<br>AGUARDANDO</div>
+      </div>
+      <div id="photoPrint" class="photo-print"></div>
+      <div class="footer">Documento preparado por ferramenta de geração local · A validade e a autoria dependem dos mecanismos de assinatura efetivamente implementados.</div>
+    </div>
+  </article>
+</section>
+</div>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const fields=['office','watermark','title','docType','bodyText','signer1','signer2'];
+let logoData='', validationPrepared=false, hashSnapshot='';
+const issuedAt=new Date();
+function stamp(d=issuedAt){return d.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'medium'})}
+$('signerDate').value=stamp();
+function setupSignature(canvasId,clearId){
+ const c=$(canvasId),cx=c.getContext('2d');let drawing=false,has=false,lastPoint=null;
+ cx.strokeStyle='#142f4a';cx.lineWidth=5;cx.lineCap='round';cx.lineJoin='round';
+ function point(e){const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*c.width/r.width,y:(e.clientY-r.top)*c.height/r.height}}
+ c.addEventListener('pointerdown',e=>{e.preventDefault();drawing=true;lastPoint=point(e);if(c.setPointerCapture)c.setPointerCapture(e.pointerId);cx.beginPath();cx.arc(lastPoint.x,lastPoint.y,cx.lineWidth/2,0,Math.PI*2);cx.fillStyle=cx.strokeStyle;cx.fill();has=true;invalidate('Assinatura alterada — prepare novamente');update()});
+ c.addEventListener('pointermove',e=>{if(!drawing)return;e.preventDefault();const p=point(e);cx.beginPath();cx.moveTo(lastPoint.x,lastPoint.y);cx.lineTo(p.x,p.y);cx.stroke();lastPoint=p;has=true;invalidate('Assinatura alterada — prepare novamente');update()});
+ const stop=()=>{drawing=false;lastPoint=null};c.addEventListener('pointerup',stop);c.addEventListener('pointercancel',stop);c.addEventListener('lostpointercapture',stop);
+ $(clearId).onclick=()=>{cx.clearRect(0,0,c.width,c.height);has=false;invalidate('Assinatura alterada — prepare novamente');update()};
+ return {canvas:c,has:()=>has,data:()=>has?c.toDataURL('image/png'):'',_clear:()=>{cx.clearRect(0,0,c.width,c.height);has=false}};
+}
+const sig1=setupSignature('signature','clearSig'),sig2=setupSignature('signature2','clearSig2');
+function invalidate(message='Documento alterado — prepare novamente'){
+ if(validationPrepared){validationPrepared=false;$('validationStatus').textContent=message;$('sealCaption').textContent='RECALCULAR INTEGRIDADE';$('sealCode').textContent='CÓDIGO DESATUALIZADO';$('hashPreview').textContent='Prepare novamente para atualizar o hash';$('qrCode').innerHTML='QR AGUARDANDO';$('qrCode').className='qr-dummy';}
+}
+$('logo').addEventListener('change',e=>{const f=e.target.files?.[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{logoData=reader.result;$('logoPreview').src=logoData;$('logoPreview').style.display='block';invalidate();update()};reader.readAsDataURL(f)});
+function update(){
+ const office=$('office').value.trim()||'NOME DO ESCRITÓRIO';
+ $('officePreview').textContent=office;$('wmPreview').textContent=$('watermark').value.trim()||office;
+ $('titlePreview').textContent=$('title').value.trim()||'DOCUMENTO PARTICULAR';$('typePreview').textContent=$('docType').value;
+ $('bodyPreview').textContent=$('bodyText').value||'O conteúdo do documento aparecerá aqui.';
+ $('signer1Preview').textContent=$('signer1').value.trim()||'Assinante 1';$('signer2Preview').textContent=$('signer2').value.trim()||'Não informado';
+ $('secondSignerStatus').textContent=$('signer2').value.trim()?(sig2.has()?'Assinatura manuscrita capturada':'Aguardando assinatura do segundo signatário'):'Segundo signatário não informado';
+ $('datePreview').textContent=$('signerDate').value;
+ for(const [obj,id] of [[sig1,'sigPreview'],[sig2,'sig2Preview']]){const el=$(id);if(obj.has()){el.src=obj.data();el.style.display='block'}else{el.removeAttribute('src');el.style.display='none'}}
+}
+const attachedPhotos=[];
+function renderPhotos(){
+ const gallery=$('photoGallery'),printArea=$('photoPrint');gallery.innerHTML='';printArea.innerHTML='';
+ attachedPhotos.forEach((item,index)=>{const card=document.createElement('div');card.className='photo-thumb';const img=document.createElement('img');img.src=item.data;const label=document.createElement('div');label.className='hint';label.textContent=item.name;const remove=document.createElement('button');remove.type='button';remove.textContent='Remover';remove.onclick=()=>{attachedPhotos.splice(index,1);invalidate('Anexo removido — prepare novamente');renderPhotos()};card.append(img,label,remove);gallery.append(card);const printImg=document.createElement('img');printImg.src=item.data;printImg.alt='Anexo: '+item.name;printArea.append(printImg)});
+ invalidate('Anexos alterados — prepare novamente');
+}
+function readPhotoFiles(files){[...files].forEach(file=>{if(!file.type.startsWith('image/'))return;const reader=new FileReader();reader.onload=()=>{attachedPhotos.push({name:file.name||'Fotografia',data:reader.result});renderPhotos()};reader.readAsDataURL(file)})}
+$('cameraInput').addEventListener('change',e=>readPhotoFiles(e.target.files));$('extraFiles').addEventListener('change',e=>readPhotoFiles(e.target.files));
+async function prepareValidation(){
+ if(!$('bodyText').value.trim()){alert('Digite o conteúdo do documento antes de preparar a validação.');return}
+ if(!$('signer1').value.trim()){alert('Informe o nome do primeiro signatário.');return}
+ if(!$('consent').checked){alert('Registre o consentimento antes de preparar a validação.');return}
+ if(!sig1.has()){alert('Registre a assinatura do primeiro signatário.');return}
+ if($('signer2').value.trim()&&!sig2.has()){alert('O segundo signatário foi informado. Registre também a assinatura dele ou deixe o campo de nome vazio.');return}
+ if(!window.crypto?.subtle){alert('SHA-256 indisponível neste contexto. Abra o arquivo em HTTPS ou localhost.');return}
+ const data={produto:'ESIP ASSINA',empresa:$('office').value.trim(),titulo:$('title').value.trim(),tipo:$('docType').value,conteudo:$('bodyText').value,signatarios:[{nome:$('signer1').value.trim(),assinatura:sig1.data()},{nome:$('signer2').value.trim(),assinatura:sig2.data()}].filter(x=>x.nome),dataPreparacao:$('signerDate').value,consentimento:$('consent').checked,marcaDagua:$('watermark').value.trim(),logo:logoData,fotografias:attachedPhotos.map(p=>({nome:p.name,dados:p.data}))};
+ const canonical=JSON.stringify(data);const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical));
+ const hash=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');const shortId='ESIP-'+hash.slice(0,16).toUpperCase();hashSnapshot=hash;validationPrepared=true;
+ $('hashValue').value=hash;$('hashPreview').textContent=hash;$('validationCode').textContent=shortId;$('validationStatus').textContent='Integridade calculada localmente';$('sealCaption').textContent='INTEGRIDADE CALCULADA';$('sealCode').textContent=shortId;
+ const qr=$('qrCode');qr.innerHTML='';qr.className='qr-dummy';const payload='ESIP ASSINA | '+shortId+' | SHA-256:'+hash+' | REGISTRO LOCAL';
+ if(window.QRCode){new QRCode(qr,{text:payload,width:82,height:82,correctLevel:QRCode.CorrectLevel.M})}else{qr.textContent='QR indisponível — biblioteca não carregada'}
+ const report={produto:'ESIP ASSINA',codigo:shortId,sha256:hash,dataLocal:$('signerDate').value,documento:$('title').value,tipo:$('docType').value,signatarios:data.signatarios.map(x=>x.nome),assinaturasCapturadas:data.signatarios.map(x=>({nome:x.nome,assinaturaDesenhada:!!x.assinatura})),consentimento:$('consent').checked,quantidadeDeImagens:attachedPhotos.length,arquivoDeEvidencias:data,aviso:'Registro local. O selo e o QR não comprovam identidade nem oferecem consulta pública online. O hash permite comparar a integridade dos dados incluídos no relatório, mas não é autenticação nem trilha de auditoria independente.'};
+ const blob=new Blob([JSON.stringify(report,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=shortId+'-validacao.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1500);
+ $('success').textContent='Validação local preparada. Guarde o PDF e o arquivo JSON de evidências juntos.';$('success').style.display='block';update();
+}
+// V3.2 — link direto leve: somente texto e metadados; imagens nunca são incorporadas ao endereço.
+function bytesToBase64Url(bytes){let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'')}
+function base64UrlToBytes(value){const b64=value.replace(/-/g,'+').replace(/_/g,'/');const bin=atob(b64);const out=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)out[i]=bin.charCodeAt(i);return out}
+async function compressEnvelope(env){const raw=new TextEncoder().encode(JSON.stringify(env));if(!window.CompressionStream)throw new Error('Este navegador não oferece compactação de link. Atualize o navegador ou use Chrome.');const stream=new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'));return new Uint8Array(await new Response(stream).arrayBuffer())}
+async function decompressEnvelope(encoded){const bytes=base64UrlToBytes(encoded);if(!window.DecompressionStream)throw new Error('Este navegador não consegue abrir este link compactado. Atualize o navegador.');const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));const raw=await new Response(stream).arrayBuffer();return JSON.parse(new TextDecoder().decode(raw))}
+async function makeEnvelope(){
+ const content=$('bodyText').value.trim();
+ if(!content){alert('Preencha o conteúdo do documento antes de gerar o link.');$('bodyText').focus();return}
+ const envelope={formato:'ESIP-ASSINA-ENVELOPE',versao:3,id:'ENV-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,8).toUpperCase(),criadoEm:new Date().toISOString(),documento:{empresa:$('office').value.trim(),marcaDagua:$('watermark').value.trim(),titulo:$('title').value.trim(),tipo:$('docType').value,conteudo:content,signatario1:'',signatario2:''},observacao:'Link textual. Fotografias e logotipo não foram incluídos para manter o endereço compacto.'};
+ try{
+  const packed=await compressEnvelope(envelope);const link=location.href.split('#')[0]+'#esip='+bytesToBase64Url(packed);
+  if(link.length>12000){alert('O texto ainda gerou um link muito grande ('+link.length+' caracteres). Reduza o conteúdo do documento. O limite protege contra links que podem ser cortados por aplicativos.');return}
+  window.__esipLastLink=link;$('copyLinkBtn').disabled=false;$('envelopeStatus').textContent='Link pronto ('+link.length+' caracteres). Fotos e logotipo não foram incluídos. Copie e envie este link ao destinatário; o conteúdo textual fica no próprio endereço e não é armazenado pela ESIP.';
+  if(navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(link);$('envelopeStatus').textContent+=' Link copiado.'}catch(copyErr){$('envelopeStatus').textContent+=' Use o botão COPIAR LINK para copiar manualmente.'}}
+ }catch(err){alert('Não foi possível gerar o link: '+err.message)}
+}
+async function loadEnvelope(env){
+ try{
+  if(env.formato!=='ESIP-ASSINA-ENVELOPE'||!env.documento||!env.documento.conteudo)throw new Error('Este link não contém um documento ESIP ASSINA válido.');
+  const d=env.documento;
+  $('office').value=d.empresa||'';$('watermark').value=d.marcaDagua||'';$('title').value=d.titulo||'DOCUMENTO PARTICULAR';$('docType').value=d.tipo||'Contrato';$('bodyText').value=d.conteudo||'';
+  $('signer1').value='';$('signer2').value='';
+  logoData='';$('logoPreview').removeAttribute('src');$('logoPreview').style.display='none';
+  attachedPhotos.splice(0,attachedPhotos.length);renderPhotos();
+  sig1.clear();sig2.clear();$('consent').checked=false;$('signerDate').value=stamp(new Date());
+  validationPrepared=false;$('hashValue').value='';$('hashPreview').textContent='Prepare a validação após assinar';$('validationCode').textContent='Aguardando preparação';$('validationStatus').textContent='Envelope carregado — aguardando assinatura';$('sealCaption').textContent='AGUARDANDO ASSINATURA';$('sealCode').textContent=env.id||'ENVELOPE';$('qrCode').innerHTML='QR AGUARDANDO';$('qrCode').className='qr-dummy';
+  update();$('signer1').focus();
+ }catch(err){alert('Não foi possível abrir o documento: '+err.message)}
+}
+$('makeEnvelopeBtn').addEventListener('click',makeEnvelope);
+$('copyLinkBtn').addEventListener('click',async()=>{if(!window.__esipLastLink)return;try{await navigator.clipboard.writeText(window.__esipLastLink);$('envelopeStatus').textContent='Link copiado. Agora é só enviar ao destinatário.'}catch(e){prompt('Copie o link de assinatura:',window.__esipLastLink)}});
+async function openLinkEnvelope(){const match=location.hash.match(/^#esip=(.+)$/);if(!match)return;try{const env=await decompressEnvelope(match[1]);await loadEnvelope(env);document.querySelectorAll('.panel > .section').forEach((el,i)=>{if(i<=3)el.style.display='none'});$('signer2').closest('.two').style.display='none';$('signer2').value='';$('envelopeStatus').textContent='Documento recebido por link. Fotos e logotipo não acompanham este endereço. Confira o texto, informe seu nome, assine e salve o PDF.';document.querySelector('.intro h2').textContent='Documento recebido para assinatura';document.querySelector('.intro p').textContent='Confira o documento, assine pelo celular e salve sua cópia em PDF.'}catch(err){alert('Não foi possível abrir o link: '+err.message)}}
+openLinkEnvelope();
+
+async function verifyEvidenceFile(file){
+ const box=$('verifyResult');box.style.display='block';box.textContent='Conferindo arquivo...';
+ try{
+  const report=JSON.parse(await file.text());
+  if(!report || !report.arquivoDeEvidencias || !report.sha256 || !report.codigo){throw new Error('Estrutura de arquivo não reconhecida. Selecione um JSON gerado pelo ESIP ASSINA.');}
+  if(!window.crypto?.subtle)throw new Error('SHA-256 indisponível. Abra esta página em HTTPS ou localhost.');
+  const canonical=JSON.stringify(report.arquivoDeEvidencias);
+  const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical));
+  const actual=[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const code='ESIP-'+actual.slice(0,16).toUpperCase();
+  if(actual.toLowerCase()===String(report.sha256).toLowerCase() && code===report.codigo){
+   box.textContent='✓ INTEGRIDADE CONFERIDA. O conteúdo do JSON corresponde ao SHA-256 registrado. Código: '+code+'. Esta conferência não identifica quem assinou nem comprova a origem do arquivo.';
+   box.style.background='#0c3029';box.style.borderColor='#236b57';box.style.color='#a5f0d1';
+  }else{
+   box.textContent='⚠ DIVERGÊNCIA DETECTADA. O conteúdo do JSON não corresponde ao hash/código informado. Não considere este arquivo íntegro.';
+   box.style.background='#3b2028';box.style.borderColor='#8a3948';box.style.color='#ffe0e5';
+  }
+ }catch(err){box.textContent='Não foi possível conferir: '+err.message;box.style.background='#3b2028';box.style.borderColor='#8a3948';box.style.color='#ffe0e5';}
+}
+$('verifyFile').addEventListener('change',e=>{const f=e.target.files?.[0];if(f)verifyEvidenceFile(f)});
+$('validateBtn').onclick=prepareValidation;
+fields.forEach(id=>$(id).addEventListener('input',()=>{invalidate();update()}));
+$('consent').addEventListener('change',()=>{invalidate();update()});
+$('refreshBtn').onclick=update;
+$('printBtn').onclick=()=>{
+ if(!$('bodyText').value.trim()){alert('Digite ou cole o texto do documento antes de gerar o PDF.');$('bodyText').focus();return}
+ if(!$('signer1').value.trim()){alert('Informe o nome do primeiro signatário.');$('signer1').focus();return}
+ if(!$('consent').checked){alert('Marque o consentimento após revisar o documento.');return}
+ if(!sig1.has()){alert('Registre a assinatura do primeiro signatário.');return}
+ if($('signer2').value.trim()&&!sig2.has()){alert('Registre também a assinatura do segundo signatário.');return}
+ if(!validationPrepared){alert('Primeiro clique em PREPARAR VALIDAÇÃO + SELO. Depois gere o PDF.');return}
+ update();setTimeout(()=>window.print(),200);
+};
+update();
+</script>
+</body>
+</html>
