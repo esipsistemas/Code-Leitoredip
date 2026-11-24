@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f172a">
+<title>ESIP | Interfone Central</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--primary:#22c55e;--text:#f8fafc;--muted:#94a3b8;--line:#334155}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,sans-serif}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:center;padding:16px;text-align:center}
+main{width:100%;max-width:480px;background:var(--card);padding:24px;border-radius:20px;box-shadow:0 10px 25px #0006}
+h1{font-size:1.4rem;margin:0 0 8px}p{color:var(--muted);line-height:1.45;margin:0 0 18px}
+.status{font-size:.88rem;padding:11px;border-radius:9px;background:#ffffff0d;color:#cbd5e1;margin:14px 0;line-height:1.45}
+.client{display:block;width:100%;padding:16px;margin:10px 0;border:1px solid var(--line);border-radius:12px;background:#0f1b30;color:white;text-align:left;font-size:1rem;font-weight:700;cursor:pointer}
+.client small{display:block;color:var(--muted);font-weight:400;margin-top:4px}
+.btn{width:100%;padding:15px;border:0;border-radius:11px;font-size:1rem;font-weight:700;margin:8px 0;cursor:pointer}
+.primary{background:var(--primary);color:#052e16}.secondary{background:#334155;color:white}.danger{background:#ef4444;color:white;display:none}
+.video-box{position:relative;width:100%;aspect-ratio:3/4;background:#000;border-radius:13px;overflow:hidden;margin:14px 0;display:none}
+video{width:100%;height:100%;object-fit:cover}
+#localVideo{position:absolute;right:10px;bottom:10px;width:95px;height:130px;border:2px solid var(--primary);border-radius:9px}
+#callScreen,#residentScreen{display:none}
+.hint{font-size:.78rem;margin-top:14px}
+input{width:100%;padding:12px;border-radius:9px;border:1px solid var(--line);background:#0f172a;color:white}
+.tts{display:none;gap:8px;margin-top:10px}.tts input{flex:1;min-width:0}.tts button{padding:0 15px;border:0;border-radius:9px;background:#3b82f6;color:white}
+</style>
+</head>
+<body>
+<main>
+  <section id="directory">
+    <h1>📡 ESIP — Interfone Digital</h1>
+    <p>Selecione o condomínio ou estabelecimento para iniciar o atendimento.</p>
+    <div id="clientList"></div>
+    <div class="status">Acesso central único. Nenhum telefone de morador é publicado nesta página.</div>
+  </section>
+
+  <section id="callScreen">
+    <h1 id="callTitle">🔔 Interfone</h1>
+    <p id="callSubtitle">Toque para iniciar a chamada do portão.</p>
+    <div class="status" id="callStatus" role="status" aria-live="polite">Pronto para iniciar</div>
+    <div class="video-box" id="videoBox">
+      <video id="remoteVideo" autoplay playsinline></video>
+      <video id="localVideo" autoplay muted playsinline></video>
+    </div>
+    <button class="btn primary" id="btnCall" onclick="startGateCall()">🔔 Tocar Interfone</button>
+    <button class="btn secondary" id="btnShare" style="display:none" onclick="shareWhatsApp()">📲 Compartilhar aviso pelo WhatsApp</button>
+    <button class="btn danger" id="btnEnd" onclick="endCall()">✖ Encerrar chamada</button>
+    <button class="btn secondary" onclick="backToDirectory()">Voltar à seleção</button>
+    <p class="hint">A chamada requer internet, HTTPS e permissão de câmera e microfone nos dois aparelhos.</p>
+  </section>
+
+  <section id="residentScreen">
+    <h1 id="residentTitle">🏠 Atender Interfone</h1>
+    <p>Autorize câmera e microfone para conversar com o visitante.</p>
+    <div class="status" id="residentStatus" role="status" aria-live="polite">Preparando atendimento...</div>
+    <div class="video-box" id="residentVideoBox">
+      <video id="residentRemote" autoplay playsinline></video>
+      <video id="residentLocal" autoplay muted playsinline></video>
+    </div>
+    <button class="btn danger" id="residentEnd" onclick="endCall()">✖ Encerrar chamada</button>
+    <div class="tts" id="ttsBox">
+      <input id="ttsText" maxlength="250" placeholder="Mensagem para falar no portão">
+      <button onclick="sendSpeechText()">Falar</button>
+    </div>
+    <p class="hint">A chamada requer internet, HTTPS e permissão de câmera e microfone.</p>
+  </section>
+</main>
+<script>
+// LISTA INICIAL DE DEMONSTRAÇÃO.
+// A lista compartilhada e editável para todos será ligada ao administrador central numa próxima etapa.
+const CLIENTS = [
+  {id:"residencial-a", name:"Residencial de demonstração", description:"Interfone do condomínio"},
+  {id:"empresa-b", name:"Estabelecimento de demonstração", description:"Interfone da empresa"}
+];
+
+const $=id=>document.getElementById(id);
+let selectedClient=null, peer=null, localStream=null, activeCall=null, dataConn=null, currentLink="", closing=false;
+const params=new URLSearchParams(location.search);
+const room=params.get("sala");
+const clientId=params.get("cliente");
+
+function renderDirectory(){
+  $("clientList").innerHTML="";
+  CLIENTS.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="client";
+    b.innerHTML="";
+    const name=document.createElement("span"); name.textContent=c.name;
+    const desc=document.createElement("small"); desc.textContent=c.description||"Interfone";
+    b.append(name,desc);
+    b.onclick=()=>selectClient(c.id);
+    $("clientList").appendChild(b);
+  });
+}
+function selectClient(id){
+  selectedClient=CLIENTS.find(c=>c.id===id);
+  if(!selectedClient)return;
+  $("directory").style.display="none";$("callScreen").style.display="block";
+  $("callTitle").textContent="🔔 "+selectedClient.name;
+  $("callSubtitle").textContent="Toque para iniciar a chamada do portão.";
+}
+function backToDirectory(){
+  if(peer||localStream){endCall(false);return}
+  $("callScreen").style.display="none";$("directory").style.display="block";
+}
+function setStatus(text,resident=false){$(resident?"residentStatus":"callStatus").textContent=text}
+function secureReady(resident=false){
+  if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){setStatus("Abra este endereço por HTTPS e autorize câmera e microfone.",resident);return false}
+  if(typeof Peer==="undefined"){setStatus("Biblioteca de conexão indisponível. Verifique a internet e recarregue.",resident);return false}
+  return true;
+}
+function showVideo(resident=false){$(resident?"residentVideoBox":"videoBox").style.display="block"}
+async function startGateCall(){
+  if(!selectedClient||!secureReady())return;
+  $("btnCall").disabled=true;setStatus("Solicitando câmera e microfone...");
+  try{localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:{facingMode:"user"}})}
+  catch(e){setStatus("Não foi possível acessar câmera/microfone. Verifique as permissões.");$("btnCall").disabled=false;return}
+  $("localVideo").srcObject=localStream;showVideo();
+  const roomId="portao-"+Math.random().toString(36).slice(2,10);
+  const base=location.origin+location.pathname;
+  currentLink=base+"?cliente="+encodeURIComponent(selectedClient.id)+"&sala="+encodeURIComponent(roomId);
+  setStatus("Preparando chamada...");
+  try{peer=new Peer(roomId)}catch(e){setStatus("Não foi possível iniciar a conexão.");stopMedia();$("btnCall").disabled=false;return}
+  peer.on("open",()=>{
+    $("btnCall").style.display="none";$("btnEnd").style.display="block";$("btnShare").style.display="block";
+    setStatus("Interfone pronto. Compartilhe o aviso com o morador pelo WhatsApp.");
+  });
+  peer.on("call",call=>{
+    activeCall=call;setStatus("Morador atendendo. Conectando áudio e vídeo...");call.answer(localStream);
+    call.on("stream",stream=>{$("remoteVideo").srcObject=stream;$("remoteVideo").play().catch(()=>{});setStatus("✅ Morador conectado. Conversa ao vivo.")});
+    call.on("close",()=>{if(!closing)setStatus("A chamada foi encerrada pelo outro aparelho.")});
+    call.on("error",()=>setStatus("Falha na chamada. Encerre e tente novamente."));
+  });
+  peer.on("connection",conn=>{
+    dataConn=conn;conn.on("data",msg=>{if(typeof msg==="string")speak(msg.slice(0,250))});conn.on("close",()=>dataConn=null);
+  });
+  peer.on("error",e=>{console.error(e);setStatus("Falha na conexão. Verifique a internet e tente novamente.");$("btnCall").style.display="block";$("btnCall").disabled=false;$("btnShare").style.display="none"});
+}
+function shareWhatsApp(){
+  if(!currentLink){setStatus("Inicie o interfone primeiro.");return}
+  const message=`🔔 INTERFONE TOCANDO!\nVisitante no portão de ${selectedClient.name}.\n\nAbra este link para atender:\n${currentLink}`;
+  window.open("https://wa.me/?text="+encodeURIComponent(message),"_blank","noopener,noreferrer");
+}
+async function startResident(roomId,client){
+  $("directory").style.display="none";$("residentScreen").style.display="block";
+  const found=CLIENTS.find(c=>c.id===client);
+  $("residentTitle").textContent="🏠 Atender "+(found?found.name:"Interfone ESIP");
+  if(!secureReady(true))return;
+  setStatus("Solicitando câmera e microfone...",true);
+  try{localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:true})}
+  catch(e){setStatus("Permita o acesso à câmera e ao microfone para atender.",true);return}
+  $("residentLocal").srcObject=localStream;showVideo(true);
+  try{peer=new Peer()}catch(e){setStatus("Não foi possível iniciar a conexão.",true);stopMedia();return}
+  peer.on("open",()=>{
+    setStatus("Chamando o aparelho do portão...",true);
+    activeCall=peer.call(roomId,localStream);
+    if(!activeCall){setStatus("O visitante pode ter encerrado o interfone.",true);return}
+    activeCall.on("stream",stream=>{$("residentRemote").srcObject=stream;$("residentRemote").play().catch(()=>{});setStatus("✅ Conectado ao portão. Você já pode conversar.",true);$("residentEnd").style.display="block";$("ttsBox").style.display="flex"});
+    activeCall.on("close",()=>{if(!closing)setStatus("A chamada foi encerrada pelo outro aparelho.",true)});
+    activeCall.on("error",()=>setStatus("Falha ao conectar. Verifique se o visitante ainda aguarda.",true));
+    dataConn=peer.connect(roomId);
+  });
+  peer.on("error",e=>{console.error(e);setStatus("Não foi possível localizar o aparelho do portão. Confirme se o visitante ainda aguarda.",true)});
+}
+function sendSpeechText(){
+  const input=$("ttsText"),txt=input.value.trim().slice(0,250);if(!txt)return;
+  if(!dataConn||dataConn.open!==true){setStatus("Canal de mensagens ainda não conectado.",true);return}
+  dataConn.send(txt);input.value="";
+}
+function speak(text){
+  if(!("speechSynthesis"in window)){setStatus("Este navegador não oferece leitura de texto em voz alta.");return}
+  speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang="pt-BR";speechSynthesis.speak(utterance);
+}
+function stopMedia(){
+  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
+  ["localVideo","remoteVideo","residentLocal","residentRemote"].forEach(id=>{if($(id))$(id).srcObject=null});
+}
+function endCall(redirect=true){
+  closing=true;
+  try{activeCall?.close()}catch(e){}try{dataConn?.close()}catch(e){}try{peer?.destroy()}catch(e){}
+  if("speechSynthesis"in window)speechSynthesis.cancel();stopMedia();
+  if(redirect)location.href=location.pathname;
+}
+renderDirectory();
+if(room){startResident(room,clientId)}
+else if(clientId){selectClient(clientId)}
+</script>
+</body>
+</html>
